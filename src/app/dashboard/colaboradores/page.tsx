@@ -11,10 +11,39 @@ import {
     TableRow,
 } from "@/components/ui/table"
 
-export default async function ColaboradoresPage() {
-    const colaboradores = await db.colaborador.findMany({
-        orderBy: { nome: 'asc' },
-    })
+import { SearchInput } from "@/components/ui/search-input"
+import { PaginationControl } from "@/components/ui/pagination-control"
+import { Prisma } from "@prisma/client"
+
+export default async function ColaboradoresPage({
+    searchParams,
+}: {
+    searchParams: Promise<{ page?: string; q?: string }>
+}) {
+    const params = await searchParams
+    const currentPage = Number(params.page) || 1
+    const query = params.q || ''
+    const itemsPerPage = 10
+    const skip = (currentPage - 1) * itemsPerPage
+
+    const where: Prisma.ColaboradorWhereInput = query ? {
+        OR: [
+            { nome: { contains: query, mode: Prisma.QueryMode.insensitive } },
+            { email: { contains: query, mode: Prisma.QueryMode.insensitive } },
+        ]
+    } : {}
+
+    const [totalItems, colaboradores] = await Promise.all([
+        db.colaborador.count({ where }),
+        db.colaborador.findMany({
+            where,
+            orderBy: { nome: 'asc' },
+            skip,
+            take: itemsPerPage,
+        })
+    ])
+
+    const totalPages = Math.ceil(totalItems / itemsPerPage)
 
     return (
         <div className="p-8 space-y-8">
@@ -24,6 +53,10 @@ export default async function ColaboradoresPage() {
                     <p className="text-muted-foreground">Gerencie a equipe do salão.</p>
                 </div>
                 <NovoColaboradorDialog />
+            </div>
+
+            <div className="flex items-center justify-between">
+                <SearchInput placeholder="Buscar colaboradores..." />
             </div>
 
             <div className="rounded-md border">
@@ -61,6 +94,12 @@ export default async function ColaboradoresPage() {
                     </TableBody>
                 </Table>
             </div>
+
+            <PaginationControl
+                currentPage={currentPage}
+                totalPages={totalPages}
+                baseUrl="/dashboard/colaboradores"
+            />
         </div>
     )
 }

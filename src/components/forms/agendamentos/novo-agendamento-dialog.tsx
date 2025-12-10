@@ -15,9 +15,10 @@ import { Plus } from "lucide-react"
 interface NovoAgendamentoDialogProps {
     clientes: { id: string; nome: string }[]
     servicos: { id: string; nome: string; preco: any }[]
+    colaboradores: { id: string; nome: string }[]
 }
 
-export function NovoAgendamentoDialog({ clientes, servicos }: NovoAgendamentoDialogProps) {
+export function NovoAgendamentoDialog({ clientes, servicos, colaboradores }: NovoAgendamentoDialogProps) {
     return (
         <Dialog>
             <DialogTrigger asChild>
@@ -32,7 +33,7 @@ export function NovoAgendamentoDialog({ clientes, servicos }: NovoAgendamentoDia
                         Preencha os dados do agendamento abaixo.
                     </DialogDescription>
                 </DialogHeader>
-                <FormNovoAgendamento clientes={clientes} servicos={servicos} />
+                <FormNovoAgendamento clientes={clientes} servicos={servicos} colaboradores={colaboradores} />
             </DialogContent>
         </Dialog>
     )

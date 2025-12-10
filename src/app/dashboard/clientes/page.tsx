@@ -9,16 +9,50 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
+import { DetalhesClienteDialog } from "@/components/clientes/detalhes-cliente-dialog"
+import { Button } from "@/components/ui/button"
+import { Eye } from "lucide-react"
 
-export default async function ClientesPage() {
-    const clientes = await db.cliente.findMany({
-        orderBy: { nome: 'asc' },
-        include: {
-            _count: {
-                select: { agendamentos: true }
-            }
-        }
-    })
+import { SearchInput } from "@/components/ui/search-input"
+import { PaginationControl } from "@/components/ui/pagination-control"
+import { EditarClienteDialog } from "@/components/forms/clientes/editar-cliente-dialog"
+import { Prisma } from "@prisma/client"
+
+export default async function ClientesPage({
+    searchParams,
+}: {
+    searchParams: Promise<{ page?: string; q?: string }>
+}) {
+    const params = await searchParams
+    const currentPage = Number(params.page) || 1
+    const query = params.q || ''
+    const itemsPerPage = 10
+    const skip = (currentPage - 1) * itemsPerPage
+
+    const where: Prisma.ClienteWhereInput = query ? {
+        OR: [
+            { nome: { contains: query, mode: Prisma.QueryMode.insensitive } },
+            { email: { contains: query, mode: Prisma.QueryMode.insensitive } },
+            { cpf: { contains: query } },
+        ]
+    } : {}
+
+    const [totalItems, clientes] = await Promise.all([
+        db.cliente.count({ where }),
+        db.cliente.findMany({
+            where,
+            orderBy: { nome: 'asc' },
+            include: {
+                _count: {
+                    select: { agendamentos: true }
+                }
+            },
+            skip,
+            take: itemsPerPage,
+        })
+    ])
+
+    const totalPages = Math.ceil(totalItems / itemsPerPage)
 
     return (
         <div className="p-8 space-y-8">
@@ -28,6 +62,10 @@ export default async function ClientesPage() {
                     <p className="text-muted-foreground">Gerencie sua base de clientes.</p>
                 </div>
                 <NovoClienteDialog />
+            </div>
+
+            <div className="flex items-center justify-between">
+                <SearchInput placeholder="Buscar clientes..." />
             </div>
 
             <div className="rounded-md border">
@@ -60,7 +98,15 @@ export default async function ClientesPage() {
                                     <TableCell>{cliente.telefone}</TableCell>
                                     <TableCell>{cliente._count.agendamentos}</TableCell>
                                     <TableCell>
-                                        <BotaoExcluirCliente id={cliente.id} />
+                                        <div className="flex items-center gap-2">
+                                            <DetalhesClienteDialog clienteId={cliente.id}>
+                                                <Button variant="ghost" size="icon" title="Ver Detalhes">
+                                                    <Eye className="h-4 w-4" />
+                                                </Button>
+                                            </DetalhesClienteDialog>
+                                            <EditarClienteDialog cliente={cliente} />
+                                            <BotaoExcluirCliente id={cliente.id} />
+                                        </div>
                                     </TableCell>
                                 </TableRow>
                             ))
@@ -68,6 +114,12 @@ export default async function ClientesPage() {
                     </TableBody>
                 </Table>
             </div>
+
+            <PaginationControl
+                currentPage={currentPage}
+                totalPages={totalPages}
+                baseUrl="/dashboard/clientes"
+            />
         </div>
     )
 }

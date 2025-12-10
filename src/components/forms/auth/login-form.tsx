@@ -47,7 +47,7 @@ export function LoginForm() {
         setError(null)
 
         const result = await signIn("credentials", {
-            cnpj: values.cnpj, // Changed from email
+            cnpj: values.cnpj.replace(/\D/g, ""), // Remove formatting before sending
             password: values.password,
             redirect: false,
         })
@@ -79,7 +79,21 @@ export function LoginForm() {
                                 <FormItem>
                                     <FormLabel>CNPJ</FormLabel>
                                     <FormControl>
-                                        <Input placeholder="00.000.000/0000-00" {...field} />
+                                        <Input
+                                            placeholder="00.000.000/0000-00"
+                                            {...field}
+                                            onChange={(e) => {
+                                                const value = e.target.value
+                                                    .replace(/\D/g, "")
+                                                    .replace(/^(\d{2})(\d)/, "$1.$2")
+                                                    .replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3")
+                                                    .replace(/\.(\d{3})(\d)/, ".$1/$2")
+                                                    .replace(/(\d{4})(\d)/, "$1-$2")
+                                                    .slice(0, 18)
+                                                field.onChange(value)
+                                            }}
+                                            maxLength={18}
+                                        />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>

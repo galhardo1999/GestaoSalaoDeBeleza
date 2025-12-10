@@ -6,5 +6,6 @@ export const agendamentoSchema = z.object({
     data: z.string().refine((val) => new Date(val).getTime() > Date.now(), {
         message: "A data do agendamento deve ser no futuro",
     }),
+    colaboradorId: z.string().optional(),
     observacoes: z.string().optional(),
 });

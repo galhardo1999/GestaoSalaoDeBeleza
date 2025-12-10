@@ -64,3 +64,44 @@ export async function excluirServico(id: string) {
         throw new Error("Failed to delete service")
     }
 }
+
+export async function editarServico(
+    prevState: ActionState,
+    formData: FormData
+): Promise<ActionState> {
+    const id = formData.get('id') as string
+
+    const validatedFields = servicoSchema.safeParse({
+        nome: formData.get('nome'),
+        preco: formData.get('preco'),
+        duracaoMin: formData.get('duracaoMin'),
+        ativo: true,
+    })
+
+    if (!validatedFields.success) {
+        return {
+            errors: validatedFields.error.flatten().fieldErrors,
+        }
+    }
+
+    const { nome, preco, duracaoMin } = validatedFields.data
+
+    try {
+        await db.servico.update({
+            where: { id },
+            data: {
+                nome,
+                preco: Number(preco),
+                duracaoMin: Number(duracaoMin),
+            },
+        })
+    } catch (error) {
+        console.error('Erro ao editar serviço:', error)
+        return {
+            message: 'Erro no Banco de Dados: Falha ao atualizar serviço.',
+        }
+    }
+
+    revalidatePath('/dashboard/servicos')
+    return { message: 'Serviço atualizado com sucesso!' }
+}

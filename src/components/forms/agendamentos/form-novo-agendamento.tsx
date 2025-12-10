@@ -18,6 +18,7 @@ import { Textarea } from '@/components/ui/textarea'
 interface FormNovoAgendamentoProps {
     clientes: { id: string; nome: string }[]
     servicos: { id: string; nome: string; preco: any }[] // preco is Decimal
+    colaboradores: { id: string; nome: string }[]
 }
 
 const initialState = {
@@ -26,15 +27,30 @@ const initialState = {
         clienteId?: string[]
         servicoId?: string[]
         data?: string[]
+        colaboradorId?: string[]
         _form?: string[]
     }
 }
 
-export function FormNovoAgendamento({ clientes, servicos }: FormNovoAgendamentoProps) {
+export function FormNovoAgendamento({ clientes, servicos, colaboradores }: FormNovoAgendamentoProps) {
     const [state, dispatch] = useActionState(criarAgendamento, initialState)
 
     return (
         <form action={dispatch} className="space-y-4">
+            {/* Date & Time Picker */}
+            <div className="space-y-2">
+                <Label htmlFor="data">Data e Hora</Label>
+                <Input
+                    type="datetime-local"
+                    name="data"
+                    id="data"
+                    required
+                />
+                {state.errors?.data && (
+                    <p className="text-sm text-red-500 font-medium">{state.errors.data}</p>
+                )}
+            </div>
+
             {/* Client Selection */}
             <div className="space-y-2">
                 <Label htmlFor="clienteId">Cliente</Label>
@@ -75,17 +91,23 @@ export function FormNovoAgendamento({ clientes, servicos }: FormNovoAgendamentoP
                 )}
             </div>
 
-            {/* Date & Time Picker */}
+            {/* Collaborator Selection */}
             <div className="space-y-2">
-                <Label htmlFor="data">Data e Hora</Label>
-                <Input
-                    type="datetime-local"
-                    name="data"
-                    id="data"
-                    required
-                />
-                {state.errors?.data && (
-                    <p className="text-sm text-red-500 font-medium">{state.errors.data}</p>
+                <Label htmlFor="colaboradorId">Colaborador (Opcional)</Label>
+                <Select name="colaboradorId" defaultValue="">
+                    <SelectTrigger>
+                        <SelectValue placeholder="Selecione um colaborador" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {colaboradores.map((colaborador) => (
+                            <SelectItem key={colaborador.id} value={colaborador.id}>
+                                {colaborador.nome}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+                {state.errors?.colaboradorId && (
+                    <p className="text-sm text-red-500 font-medium">{state.errors.colaboradorId}</p>
                 )}
             </div>
 

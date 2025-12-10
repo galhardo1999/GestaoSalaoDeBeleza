@@ -10,6 +10,7 @@ type ActionState = {
         clienteId?: string[]
         servicoId?: string[]
         data?: string[]
+        colaboradorId?: string[]
         _form?: string[]
     }
     message?: string
@@ -23,6 +24,7 @@ export async function criarAgendamento(
         clienteId: formData.get('clienteId'),
         servicoId: formData.get('servicoId'),
         data: formData.get('data'),
+        colaboradorId: formData.get('colaboradorId'),
         observacoes: formData.get('observacoes'),
     })
 
@@ -32,7 +34,7 @@ export async function criarAgendamento(
         }
     }
 
-    const { clienteId, servicoId, data, observacoes } = validatedFields.data
+    const { clienteId, servicoId, data, colaboradorId, observacoes } = validatedFields.data
 
     try {
         await db.agendamento.create({
@@ -40,6 +42,7 @@ export async function criarAgendamento(
                 clienteId,
                 servicoId,
                 data: new Date(data),
+                colaboradorId: colaboradorId || null,
                 observacoes,
                 status: 'AGENDADO',
             },

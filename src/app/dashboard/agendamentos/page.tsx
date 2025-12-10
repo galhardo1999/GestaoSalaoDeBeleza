@@ -12,16 +12,45 @@ import {
 } from "@/components/ui/table"
 import { format } from "date-fns"
 
-export default async function AgendamentosPage() {
-    const agendamentos = await db.agendamento.findMany({
-        include: {
-            cliente: true,
-            servico: true,
-        },
-        orderBy: {
-            data: 'desc',
-        },
-    })
+import { Prisma } from "@prisma/client"
+import { SearchInput } from "@/components/ui/search-input"
+import { PaginationControl } from "@/components/ui/pagination-control"
+
+export default async function AgendamentosPage({
+    searchParams,
+}: {
+    searchParams: Promise<{ page?: string; q?: string }>
+}) {
+    const params = await searchParams
+    const currentPage = Number(params.page) || 1
+    const query = params.q || ''
+    const itemsPerPage = 10
+    const skip = (currentPage - 1) * itemsPerPage
+
+    const where: Prisma.AgendamentoWhereInput = query ? {
+        OR: [
+            { cliente: { nome: { contains: query, mode: Prisma.QueryMode.insensitive } } },
+            { servico: { nome: { contains: query, mode: Prisma.QueryMode.insensitive } } },
+        ]
+    } : {}
+
+    const [totalItems, agendamentos] = await Promise.all([
+        db.agendamento.count({ where }),
+        db.agendamento.findMany({
+            where,
+            include: {
+                cliente: true,
+                servico: true,
+            },
+            orderBy: {
+                data: 'desc',
+            },
+            skip,
+            take: itemsPerPage,
+        })
+    ])
+
+    const totalPages = Math.ceil(totalItems / itemsPerPage)
 
     // We need to fetch data for the dialog again
     const clientes = await db.cliente.findMany({
@@ -30,6 +59,10 @@ export default async function AgendamentosPage() {
 
     const servicos = await db.servico.findMany({
         where: { ativo: true },
+        orderBy: { nome: 'asc' }
+    })
+
+    const colaboradores = await db.colaborador.findMany({
         orderBy: { nome: 'asc' }
     })
 
@@ -45,14 +78,19 @@ export default async function AgendamentosPage() {
                     <h2 className="text-3xl font-bold tracking-tight">Agendamentos</h2>
                     <p className="text-muted-foreground">Gerencie a agenda do salão.</p>
                 </div>
-                <NovoAgendamentoDialog clientes={clientes} servicos={formattedServicos} />
+                <NovoAgendamentoDialog clientes={clientes} servicos={formattedServicos} colaboradores={colaboradores} />
+            </div>
+
+            <div className="flex items-center justify-between">
+                <SearchInput placeholder="Buscar agendamentos..." />
             </div>
 
             <div className="rounded-md border">
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>Data/Hora</TableHead>
+                            <TableHead>Data</TableHead>
+                            <TableHead>Hora</TableHead>
                             <TableHead>Cliente</TableHead>
                             <TableHead>Serviço</TableHead>
                             <TableHead>Preço</TableHead>
@@ -63,7 +101,7 @@ export default async function AgendamentosPage() {
                     <TableBody>
                         {agendamentos.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={6} className="h-24 text-center">
+                                <TableCell colSpan={7} className="h-24 text-center">
                                     Nenhum agendamento encontrado.
                                 </TableCell>
                             </TableRow>
@@ -71,7 +109,10 @@ export default async function AgendamentosPage() {
                             agendamentos.map((agendamento) => (
                                 <TableRow key={agendamento.id}>
                                     <TableCell>
-                                        {format(agendamento.data, "dd/MM/yyyy HH:mm")}
+                                        {format(agendamento.data, "dd/MM/yyyy")}
+                                    </TableCell>
+                                    <TableCell>
+                                        {format(agendamento.data, "HH:mm")}
                                     </TableCell>
                                     <TableCell>{agendamento.cliente.nome}</TableCell>
                                     <TableCell>{agendamento.servico.nome}</TableCell>
@@ -91,6 +132,12 @@ export default async function AgendamentosPage() {
                     </TableBody>
                 </Table>
             </div>
+
+            <PaginationControl
+                currentPage={currentPage}
+                totalPages={totalPages}
+                baseUrl="/dashboard/agendamentos"
+            />
         </div>
     )
 }

@@ -1,36 +1,47 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Gestão de Salão de Beleza (SaaS)
 
-## Getting Started
+Sistema desenvolvido com Next.js 14 (App Router), Prisma, Authenticação e ShadowCN/ui.
 
-First, run the development server:
+## Configuração
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+1.  **Variáveis de Ambiente (.env)**:
+    Certifique-se de que seu arquivo `.env` contenha:
+    ```env
+    DATABASE_URL="postgresql://user:password@localhost:5432/salao?schema=public"
+    NEXTAUTH_SECRET="sua-chave-secreta-aleatoria"
+    NEXTAUTH_URL="http://localhost:3000"
+    ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2.  **Instalar Dependências**:
+    ```bash
+    bun install
+    ```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3.  **Banco de Dados**:
+    Sincronize o schema com o banco:
+    ```bash
+    bunx prisma generate
+    bunx prisma db push
+    ```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4.  **Rodar o Projeto**:
+    ```bash
+    bun dev
+    ```
 
-## Learn More
+## Estrutura do Projeto
 
-To learn more about Next.js, take a look at the following resources:
+*   `src/app/(admin)`: Painel administrativo protegido.
+*   `src/app/(auth)`: Páginas de login.
+*   `src/actions`: Server Actions para mutações de dados.
+*   `src/components/forms`: Formulários interativos (Client Components).
+*   `src/lib/db.ts`: Conexão com o banco (Prisma Singleton).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Funcionalidades Prontas (MVP)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+*   **Autenticação**: Login com Email/Senha (validado no banco `Usuario`).
+*   **Dashboard**: KPIs de Agendamentos do dia, Clientes e Faturamento projetado.
+*   **Agendamentos**:
+    *   Listagem de agendamentos.
+    *   Criação de novo agendamento (Modal + Form).
+    *   Validação com Zod e Server Actions.

@@ -1,0 +1,90 @@
+'use server'
+
+import { db } from '@/lib/db'
+import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
+import { agendamentoSchema } from '@/lib/validations/agendamento'
+
+type ActionState = {
+    errors?: {
+        clienteId?: string[]
+        servicoId?: string[]
+        data?: string[]
+        _form?: string[]
+    }
+    message?: string
+}
+
+export async function criarAgendamento(
+    prevState: ActionState,
+    formData: FormData
+): Promise<ActionState> {
+    const validatedFields = agendamentoSchema.safeParse({
+        clienteId: formData.get('clienteId'),
+        servicoId: formData.get('servicoId'),
+        data: formData.get('data'),
+        observacoes: formData.get('observacoes'),
+    })
+
+    if (!validatedFields.success) {
+        return {
+            errors: validatedFields.error.flatten().fieldErrors,
+        }
+    }
+
+    const { clienteId, servicoId, data, observacoes } = validatedFields.data
+
+    try {
+        await db.agendamento.create({
+            data: {
+                clienteId,
+                servicoId,
+                data: new Date(data),
+                observacoes,
+                status: 'AGENDADO',
+            },
+        })
+    } catch (error) {
+        console.error('Erro de Banco de Dados:', error)
+        return {
+            message: 'Erro no Banco de Dados: Falha ao criar agendamento.',
+        }
+    }
+
+    revalidatePath('/dashboard/agendamentos')
+    redirect('/dashboard/agendamentos')
+}
+
+export async function cancelarAgendamento(id: string) {
+    try {
+        await db.agendamento.update({
+            where: { id },
+            data: { status: 'CANCELADO' }
+        })
+        revalidatePath('/dashboard/agendamentos')
+    } catch (error) {
+        console.error("Failed to cancel appointment:", error)
+        throw new Error("Failed to cancel appointment")
+    }
+}
+
+export async function reagendarAgendamento(
+    id: string,
+    novaData: Date
+): Promise<{ message?: string; error?: string }> {
+    try {
+        await db.agendamento.update({
+            where: { id },
+            data: {
+                data: novaData,
+                status: 'AGENDADO' // Reset status just in case (e.g. from Cancelled to Scheduled if allowed, otherwise assumes Scheduled)
+            }
+        })
+        revalidatePath('/dashboard/agendamentos')
+        revalidatePath('/dashboard/calendario')
+        return { message: "Agendamento reagendado com sucesso!" }
+    } catch (error) {
+        console.error("Failed to reschedule:", error)
+        return { error: "Erro ao reagendar. Tente novamente." }
+    }
+}

@@ -1,0 +1,39 @@
+"use client"
+
+import { Button } from "@/components/ui/button"
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog"
+import { FormNovoAgendamento } from "./form-novo-agendamento"
+import { Plus } from "lucide-react"
+
+interface NovoAgendamentoDialogProps {
+    clientes: { id: string; nome: string }[]
+    servicos: { id: string; nome: string; preco: any }[]
+}
+
+export function NovoAgendamentoDialog({ clientes, servicos }: NovoAgendamentoDialogProps) {
+    return (
+        <Dialog>
+            <DialogTrigger asChild>
+                <Button>
+                    <Plus className="mr-2 h-4 w-4" /> Novo Agendamento
+                </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                    <DialogTitle>Novo Agendamento</DialogTitle>
+                    <DialogDescription>
+                        Preencha os dados do agendamento abaixo.
+                    </DialogDescription>
+                </DialogHeader>
+                <FormNovoAgendamento clientes={clientes} servicos={servicos} />
+            </DialogContent>
+        </Dialog>
+    )
+}

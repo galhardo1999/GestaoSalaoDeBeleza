@@ -2,6 +2,7 @@ import { DashboardShell } from "@/components/layout/dashboard-shell"
 import { getServerSession } from "next-auth"
 import { redirect } from "next/navigation"
 import { authOptions } from "@/lib/auth"
+import { db } from "@/lib/db"
 
 export default async function AdminLayout({
     children,
@@ -10,12 +11,20 @@ export default async function AdminLayout({
 }) {
     const session = await getServerSession(authOptions)
 
-    if (!session) {
+    if (!session || !session.user) {
         redirect("/login")
     }
 
+    const user = await db.usuario.findUnique({
+        where: { id: session.user.id },
+        include: { empresa: true }
+    })
+
     return (
-        <DashboardShell>
+        <DashboardShell
+            companyName={user?.empresa?.nome}
+            companyCnpj={user?.empresa?.cnpj}
+        >
             {children}
         </DashboardShell>
     )

@@ -49,53 +49,72 @@ const routes = [
 interface SidebarProps {
     isCollapsed: boolean
     toggleCollapse: () => void
+    companyName?: string
+    companyCnpj?: string
 }
 
-export function Sidebar({ isCollapsed, toggleCollapse }: SidebarProps) {
+export function Sidebar({ isCollapsed, toggleCollapse, companyName, companyCnpj }: SidebarProps) {
     const pathname = usePathname()
 
     return (
         <TooltipProvider delayDuration={0}>
-            <div className="space-y-4 py-4 flex flex-col h-full bg-white">
-                <div className="px-3 py-2 flex-1 relative">
-                    <div className="flex items-center mb-14 mt-4 px-2">
-                        <Link href="/dashboard" className="flex items-center">
-                            <div className="h-10 w-10 min-w-[2.5rem] rounded-xl bg-blue-100 flex items-center justify-center mr-3 hover:opacity-80 transition">
-                                <Sparkles className="h-5 w-5 text-blue-600" />
+            <div className="space-y-4 py-4 flex flex-col h-full bg-white relative">
+                <Button
+                    onClick={toggleCollapse}
+                    variant="ghost"
+                    size="icon"
+                    className={cn(
+                        "absolute -right-3 top-6 h-8 w-8 rounded-full bg-white border shadow-sm hover:bg-gray-50 z-20 hidden md:flex items-center justify-center",
+                        isCollapsed ? "translate-x-1" : ""
+                    )}
+                >
+                    {isCollapsed ? <ChevronRight className="h-4 w-4 text-gray-600" /> : <ChevronLeft className="h-4 w-4 text-gray-600" />}
+                </Button>
+
+                <div className="px-4 py-2 flex-1 relative">
+                    <div className="mb-8">
+                        <Link href="/dashboard" className="flex items-center overflow-hidden mb-4">
+                            <div className="h-12 w-12 min-w-[3rem] rounded-2xl bg-blue-50 flex items-center justify-center mr-3 hover:opacity-80 transition shrink-0">
+                                <Sparkles className="h-6 w-6 text-blue-600" />
                             </div>
                             {!isCollapsed && (
                                 <div className="overflow-hidden transition-all duration-300 whitespace-nowrap">
-                                    <h1 className="text-xl font-bold text-gray-900 leading-tight">
+                                    <h1 className="text-2xl font-bold text-gray-900 leading-none mb-1">
                                         Beleza
                                     </h1>
-                                    <p className="text-xs text-gray-500 font-medium">
+                                    <p className="text-sm text-gray-500 font-medium">
                                         Gestão de Salão
                                     </p>
                                 </div>
                             )}
                         </Link>
 
-                        <Button
-                            onClick={toggleCollapse}
-                            variant="ghost"
-                            size="icon"
-                            className={cn(
-                                "absolute -right-3 top-2 h-7 w-7 rounded-full bg-white border shadow-sm hover:bg-gray-100 hidden md:flex",
-                                isCollapsed ? "translate-x-1" : "-right-3"
-                            )}
-                        >
-                            {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-                        </Button>
+                        {!isCollapsed && (companyName || companyCnpj) && (
+                            <div className="pl-1 animate-in fade-in duration-300 selection:bg-none">
+                                {companyName && (
+                                    <p className="text-sm font-bold text-gray-900 truncate" title={companyName}>
+                                        {companyName}
+                                    </p>
+                                )}
+                                {companyCnpj && (
+                                    <p className="text-sm text-gray-400 mt-0.5">
+                                        {companyCnpj}
+                                    </p>
+                                )}
+                            </div>
+                        )}
                     </div>
 
-                    <div className="space-y-1">
+                    <div className="h-[1px] bg-gray-100 w-full mb-6" />
+
+                    <div className="space-y-1.5">
                         {routes.map((route) => (
                             <Tooltip key={route.href}>
                                 <TooltipTrigger asChild>
                                     <Link
                                         href={route.href}
                                         className={cn(
-                                            "text-sm group flex p-3 w-full justify-start font-medium cursor-pointer rounded-xl transition-all duration-200",
+                                            "text-sm group flex p-3.5 w-full justify-start font-medium cursor-pointer rounded-2xl transition-all duration-200 ease-in-out",
                                             pathname === route.href
                                                 ? "text-blue-600 bg-blue-50 font-semibold"
                                                 : "text-gray-500 hover:text-gray-900 hover:bg-gray-50",
@@ -103,9 +122,9 @@ export function Sidebar({ isCollapsed, toggleCollapse }: SidebarProps) {
                                         )}
                                     >
                                         <div className="flex items-center flex-1">
-                                            <route.icon className={cn("h-5 w-5",
+                                            <route.icon className={cn("h-[22px] w-[22px]",
                                                 pathname === route.href ? "text-blue-600" : "text-gray-400 group-hover:text-gray-500",
-                                                !isCollapsed && "mr-3"
+                                                !isCollapsed && "mr-3.5"
                                             )} />
                                             {!isCollapsed && route.label}
                                         </div>
@@ -121,13 +140,13 @@ export function Sidebar({ isCollapsed, toggleCollapse }: SidebarProps) {
                     </div>
                 </div>
 
-                <div className="px-3 py-2 mb-4 space-y-1">
+                <div className="px-4 py-2 mb-4 space-y-1.5">
                     <Tooltip>
                         <TooltipTrigger asChild>
                             <Link
                                 href="/dashboard/configuracoes"
                                 className={cn(
-                                    "text-sm group flex p-3 w-full justify-start font-medium cursor-pointer rounded-xl transition-all duration-200",
+                                    "text-sm group flex p-3.5 w-full justify-start font-medium cursor-pointer rounded-2xl transition-all duration-200",
                                     pathname === "/dashboard/configuracoes"
                                         ? "text-blue-600 bg-blue-50 font-semibold"
                                         : "text-gray-500 hover:text-gray-900 hover:bg-gray-50",

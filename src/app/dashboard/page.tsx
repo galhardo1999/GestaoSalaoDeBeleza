@@ -2,9 +2,8 @@ import { db } from "@/lib/db"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Calendar, Users, DollarSign } from "lucide-react"
 import { UpcomingAppointments } from "@/components/dashboard/upcoming-appointments"
-import { TopServices } from "@/components/dashboard/top-services"
-import { TopCollaborators } from "@/components/dashboard/top-collaborators"
 import { DashboardDateFilter } from "@/components/dashboard/dashboard-date-filter"
+import { DashboardCalendar } from "@/components/dashboard/dashboard-calendar"
 import { startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from "date-fns"
 
 interface DashboardDataParams {
@@ -54,95 +53,32 @@ async function getDashboardData({ period }: DashboardDataParams) {
         return acc + Number(curr.servico.preco)
     }, 0)
 
-    // Upcoming Appointments (always from NOW onwards, active)
+    // Agenda de Hoje (Today's appointments)
+    const todayStart = startOfDay(new Date())
+    const todayEnd = endOfDay(new Date())
+
     const upcomingAppointments = await db.agendamento.findMany({
         where: {
             data: {
-                gte: new Date(),
-            },
-            status: 'AGENDADO'
+                gte: todayStart,
+                lte: todayEnd
+            }
         },
         orderBy: {
             data: 'asc'
         },
-        take: 5,
         include: {
             cliente: { select: { nome: true } },
-            servico: { select: { nome: true } }
+            servico: { select: { nome: true } },
+            colaborador: { select: { nome: true } }
         }
     })
-
-    // Top Services (Filtered by period)
-    const topServicesGrouped = await db.agendamento.groupBy({
-        by: ['servicoId'],
-        _count: {
-            servicoId: true
-        },
-        where: {
-            data: {
-                gte: startDate,
-                lte: endDate,
-            },
-            status: 'CONCLUIDO' // Only count completed for "Top Services" usually? Or all? Let's use all for now as per previous logic, but maybe better to filter by period.
-        },
-        orderBy: {
-            _count: {
-                servicoId: 'desc'
-            }
-        },
-        take: 5
-    })
-
-    const topServices = await Promise.all(topServicesGrouped.map(async (item) => {
-        const service = await db.servico.findUnique({
-            where: { id: item.servicoId }
-        })
-        return {
-            serviceName: service?.nome || 'Desconhecido',
-            count: item._count.servicoId
-        }
-    }))
-
-    // Top Collaborators (Filtered by period)
-    const topCollaboratorsGrouped = await db.agendamento.groupBy({
-        by: ['colaboradorId'],
-        _count: {
-            colaboradorId: true
-        },
-        where: {
-            data: {
-                gte: startDate,
-                lte: endDate,
-            },
-            colaboradorId: { not: null },
-            status: 'CONCLUIDO'
-        },
-        orderBy: {
-            _count: {
-                colaboradorId: 'desc'
-            }
-        },
-        take: 5
-    })
-
-    const topCollaborators = await Promise.all(topCollaboratorsGrouped.map(async (item) => {
-        if (!item.colaboradorId) return null
-        const colab = await db.colaborador.findUnique({
-            where: { id: item.colaboradorId }
-        })
-        return {
-            name: colab?.nome || 'Desconhecido',
-            count: item._count.colaboradorId
-        }
-    }))
 
     return {
         appointmentsCount,
         totalClients,
         projectedRevenue,
         upcomingAppointments,
-        topServices,
-        topCollaborators: topCollaborators.filter(c => c !== null) as { name: string, count: number }[]
     }
 }
 
@@ -158,8 +94,6 @@ export default async function DashboardPage({
         totalClients,
         projectedRevenue,
         upcomingAppointments,
-        topServices,
-        topCollaborators
     } = await getDashboardData({ period })
 
     const periodLabels = {
@@ -224,8 +158,7 @@ export default async function DashboardPage({
                     <UpcomingAppointments appointments={upcomingAppointments} />
                 </div>
                 <div className="space-y-4">
-                    <TopServices services={topServices} />
-                    <TopCollaborators collaborators={topCollaborators} />
+                    <DashboardCalendar />
                 </div>
             </div>
         </div>

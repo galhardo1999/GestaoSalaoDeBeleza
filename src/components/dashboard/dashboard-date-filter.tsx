@@ -31,6 +31,23 @@ export function DashboardDateFilter() {
         month: "Mês",
     }
 
+    const [mounted, setMounted] = React.useState(false)
+
+    React.useEffect(() => {
+        setMounted(true)
+    }, [])
+
+    if (!mounted) {
+        return (
+            <Button variant="outline" size="sm" className="h-8 gap-1">
+                <CalendarIcon className="h-3.5 w-3.5" />
+                <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
+                    {labels[currentPeriod as keyof typeof labels] || "Hoje"}
+                </span>
+            </Button>
+        )
+    }
+
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>

@@ -2,6 +2,9 @@ import { db } from "@/lib/db"
 import { NovoAgendamentoDialog } from "@/components/forms/agendamentos/novo-agendamento-dialog"
 import { BotaoCancelarAgendamento } from "@/components/forms/agendamentos/botao-cancelar-agendamento"
 import { ReagendarDialog } from "@/components/forms/agendamentos/reagendar-dialog"
+import { WhatsAppButton } from "@/components/dashboard/whatsapp-button"
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth"
 import {
     Table,
     TableBody,
@@ -21,6 +24,7 @@ export default async function AgendamentosPage({
 }: {
     searchParams: Promise<{ page?: string; q?: string }>
 }) {
+    const session = await getServerSession(authOptions)
     const params = await searchParams
     const currentPage = Number(params.page) || 1
     const query = params.q || ''
@@ -34,7 +38,7 @@ export default async function AgendamentosPage({
         ]
     } : {}
 
-    const [totalItems, agendamentos] = await Promise.all([
+    const [totalItems, agendamentos, user] = await Promise.all([
         db.agendamento.count({ where }),
         db.agendamento.findMany({
             where,
@@ -47,7 +51,11 @@ export default async function AgendamentosPage({
             },
             skip,
             take: itemsPerPage,
-        })
+        }),
+        session?.user?.id ? db.usuario.findUnique({
+            where: { id: session.user.id },
+            include: { empresa: true }
+        }) : null
     ])
 
     const totalPages = Math.ceil(totalItems / itemsPerPage)
@@ -70,6 +78,8 @@ export default async function AgendamentosPage({
         ...s,
         preco: Number(s.preco)
     }))
+
+    const whatsappTemplate = user?.empresa?.mensagemWhatsapp
 
     return (
         <div className="p-8 space-y-8">
@@ -119,12 +129,21 @@ export default async function AgendamentosPage({
                                     <TableCell>R$ {Number(agendamento.servico.preco).toFixed(2)}</TableCell>
                                     <TableCell>{agendamento.status}</TableCell>
                                     <TableCell>
-                                        {agendamento.status === 'AGENDADO' && (
-                                            <div className="flex items-center gap-2">
-                                                <ReagendarDialog id={agendamento.id} currentDate={agendamento.data} />
-                                                <BotaoCancelarAgendamento id={agendamento.id} />
-                                            </div>
-                                        )}
+                                        <div className="flex items-center gap-2">
+                                            <WhatsAppButton
+                                                phone={agendamento.cliente.telefone}
+                                                clientName={agendamento.cliente.nome}
+                                                date={agendamento.data}
+                                                serviceName={agendamento.servico.nome}
+                                                messageTemplate={whatsappTemplate}
+                                            />
+                                            {agendamento.status === 'AGENDADO' && (
+                                                <>
+                                                    <ReagendarDialog id={agendamento.id} currentDate={agendamento.data} />
+                                                    <BotaoCancelarAgendamento id={agendamento.id} />
+                                                </>
+                                            )}
+                                        </div>
                                     </TableCell>
                                 </TableRow>
                             ))

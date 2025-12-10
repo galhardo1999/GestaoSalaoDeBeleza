@@ -4,7 +4,6 @@ datasource db {
 
 generator client {
   provider = "prisma-client-js"
-  previewFeatures = ["driverAdapters"]
 }
 
 enum Cargo {
@@ -29,6 +28,9 @@ model Usuario {
   atualizadoEm DateTime @updatedAt @map("atualizado_em")
 
   agendamentos Agendamento[] // Agendamentos gerenciados/criados por este usuário
+
+  empresaId String?
+  empresa   Empresa? @relation(fields: [empresaId], references: [id])
 
   @@map("usuarios")
 }
@@ -101,4 +103,20 @@ model Agendamento {
 
   @@index([data])
   @@map("agendamentos")
+}
+
+model Empresa {
+  id        String   @id @default(cuid())
+  nome      String
+  cnpj      String   @unique
+  telefone1 String?
+  telefone2 String?
+  endereco  String?
+  logo      String?
+  criadoEm  DateTime @default(now()) @map("criado_em")
+  atualizadoEm DateTime @updatedAt @map("atualizado_em")
+
+  usuarios Usuario[]
+
+  @@map("empresas")
 }

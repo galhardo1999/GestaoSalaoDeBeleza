@@ -4,7 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { ChevronLeft, ChevronRight, LayoutDashboard, Calendar, Users, Scissors, LogOut, ListTodo, Settings, Sparkles } from "lucide-react"
+import { ChevronLeft, ChevronRight, LayoutDashboard, Calendar, Users, Scissors, LogOut, ListTodo, Settings, Sparkles, UserCog } from "lucide-react"
 import { signOut } from "next-auth/react"
 import {
     Tooltip,
@@ -36,7 +36,7 @@ const routes = [
     },
     {
         label: "Colaboradores",
-        icon: Users,
+        icon: UserCog,
         href: "/dashboard/colaboradores",
     },
     {

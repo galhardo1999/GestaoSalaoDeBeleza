@@ -1,8 +1,30 @@
-export default function ConfiguracoesPage() {
+import { ConfiguracoesForm } from "@/components/forms/configuracoes-form"
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth"
+import { getCompanySettings } from "@/actions/configuracoes"
+import { redirect } from "next/navigation"
+
+export default async function ConfiguracoesPage() {
+    const session = await getServerSession(authOptions)
+
+    if (!session || !session.user) {
+        redirect("/login")
+    }
+
+    const { data: company, userEmail } = await getCompanySettings(session.user.id)
+
     return (
         <div className="p-8">
-            <h2 className="text-2xl font-bold mb-4">Configurações</h2>
-            <p className="text-gray-500">Página de configurações em construção.</p>
+            <h2 className="text-2xl font-bold mb-1">Configurações</h2>
+            <p className="text-gray-500 mb-8">Gerencie suas informações e preferências</p>
+
+            <div className="bg-white rounded-xl border p-6">
+                <ConfiguracoesForm
+                    initialData={company}
+                    userId={session.user.id}
+                    userEmail={userEmail}
+                />
+            </div>
         </div>
     )
 }

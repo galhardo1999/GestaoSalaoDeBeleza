@@ -14,6 +14,7 @@ const initialState = {
     errors: {} as {
         nome?: string[]
         email?: string[]
+        cpf?: string[]
         telefone?: string[]
         _form?: string[]
     }
@@ -53,6 +54,14 @@ export function FormNovoCliente({ onSuccess }: { onSuccess?: () => void }) {
                 <Input name="telefone" id="telefone" required placeholder="(11) 99999-9999" />
                 {state.errors?.telefone && (
                     <p className="text-sm text-red-500 font-medium">{state.errors.telefone}</p>
+                )}
+            </div>
+
+            <div className="space-y-2">
+                <Label htmlFor="cpf">CPF</Label>
+                <Input name="cpf" id="cpf" placeholder="000.000.000-00" />
+                {state.errors?.cpf && (
+                    <p className="text-sm text-red-500 font-medium">{state.errors.cpf}</p>
                 )}
             </div>
 

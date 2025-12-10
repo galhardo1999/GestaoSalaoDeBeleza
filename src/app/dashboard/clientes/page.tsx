@@ -36,7 +36,7 @@ export default async function ClientesPage() {
                         <TableRow>
                             <TableHead className="w-[80px]">Código</TableHead>
                             <TableHead>Nome</TableHead>
-                            <TableHead>Email</TableHead>
+                            <TableHead>CPF</TableHead>
                             <TableHead>Telefone</TableHead>
                             <TableHead>Agendamentos</TableHead>
                             <TableHead className="w-[100px]">Ações</TableHead>
@@ -56,7 +56,7 @@ export default async function ClientesPage() {
                                         #{cliente.codigo}
                                     </TableCell>
                                     <TableCell className="font-medium">{cliente.nome}</TableCell>
-                                    <TableCell>{cliente.email || '-'}</TableCell>
+                                    <TableCell>{cliente.cpf || '-'}</TableCell>
                                     <TableCell>{cliente.telefone}</TableCell>
                                     <TableCell>{cliente._count.agendamentos}</TableCell>
                                     <TableCell>

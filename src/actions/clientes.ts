@@ -9,6 +9,7 @@ type ActionState = {
     errors?: {
         nome?: string[]
         email?: string[]
+        cpf?: string[]
         telefone?: string[]
         _form?: string[]
     }
@@ -22,6 +23,7 @@ export async function criarCliente(
     const validatedFields = clienteSchema.safeParse({
         nome: formData.get('nome'),
         email: formData.get('email'),
+        cpf: formData.get('cpf'),
         telefone: formData.get('telefone'),
         observacoes: formData.get('observacoes'),
     })
@@ -32,13 +34,14 @@ export async function criarCliente(
         }
     }
 
-    const { nome, email, telefone, observacoes } = validatedFields.data
+    const { nome, email, cpf, telefone, observacoes } = validatedFields.data
 
     try {
         await db.cliente.create({
             data: {
                 nome,
                 email: email || null,
+                cpf: cpf || null,
                 telefone,
                 observacoes,
             },

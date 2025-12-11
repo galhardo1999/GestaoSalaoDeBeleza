@@ -1,10 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { getMonthlyAppointmentCounts } from "@/app/actions/dashboard"
 
 const DAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"]
 const MONTHS = [
@@ -12,29 +13,28 @@ const MONTHS = [
     "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
 ]
 
-// Sample events for demo (keeping this as placeholder for now as requested)
-const eventsData: Record<string, number> = {
-    "2024-12-10": 4,
-    "2024-12-11": 6,
-    "2024-12-12": 3,
-    "2024-12-13": 8,
-    "2024-12-14": 5,
-    "2024-12-16": 7,
-    "2024-12-17": 2,
-    "2024-12-18": 4,
-    "2024-12-19": 6,
-    "2024-12-20": 3,
-}
-
 export function DashboardCalendar() {
     const [currentDate, setCurrentDate] = useState(new Date())
     const [selectedDate, setSelectedDate] = useState(new Date())
+    const [eventsData, setEventsData] = useState<Record<string, number>>({})
 
     const year = currentDate.getFullYear()
     const month = currentDate.getMonth()
 
     const firstDayOfMonth = new Date(year, month, 1).getDay()
     const daysInMonth = new Date(year, month + 1, 0).getDate()
+
+    useEffect(() => {
+        const fetchCounts = async () => {
+            try {
+                const counts = await getMonthlyAppointmentCounts(year, month)
+                setEventsData(counts)
+            } catch (error) {
+                console.error("Failed to fetch calendar counts:", error)
+            }
+        }
+        fetchCounts()
+    }, [year, month])
 
     const prevMonth = () => {
         setCurrentDate(new Date(year, month - 1, 1))

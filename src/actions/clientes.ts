@@ -61,13 +61,22 @@ export async function criarCliente(
 
 export async function excluirCliente(id: string) {
     try {
+        const agendamentosCount = await db.agendamento.count({
+            where: { clienteId: id }
+        })
+
+        if (agendamentosCount > 0) {
+            return { error: "Não é possível fazer a exclusão do cliente, pois tem lançamentos nele." }
+        }
+
         await db.cliente.delete({
             where: { id }
         })
         revalidatePath('/dashboard/clientes')
+        return { message: "Cliente excluído com sucesso." }
     } catch (error) {
         console.error("Failed to delete client:", error)
-        throw new Error("Failed to delete client")
+        return { error: "Erro ao excluir cliente." }
     }
 }
 

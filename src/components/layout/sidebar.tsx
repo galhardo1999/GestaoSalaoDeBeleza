@@ -122,7 +122,7 @@ export function Sidebar({ isCollapsed, toggleCollapse, companyName, companyCnpj 
                                         )}
                                     >
                                         <div className="flex items-center flex-1">
-                                            <route.icon className={cn("h-[22px] w-[22px]",
+                                            <route.icon className={cn("h-[22px] w-[22px] transition-transform duration-200 group-hover:scale-110",
                                                 pathname === route.href ? "text-blue-600" : "text-gray-400 group-hover:text-gray-500",
                                                 !isCollapsed && "mr-3.5"
                                             )} />
@@ -154,7 +154,7 @@ export function Sidebar({ isCollapsed, toggleCollapse, companyName, companyCnpj 
                                 )}
                             >
                                 <div className="flex items-center flex-1">
-                                    <Settings className={cn("h-5 w-5",
+                                    <Settings className={cn("h-5 w-5 transition-transform duration-200 group-hover:scale-110",
                                         pathname === "/dashboard/configuracoes" ? "text-blue-600" : "text-gray-400 group-hover:text-gray-500",
                                         !isCollapsed && "mr-3"
                                     )} />
@@ -177,11 +177,11 @@ export function Sidebar({ isCollapsed, toggleCollapse, companyName, companyCnpj 
                                 onClick={() => signOut()}
                                 variant="ghost"
                                 className={cn(
-                                    "w-full text-gray-500 hover:text-red-500 hover:bg-red-50 justify-start rounded-xl p-3 h-auto",
+                                    "w-full group text-gray-500 hover:text-red-500 hover:bg-red-50 justify-start rounded-xl p-3 h-auto",
                                     isCollapsed && "justify-center px-2"
                                 )}
                             >
-                                <LogOut className={cn("h-5 w-5", !isCollapsed && "mr-3")} />
+                                <LogOut className={cn("h-5 w-5 transition-transform duration-200 group-hover:scale-110", !isCollapsed && "mr-3")} />
                                 {!isCollapsed && "Sair"}
                             </Button>
                         </TooltipTrigger>

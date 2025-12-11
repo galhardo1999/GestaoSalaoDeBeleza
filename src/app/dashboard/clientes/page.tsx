@@ -24,7 +24,7 @@ export default async function ClientesPage({
     searchParams: Promise<{ page?: string; q?: string }>
 }) {
     const params = await searchParams
-    const currentPage = Number(params.page) || 1
+    const currentPage = Math.max(1, Number(params.page) || 1)
     const query = params.q || ''
     const itemsPerPage = 10
     const skip = (currentPage - 1) * itemsPerPage

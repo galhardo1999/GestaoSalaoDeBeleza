@@ -19,10 +19,14 @@ export async function criarColaborador(
     prevState: ActionState,
     formData: FormData
 ): Promise<ActionState> {
+    const servicosRaw = formData.getAll('servicos') as string[]
+
     const validatedFields = colaboradorSchema.safeParse({
         nome: formData.get('nome'),
         email: formData.get('email'),
         senha: formData.get('senha'),
+        foto: formData.get('foto'),
+        servicos: servicosRaw,
     })
 
     if (!validatedFields.success) {
@@ -31,7 +35,7 @@ export async function criarColaborador(
         }
     }
 
-    const { nome, email, senha } = validatedFields.data
+    const { nome, email, senha, foto, servicos } = validatedFields.data
 
     try {
         const existingUser = await db.colaborador.findUnique({
@@ -53,6 +57,10 @@ export async function criarColaborador(
                 nome,
                 email,
                 senha: hashedPassword,
+                foto: foto || null,
+                servicos: servicos && servicos.length > 0 ? {
+                    connect: servicos.map(id => ({ id }))
+                } : undefined
             },
         })
     } catch (error) {
@@ -84,12 +92,16 @@ export async function editarColaborador(
 ): Promise<ActionState> {
     const id = formData.get('id') as string
 
+    const servicosRaw = formData.getAll('servicos') as string[]
+
     // Explicitly handle empty password by removing it if it's empty string
     const rawData = {
         id,
         nome: formData.get('nome'),
         email: formData.get('email'),
         senha: formData.get('senha') || undefined,
+        foto: formData.get('foto'),
+        servicos: servicosRaw
     }
 
     // @ts-ignore - Validating with optional password
@@ -101,10 +113,17 @@ export async function editarColaborador(
         }
     }
 
-    const { nome, email, senha } = validatedFields.data
+    const { nome, email, senha, foto, servicos } = validatedFields.data
 
     try {
-        const dataToUpdate: any = { nome, email }
+        const dataToUpdate: any = {
+            nome,
+            email,
+            foto,
+            servicos: {
+                set: servicos ? servicos.map(id => ({ id })) : []
+            }
+        }
 
         if (senha) {
             dataToUpdate.senha = await hash(senha, 10)

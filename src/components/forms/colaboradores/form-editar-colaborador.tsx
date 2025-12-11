@@ -27,9 +27,21 @@ interface FormEditarColaboradorProps {
     onSuccess?: () => void
 }
 
-export function FormEditarColaborador({ collaborator, onSuccess }: any) {
+export function FormEditarColaborador({ collaborator, onSuccess, servicos = [] }: { collaborator: any, onSuccess?: () => void, servicos?: any[] }) {
     const [state, dispatch] = useActionState(editarColaborador, initialState)
     const [isSuccess, setIsSuccess] = useState(false)
+    const [fotoBase64, setFotoBase64] = useState(collaborator.foto || '')
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (file) {
+            const reader = new FileReader()
+            reader.onloadend = () => {
+                setFotoBase64(reader.result as string)
+            }
+            reader.readAsDataURL(file)
+        }
+    }
 
     useEffect(() => {
         if (state.message === 'Colaborador atualizado com sucesso!') {
@@ -39,6 +51,11 @@ export function FormEditarColaborador({ collaborator, onSuccess }: any) {
             }
         }
     }, [state.message, onSuccess])
+
+    // Helper to check if collaborator has a service
+    const hasService = (serviceId: string) => {
+        return collaborator.servicos?.some((s: any) => s.id === serviceId)
+    }
 
     return (
         <form action={dispatch} className="space-y-4">
@@ -58,6 +75,51 @@ export function FormEditarColaborador({ collaborator, onSuccess }: any) {
                 {state.errors?.email && (
                     <p className="text-sm text-red-500 font-medium">{state.errors.email}</p>
                 )}
+            </div>
+
+            <div className="space-y-2">
+                <Label htmlFor="foto">Foto</Label>
+                <div className="flex items-center gap-4">
+                    {fotoBase64 && (
+                        <img
+                            src={fotoBase64}
+                            alt="Current"
+                            className="h-10 w-10 rounded-full object-cover border"
+                        />
+                    )}
+                    <Input
+                        id="foto"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                        className="flex-1"
+                    />
+                </div>
+                <input type="hidden" name="foto" value={fotoBase64} />
+            </div>
+
+            <div className="space-y-2">
+                <Label>Serviços Realizados</Label>
+                <div className="border rounded-md p-3 space-y-2 max-h-40 overflow-y-auto">
+                    {servicos.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">Nenhum serviço disponível.</p>
+                    ) : (
+                        servicos.map(servico => (
+                            <div key={servico.id} className="flex items-center space-x-2">
+                                <input
+                                    type="checkbox"
+                                    name="servicos"
+                                    value={servico.id}
+                                    defaultChecked={hasService(servico.id)}
+                                    className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                />
+                                <Label className="font-normal text-sm cursor-pointer">
+                                    {servico.nome}
+                                </Label>
+                            </div>
+                        ))
+                    )}
+                </div>
             </div>
 
             <div className="space-y-2">

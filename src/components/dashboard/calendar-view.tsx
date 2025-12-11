@@ -79,7 +79,9 @@ export function CalendarView({ agendamentos, clientes, servicos, colaboradores }
     }
 
     const getAppointmentsForDate = (date: Date) => {
-        return agendamentos.filter((apt) => isSameDay(new Date(apt.data), date))
+        return agendamentos
+            .filter((apt) => isSameDay(new Date(apt.data), date) && apt.status !== 'CANCELADO')
+            .sort((a, b) => new Date(a.data).getTime() - new Date(b.data).getTime())
     }
 
     // Month view calendar days
@@ -98,7 +100,7 @@ export function CalendarView({ agendamentos, clientes, servicos, colaboradores }
     // For now, consistent color or random based on ID char
     const getAppointmentColor = (status: string) => {
         switch (status) {
-            case 'AGENDADO': return 'bg-amber-500'
+            case 'AGENDADO': return 'bg-emerald-500'
             case 'CONCLUIDO': return 'bg-teal-500'
             case 'CANCELADO': return 'bg-red-500'
             default: return 'bg-slate-500'

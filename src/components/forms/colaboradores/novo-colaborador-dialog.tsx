@@ -13,7 +13,7 @@ import { FormNovoColaborador } from "./form-novo-colaborador"
 import { Plus } from "lucide-react"
 import { useState } from "react"
 
-export function NovoColaboradorDialog() {
+export function NovoColaboradorDialog({ servicos }: { servicos: any[] }) {
     const [open, setOpen] = useState(false)
 
     return (
@@ -23,14 +23,14 @@ export function NovoColaboradorDialog() {
                     <Plus className="mr-2 h-4 w-4" /> Novo Colaborador
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>Novo Colaborador</DialogTitle>
                     <DialogDescription>
                         Preencha os dados para cadastrar um novo colaborador.
                     </DialogDescription>
                 </DialogHeader>
-                <FormNovoColaborador onSuccess={() => setOpen(false)} />
+                <FormNovoColaborador onSuccess={() => setOpen(false)} servicos={servicos} />
             </DialogContent>
         </Dialog>
     )

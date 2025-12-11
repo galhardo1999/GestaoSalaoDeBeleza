@@ -72,6 +72,7 @@ export function FormNovoAgendamento({ clientes, servicos, colaboradores }: FormN
             </div>
 
             {/* Service Selection */}
+            {/* Service Selection */}
             <div className="space-y-2">
                 <Label htmlFor="servicoId">Serviço</Label>
                 <Select name="servicoId" defaultValue="">

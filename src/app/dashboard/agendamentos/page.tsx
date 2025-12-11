@@ -45,6 +45,7 @@ export default async function AgendamentosPage({
             include: {
                 cliente: true,
                 servico: true,
+                colaborador: true,
             },
             orderBy: {
                 data: 'desc',
@@ -103,6 +104,7 @@ export default async function AgendamentosPage({
                             <TableHead>Hora</TableHead>
                             <TableHead>Cliente</TableHead>
                             <TableHead>Serviço</TableHead>
+                            <TableHead>Colaborador</TableHead>
                             <TableHead>Preço</TableHead>
                             <TableHead>Status</TableHead>
                             <TableHead>Ações</TableHead>
@@ -111,7 +113,7 @@ export default async function AgendamentosPage({
                     <TableBody>
                         {agendamentos.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={7} className="h-24 text-center">
+                                <TableCell colSpan={8} className="h-24 text-center">
                                     Nenhum agendamento encontrado.
                                 </TableCell>
                             </TableRow>
@@ -126,6 +128,7 @@ export default async function AgendamentosPage({
                                     </TableCell>
                                     <TableCell>{agendamento.cliente.nome}</TableCell>
                                     <TableCell>{agendamento.servico.nome}</TableCell>
+                                    <TableCell>{agendamento.colaborador?.nome || '-'}</TableCell>
                                     <TableCell>R$ {Number(agendamento.servico.preco).toFixed(2)}</TableCell>
                                     <TableCell>{agendamento.status}</TableCell>
                                     <TableCell>

@@ -16,7 +16,12 @@ export function BotaoExcluirCliente({ id }: { id: string }) {
             disabled={isPending}
             onClick={() => {
                 if (confirm('Tem certeza que deseja excluir este cliente?')) {
-                    startTransition(() => excluirCliente(id))
+                    startTransition(async () => {
+                        const result = await excluirCliente(id)
+                        if (result?.error) {
+                            alert(result.error)
+                        }
+                    })
                 }
             }}
         >

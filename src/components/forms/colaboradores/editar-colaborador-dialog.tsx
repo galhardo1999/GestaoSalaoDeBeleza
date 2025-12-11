@@ -18,10 +18,13 @@ interface EditarColaboradorDialogProps {
         id: string
         nome: string
         email: string
+        foto?: string | null
+        servicos?: any[]
     }
+    servicos?: any[]
 }
 
-export function EditarColaboradorDialog({ colaborador }: EditarColaboradorDialogProps) {
+export function EditarColaboradorDialog({ colaborador, servicos }: EditarColaboradorDialogProps) {
     const [open, setOpen] = useState(false)
 
     return (
@@ -31,14 +34,14 @@ export function EditarColaboradorDialog({ colaborador }: EditarColaboradorDialog
                     <Pencil className="h-4 w-4" />
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>Editar Colaborador</DialogTitle>
                     <DialogDescription>
                         Faça alterações nos dados do colaborador abaixo.
                     </DialogDescription>
                 </DialogHeader>
-                <FormEditarColaborador collaborator={colaborador} onSuccess={() => setOpen(false)} />
+                <FormEditarColaborador collaborator={colaborador} servicos={servicos} onSuccess={() => setOpen(false)} />
             </DialogContent>
         </Dialog>
     )

@@ -17,6 +17,8 @@ import { SearchInput } from "@/components/ui/search-input"
 import { PaginationControl } from "@/components/ui/pagination-control"
 import { EditarClienteDialog } from "@/components/forms/clientes/editar-cliente-dialog"
 import { Prisma } from "@prisma/client"
+import { format } from "date-fns"
+import { ptBR } from "date-fns/locale"
 
 export default async function ClientesPage({
     searchParams,
@@ -45,6 +47,11 @@ export default async function ClientesPage({
             include: {
                 _count: {
                     select: { agendamentos: true }
+                },
+                agendamentos: {
+                    take: 1,
+                    orderBy: { data: 'desc' },
+                    select: { data: true }
                 }
             },
             skip,
@@ -72,33 +79,40 @@ export default async function ClientesPage({
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead className="w-[80px]">Código</TableHead>
-                            <TableHead>Nome</TableHead>
-                            <TableHead>CPF</TableHead>
-                            <TableHead>Telefone</TableHead>
-                            <TableHead>Agendamentos</TableHead>
-                            <TableHead className="w-[100px]">Ações</TableHead>
+                            <TableHead className="w-[80px] text-center">Código</TableHead>
+                            <TableHead className="text-center">Nome</TableHead>
+                            <TableHead className="text-center">CPF</TableHead>
+                            <TableHead className="text-center">Telefone</TableHead>
+                            <TableHead className="text-center">Agendamentos</TableHead>
+                            <TableHead className="text-center">Último Agendamento</TableHead>
+                            <TableHead className="w-[100px] text-center">Ações</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {clientes.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={6} className="h-24 text-center">
+                                <TableCell colSpan={7} className="h-24 text-center">
                                     Nenhum cliente cadastrado.
                                 </TableCell>
                             </TableRow>
                         ) : (
                             clientes.map((cliente) => (
                                 <TableRow key={cliente.id}>
-                                    <TableCell className="font-medium text-muted-foreground">
+                                    <TableCell className="font-medium text-muted-foreground text-center">
                                         #{cliente.codigo}
                                     </TableCell>
-                                    <TableCell className="font-medium">{cliente.nome}</TableCell>
-                                    <TableCell>{cliente.cpf || '-'}</TableCell>
-                                    <TableCell>{cliente.telefone}</TableCell>
-                                    <TableCell>{cliente._count.agendamentos}</TableCell>
-                                    <TableCell>
-                                        <div className="flex items-center gap-2">
+                                    <TableCell className="font-medium text-center">{cliente.nome}</TableCell>
+                                    <TableCell className="text-center">{cliente.cpf || '-'}</TableCell>
+                                    <TableCell className="text-center">{cliente.telefone}</TableCell>
+                                    <TableCell className="text-center">{cliente._count.agendamentos}</TableCell>
+                                    <TableCell className="text-center">
+                                        {cliente.agendamentos[0]
+                                            ? format(cliente.agendamentos[0].data, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })
+                                            : '-'
+                                        }
+                                    </TableCell>
+                                    <TableCell className="text-center">
+                                        <div className="flex items-center justify-center gap-2">
                                             <DetalhesClienteDialog clienteId={cliente.id}>
                                                 <Button variant="ghost" size="icon" title="Ver Detalhes">
                                                     <Eye className="h-4 w-4" />

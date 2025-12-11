@@ -112,7 +112,7 @@ export function CalendarView({ agendamentos, clientes, servicos, colaboradores }
             {/* Header */}
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h1 className="text-2xl font-semibold text-gray-900 font-serif">Calendário</h1>
+                    <h1 className="text-2xl font-semibold text-gray-900">Calendário</h1>
                     <p className="text-sm text-muted-foreground">Gerencie sua agenda de atendimentos</p>
                 </div>
                 <NovoAgendamentoDialog clientes={clientes} servicos={servicos} colaboradores={colaboradores} />
@@ -130,7 +130,7 @@ export function CalendarView({ agendamentos, clientes, servicos, colaboradores }
                             <Button variant="outline" size="icon" className="rounded-lg" onClick={navigateNext}>
                                 <ChevronRight className="h-4 w-4" />
                             </Button>
-                            <CardTitle className="ml-2 text-xl capitalize font-serif font-medium">
+                            <CardTitle className="ml-2 text-xl capitalize font-medium">
                                 {viewMode === "month"
                                     ? format(currentDate, "MMMM yyyy", { locale: ptBR })
                                     : `${format(weekStart, "dd MMM", { locale: ptBR })} - ${format(weekEnd, "dd MMM yyyy", { locale: ptBR })}`}
@@ -305,7 +305,7 @@ export function CalendarView({ agendamentos, clientes, servicos, colaboradores }
             {/* Selected Date Details */}
             <Card className="shadow-sm border-border">
                 <CardHeader>
-                    <CardTitle className="text-lg font-medium font-serif">
+                    <CardTitle className="text-lg font-medium">
                         Agendamentos - {format(selectedDate, "dd 'de' MMMM", { locale: ptBR })}
                     </CardTitle>
                 </CardHeader>

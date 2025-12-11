@@ -59,12 +59,11 @@ export function ReagendarDialog({ id, currentDate }: ReagendarDialogProps) {
             <DialogTrigger asChild>
                 <Button
                     variant="ghost"
-                    size="sm"
-                    className="text-blue-500 hover:text-blue-700 hover:bg-blue-50"
+                    size="icon"
+                    className="h-8 w-8 text-blue-500 hover:text-blue-700 hover:bg-blue-50"
                     title="Reagendar"
                 >
-                    <CalendarClock className="h-4 w-4 mr-2" />
-                    Reagendar
+                    <CalendarClock className="h-4 w-4" />
                 </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">

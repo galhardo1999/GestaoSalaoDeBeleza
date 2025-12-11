@@ -83,11 +83,11 @@ export default async function ColaboradoresPage({
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead className="w-[80px]">Código</TableHead>
-                            <TableHead>Nome</TableHead>
-                            <TableHead>Email</TableHead>
-                            <TableHead>Serviços</TableHead>
-                            <TableHead className="w-[100px]">Ações</TableHead>
+                            <TableHead className="w-[80px] text-center">Código</TableHead>
+                            <TableHead className="text-center">Nome</TableHead>
+                            <TableHead className="text-center">Email</TableHead>
+                            <TableHead className="text-center">Serviços</TableHead>
+                            <TableHead className="w-[100px] text-center">Ações</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -100,22 +100,24 @@ export default async function ColaboradoresPage({
                         ) : (
                             formattedColaboradores.map((colaborador) => (
                                 <TableRow key={colaborador.id}>
-                                    <TableCell className="font-medium text-muted-foreground">
+                                    <TableCell className="font-medium text-muted-foreground text-center">
                                         #{colaborador.codigo}
                                     </TableCell>
-                                    <TableCell className="flex items-center gap-2">
-                                        {colaborador.foto ? (
-                                            <img src={colaborador.foto} alt={colaborador.nome} className="h-8 w-8 rounded-full object-cover" />
-                                        ) : (
-                                            <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-500">
-                                                {colaborador.nome.substring(0, 2).toUpperCase()}
-                                            </div>
-                                        )}
-                                        <span className="font-medium">{colaborador.nome}</span>
+                                    <TableCell className="text-center">
+                                        <div className="flex items-center justify-center gap-2">
+                                            {colaborador.foto ? (
+                                                <img src={colaborador.foto} alt={colaborador.nome} className="h-8 w-8 rounded-full object-cover" />
+                                            ) : (
+                                                <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-500">
+                                                    {colaborador.nome.substring(0, 2).toUpperCase()}
+                                                </div>
+                                            )}
+                                            <span className="font-medium">{colaborador.nome}</span>
+                                        </div>
                                     </TableCell>
-                                    <TableCell>{colaborador.email}</TableCell>
-                                    <TableCell>
-                                        <div className="flex flex-wrap gap-1">
+                                    <TableCell className="text-center">{colaborador.email}</TableCell>
+                                    <TableCell className="text-center">
+                                        <div className="flex flex-wrap gap-1 justify-center">
                                             {colaborador.servicos && colaborador.servicos.length > 0 ? (
                                                 colaborador.servicos.map((s: any) => (
                                                     <span key={s.id} className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">
@@ -127,9 +129,11 @@ export default async function ColaboradoresPage({
                                             )}
                                         </div>
                                     </TableCell>
-                                    <TableCell className="flex items-center gap-2">
-                                        <EditarColaboradorDialog colaborador={colaborador} servicos={formattedServicos} />
-                                        <BotaoExcluirColaborador id={colaborador.id} />
+                                    <TableCell className="text-center">
+                                        <div className="flex items-center justify-center gap-2">
+                                            <EditarColaboradorDialog colaborador={colaborador} servicos={formattedServicos} />
+                                            <BotaoExcluirColaborador id={colaborador.id} />
+                                        </div>
                                     </TableCell>
                                 </TableRow>
                             ))

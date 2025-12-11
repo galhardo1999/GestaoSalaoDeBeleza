@@ -61,7 +61,7 @@ export async function criarColaborador(
                 servicos: servicos && servicos.length > 0 ? {
                     connect: servicos.map(id => ({ id }))
                 } : undefined
-            },
+            } as any,
         })
     } catch (error) {
         console.error('Erro ao criar colaborador:', error)

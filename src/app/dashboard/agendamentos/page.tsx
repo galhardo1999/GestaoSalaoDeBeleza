@@ -100,14 +100,14 @@ export default async function AgendamentosPage({
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>Data</TableHead>
-                            <TableHead>Hora</TableHead>
-                            <TableHead>Cliente</TableHead>
-                            <TableHead>Serviço</TableHead>
-                            <TableHead>Colaborador</TableHead>
-                            <TableHead>Preço</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead>Ações</TableHead>
+                            <TableHead className="text-center">Data</TableHead>
+                            <TableHead className="text-center">Hora</TableHead>
+                            <TableHead className="text-center">Cliente</TableHead>
+                            <TableHead className="text-center">Serviço</TableHead>
+                            <TableHead className="text-center">Colaborador</TableHead>
+                            <TableHead className="text-center">Preço</TableHead>
+                            <TableHead className="text-center">Status</TableHead>
+                            <TableHead className="text-center">Ações</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -120,19 +120,19 @@ export default async function AgendamentosPage({
                         ) : (
                             agendamentos.map((agendamento) => (
                                 <TableRow key={agendamento.id}>
-                                    <TableCell>
+                                    <TableCell className="text-center">
                                         {format(agendamento.data, "dd/MM/yyyy")}
                                     </TableCell>
-                                    <TableCell>
+                                    <TableCell className="text-center">
                                         {format(agendamento.data, "HH:mm")}
                                     </TableCell>
-                                    <TableCell>{agendamento.cliente.nome}</TableCell>
-                                    <TableCell>{agendamento.servico.nome}</TableCell>
-                                    <TableCell>{agendamento.colaborador?.nome || '-'}</TableCell>
-                                    <TableCell>R$ {Number(agendamento.servico.preco).toFixed(2)}</TableCell>
-                                    <TableCell>{agendamento.status}</TableCell>
-                                    <TableCell>
-                                        <div className="flex items-center gap-2">
+                                    <TableCell className="text-center">{agendamento.cliente.nome}</TableCell>
+                                    <TableCell className="text-center">{agendamento.servico.nome}</TableCell>
+                                    <TableCell className="text-center">{agendamento.colaborador?.nome || '-'}</TableCell>
+                                    <TableCell className="text-center">R$ {Number(agendamento.servico.preco).toFixed(2)}</TableCell>
+                                    <TableCell className="text-center">{agendamento.status}</TableCell>
+                                    <TableCell className="text-center">
+                                        <div className="flex items-center justify-center gap-2">
                                             <WhatsAppButton
                                                 phone={agendamento.cliente.telefone}
                                                 clientName={agendamento.cliente.nome}

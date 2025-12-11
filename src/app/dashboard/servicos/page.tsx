@@ -65,11 +65,11 @@ export default async function ServicosPage({
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>Nome</TableHead>
-                            <TableHead>Preço</TableHead>
-                            <TableHead>Duração</TableHead>
-                            <TableHead>Agendamentos</TableHead>
-                            <TableHead className="w-[100px]">Ações</TableHead>
+                            <TableHead className="text-center">Nome</TableHead>
+                            <TableHead className="text-center">Preço</TableHead>
+                            <TableHead className="text-center">Duração</TableHead>
+                            <TableHead className="text-center">Agendamentos</TableHead>
+                            <TableHead className="w-[100px] text-center">Ações</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -82,13 +82,13 @@ export default async function ServicosPage({
                         ) : (
                             servicos.map((servico) => (
                                 <TableRow key={servico.id}>
-                                    <TableCell className="font-medium">{servico.nome}</TableCell>
-                                    <TableCell>R$ {Number(servico.preco).toFixed(2)}</TableCell>
-                                    <TableCell>{servico.duracaoMin} min</TableCell>
-                                    <TableCell>{servico._count.agendamentos}</TableCell>
+                                    <TableCell className="font-medium text-center">{servico.nome}</TableCell>
+                                    <TableCell className="text-center">R$ {Number(servico.preco).toFixed(2)}</TableCell>
+                                    <TableCell className="text-center">{servico.duracaoMin} min</TableCell>
+                                    <TableCell className="text-center">{servico._count.agendamentos}</TableCell>
 
-                                    <TableCell>
-                                        <div className="flex items-center gap-2">
+                                    <TableCell className="text-center">
+                                        <div className="flex items-center justify-center gap-2">
                                             <EditarServicoDialog servico={{
                                                 ...servico,
                                                 preco: Number(servico.preco)

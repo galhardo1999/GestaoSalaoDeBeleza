@@ -11,8 +11,8 @@ export function BotaoCancelarAgendamento({ id }: { id: string }) {
     return (
         <Button
             variant="ghost"
-            size="sm"
-            className="text-red-500 hover:text-red-700 hover:bg-red-50"
+            size="icon"
+            className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
             disabled={isPending}
             title="Cancelar Agendamento"
             onClick={() => {
@@ -21,8 +21,7 @@ export function BotaoCancelarAgendamento({ id }: { id: string }) {
                 }
             }}
         >
-            <XCircle className="h-4 w-4 mr-2" />
-            Cancelar
+            <XCircle className="h-4 w-4" />
         </Button>
     )
 }

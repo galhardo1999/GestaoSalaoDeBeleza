@@ -22,17 +22,20 @@ interface EditarColaboradorDialogProps {
         servicos?: any[]
     }
     servicos?: any[]
+    children?: React.ReactNode
 }
 
-export function EditarColaboradorDialog({ colaborador, servicos }: EditarColaboradorDialogProps) {
+export function EditarColaboradorDialog({ colaborador, servicos, children }: EditarColaboradorDialogProps) {
     const [open, setOpen] = useState(false)
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button variant="ghost" size="icon" className="hover:bg-muted">
-                    <Pencil className="h-4 w-4" />
-                </Button>
+                {children ? children : (
+                    <Button variant="ghost" size="icon" className="hover:bg-muted">
+                        <Pencil className="h-4 w-4" />
+                    </Button>
+                )}
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>

@@ -13,6 +13,7 @@ enum Cargo {
 
 enum StatusAgendamento {
   AGENDADO
+  PENDENTE
   CONCLUIDO
   CANCELADO
   NAO_COMPARECEU

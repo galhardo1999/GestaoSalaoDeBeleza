@@ -1,42 +1,66 @@
 import { db } from "@/lib/db"
-import { NovoAgendamentoDialog } from "@/components/forms/agendamentos/novo-agendamento-dialog"
-import { BotaoCancelarAgendamento } from "@/components/forms/agendamentos/botao-cancelar-agendamento"
-import { ReagendarDialog } from "@/components/forms/agendamentos/reagendar-dialog"
-import { WhatsAppButton } from "@/components/dashboard/whatsapp-button"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table"
-import { format } from "date-fns"
-
 import { Prisma } from "@prisma/client"
-import { SearchInput } from "@/components/ui/search-input"
-import { PaginationControl } from "@/components/ui/pagination-control"
+import { AgendamentosClient } from "./agendamentos-client"
+import { expireAppointments } from "@/lib/agendamento-utils"
 
 export default async function AgendamentosPage({
     searchParams,
 }: {
-    searchParams: Promise<{ page?: string; q?: string }>
+    searchParams: Promise<{ page?: string; q?: string; status?: string; date?: string }>
 }) {
+    // Check for expired appointments on page load
+    await expireAppointments()
+
     const session = await getServerSession(authOptions)
     const params = await searchParams
     const currentPage = Number(params.page) || 1
     const query = params.q || ''
+    const status = params.status
+    // Default to today if no date provided, unless 'all' is specified
+    const today = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }))
+    const todayStr = today.toISOString().split('T')[0]
+
+    // Logic: 
+    // - If params.date exists and is not 'all', use it.
+    // - If params.date is 'all', use null (no filter).
+    // - If params.date is missing, use todayStr.
+    const dateStr = params.date === 'all' ? null : (params.date || todayStr)
+
+    // Construct start and end dates for Prisma query respecting Brazil time (UTC-3)
+    // Brazil 00:00 is UTC 03:00.
+    // So we search from ${dateStr}T03:00:00Z to +24h
+    let dateFilter: Prisma.DateTimeFilter | undefined = undefined
+
+    if (dateStr) {
+        const startOfDay = new Date(`${dateStr}T03:00:00Z`)
+        const endOfDay = new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000)
+
+        // Validation to ensure valid dates
+        if (!isNaN(startOfDay.getTime())) {
+            dateFilter = {
+                gte: startOfDay,
+                lt: endOfDay
+            }
+        }
+    }
+
     const itemsPerPage = 10
     const skip = (currentPage - 1) * itemsPerPage
 
-    const where: Prisma.AgendamentoWhereInput = query ? {
-        OR: [
-            { cliente: { nome: { contains: query, mode: Prisma.QueryMode.insensitive } } },
-            { servico: { nome: { contains: query, mode: Prisma.QueryMode.insensitive } } },
+    const where: Prisma.AgendamentoWhereInput = {
+        AND: [
+            query ? {
+                OR: [
+                    { cliente: { nome: { contains: query, mode: Prisma.QueryMode.insensitive } } },
+                    { servico: { nome: { contains: query, mode: Prisma.QueryMode.insensitive } } },
+                ]
+            } : {},
+            status && status !== 'todos' ? { status: status as any } : {},
+            dateFilter ? { data: dateFilter } : {}
         ]
-    } : {}
+    }
 
     const [totalItems, agendamentos, user] = await Promise.all([
         db.agendamento.count({ where }),
@@ -61,7 +85,6 @@ export default async function AgendamentosPage({
 
     const totalPages = Math.ceil(totalItems / itemsPerPage)
 
-    // We need to fetch data for the dialog again
     const clientes = await db.cliente.findMany({
         orderBy: { nome: 'asc' }
     })
@@ -76,90 +99,44 @@ export default async function AgendamentosPage({
     })
 
     const formattedServicos = servicos.map(s => ({
-        ...s,
-        preco: Number(s.preco)
+        id: s.id,
+        nome: s.nome,
+        preco: Number(s.preco),
+        duracaoMin: s.duracaoMin,
+        ativo: s.ativo,
+        criadoEm: s.criadoEm,
+        atualizadoEm: s.atualizadoEm
+    }))
+
+    const formattedAgendamentos = agendamentos.map(a => ({
+        ...a,
+        servico: {
+            id: a.servico.id,
+            nome: a.servico.nome,
+            preco: Number(a.servico.preco),
+            duracaoMin: a.servico.duracaoMin,
+            ativo: a.servico.ativo,
+            criadoEm: a.servico.criadoEm,
+            atualizadoEm: a.servico.atualizadoEm
+        }
     }))
 
     const whatsappTemplate = user?.empresa?.mensagemWhatsapp
 
     return (
-        <div className="p-8 space-y-8">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h2 className="text-3xl font-bold tracking-tight">Agendamentos</h2>
-                    <p className="text-muted-foreground">Gerencie a agenda do salão.</p>
-                </div>
-                <NovoAgendamentoDialog clientes={clientes} servicos={formattedServicos} colaboradores={colaboradores} />
-            </div>
-
-            <div className="flex items-center justify-between">
-                <SearchInput placeholder="Buscar agendamentos..." />
-            </div>
-
-            <div className="rounded-md border">
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead className="text-center">Data</TableHead>
-                            <TableHead className="text-center">Hora</TableHead>
-                            <TableHead className="text-center">Cliente</TableHead>
-                            <TableHead className="text-center">Serviço</TableHead>
-                            <TableHead className="text-center">Colaborador</TableHead>
-                            <TableHead className="text-center">Preço</TableHead>
-                            <TableHead className="text-center">Status</TableHead>
-                            <TableHead className="text-center">Ações</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {agendamentos.length === 0 ? (
-                            <TableRow>
-                                <TableCell colSpan={8} className="h-24 text-center">
-                                    Nenhum agendamento encontrado.
-                                </TableCell>
-                            </TableRow>
-                        ) : (
-                            agendamentos.map((agendamento) => (
-                                <TableRow key={agendamento.id}>
-                                    <TableCell className="text-center">
-                                        {format(agendamento.data, "dd/MM/yyyy")}
-                                    </TableCell>
-                                    <TableCell className="text-center">
-                                        {format(agendamento.data, "HH:mm")}
-                                    </TableCell>
-                                    <TableCell className="text-center">{agendamento.cliente.nome}</TableCell>
-                                    <TableCell className="text-center">{agendamento.servico.nome}</TableCell>
-                                    <TableCell className="text-center">{agendamento.colaborador?.nome || '-'}</TableCell>
-                                    <TableCell className="text-center">R$ {Number(agendamento.servico.preco).toFixed(2)}</TableCell>
-                                    <TableCell className="text-center">{agendamento.status}</TableCell>
-                                    <TableCell className="text-center">
-                                        <div className="flex items-center justify-center gap-2">
-                                            <WhatsAppButton
-                                                phone={agendamento.cliente.telefone}
-                                                clientName={agendamento.cliente.nome}
-                                                date={agendamento.data}
-                                                serviceName={agendamento.servico.nome}
-                                                messageTemplate={whatsappTemplate}
-                                            />
-                                            {agendamento.status === 'AGENDADO' && (
-                                                <>
-                                                    <ReagendarDialog id={agendamento.id} currentDate={agendamento.data} />
-                                                    <BotaoCancelarAgendamento id={agendamento.id} />
-                                                </>
-                                            )}
-                                        </div>
-                                    </TableCell>
-                                </TableRow>
-                            ))
-                        )}
-                    </TableBody>
-                </Table>
-            </div>
-
-            <PaginationControl
-                currentPage={currentPage}
-                totalPages={totalPages}
-                baseUrl="/dashboard/agendamentos"
-            />
-        </div>
+        <AgendamentosClient
+            agendamentos={formattedAgendamentos}
+            clientes={clientes}
+            servicos={formattedServicos}
+            colaboradores={colaboradores}
+            pagination={{
+                currentPage,
+                totalPages,
+                itemsPerPage,
+                totalItems
+            }}
+            whatsappTemplate={whatsappTemplate}
+            filteredDate={dateStr}
+        />
     )
 }

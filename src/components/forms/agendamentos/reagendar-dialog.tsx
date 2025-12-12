@@ -20,9 +20,10 @@ import { format } from "date-fns"
 interface ReagendarDialogProps {
     id: string
     currentDate: Date
+    children?: React.ReactNode
 }
 
-export function ReagendarDialog({ id, currentDate }: ReagendarDialogProps) {
+export function ReagendarDialog({ id, currentDate, children }: ReagendarDialogProps) {
     const [open, setOpen] = useState(false)
     const [date, setDate] = useState("")
     const [time, setTime] = useState("")
@@ -57,14 +58,16 @@ export function ReagendarDialog({ id, currentDate }: ReagendarDialogProps) {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-blue-500 hover:text-blue-700 hover:bg-blue-50"
-                    title="Reagendar"
-                >
-                    <CalendarClock className="h-4 w-4" />
-                </Button>
+                {children ? children : (
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-blue-500 hover:text-blue-700 hover:bg-blue-50"
+                        title="Reagendar"
+                    >
+                        <CalendarClock className="h-4 w-4" />
+                    </Button>
+                )}
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>

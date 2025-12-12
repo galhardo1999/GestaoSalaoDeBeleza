@@ -41,10 +41,10 @@ export async function criarAgendamento(
             data: {
                 clienteId,
                 servicoId,
-                data: new Date(data),
+                data: new Date(`${data}:00-03:00`),
                 colaboradorId: colaboradorId || null,
                 observacoes,
-                status: 'AGENDADO',
+                status: 'PENDENTE' as any,
             },
         })
     } catch (error) {
@@ -68,6 +68,21 @@ export async function cancelarAgendamento(id: string) {
     } catch (error) {
         console.error("Failed to cancel appointment:", error)
         throw new Error("Failed to cancel appointment")
+    }
+}
+
+
+
+export async function confirmarAgendamento(id: string) {
+    try {
+        await db.agendamento.update({
+            where: { id },
+            data: { status: 'AGENDADO' }
+        })
+        revalidatePath('/dashboard/agendamentos')
+    } catch (error) {
+        console.error("Failed to confirm appointment:", error)
+        throw new Error("Failed to confirm appointment")
     }
 }
 

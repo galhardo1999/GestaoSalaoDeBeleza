@@ -1,8 +1,8 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
+import { Button, ButtonProps } from "@/components/ui/button"
 
-interface WhatsAppButtonProps {
+interface WhatsAppButtonProps extends Omit<ButtonProps, "onClick"> {
     phone: string
     clientName: string
     date: Date
@@ -10,7 +10,7 @@ interface WhatsAppButtonProps {
     messageTemplate?: string | null
 }
 
-export function WhatsAppButton({ phone, clientName, date, serviceName, messageTemplate }: WhatsAppButtonProps) {
+export function WhatsAppButton({ phone, clientName, date, serviceName, messageTemplate, ...props }: WhatsAppButtonProps) {
     const handleSend = () => {
         if (!phone) {
             alert("Cliente sem telefone cadastrado.")
@@ -52,7 +52,7 @@ export function WhatsAppButton({ phone, clientName, date, serviceName, messageTe
     }
 
     return (
-        <Button variant="ghost" size="icon" onClick={handleSend} title="Enviar WhatsApp" className="h-8 w-8 hover:bg-green-50 hover:text-green-600">
+        <Button onClick={handleSend} title="Enviar WhatsApp" className="h-8 w-8 hover:bg-green-50 hover:text-green-600" {...props}>
             <svg
                 viewBox="0 0 24 24"
                 fill="currentColor"

@@ -13,15 +13,17 @@ import { FormNovoColaborador } from "./form-novo-colaborador"
 import { Plus } from "lucide-react"
 import { useState } from "react"
 
-export function NovoColaboradorDialog({ servicos }: { servicos: any[] }) {
+export function NovoColaboradorDialog({ servicos, children }: { servicos: any[], children?: React.ReactNode }) {
     const [open, setOpen] = useState(false)
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button>
-                    <Plus className="mr-2 h-4 w-4" /> Novo Colaborador
-                </Button>
+                {children ? children : (
+                    <Button>
+                        <Plus className="mr-2 h-4 w-4" /> Novo Colaborador
+                    </Button>
+                )}
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>

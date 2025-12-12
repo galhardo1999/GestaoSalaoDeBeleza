@@ -13,15 +13,17 @@ import { FormNovoCliente } from "./form-novo-cliente"
 import { Plus } from "lucide-react"
 import { useState } from "react"
 
-export function NovoClienteDialog() {
+export function NovoClienteDialog({ children }: { children?: React.ReactNode }) {
     const [open, setOpen] = useState(false)
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button>
-                    <Plus className="mr-2 h-4 w-4" /> Novo Cliente
-                </Button>
+                {children ? children : (
+                    <Button>
+                        <Plus className="mr-2 h-4 w-4" /> Novo Cliente
+                    </Button>
+                )}
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>

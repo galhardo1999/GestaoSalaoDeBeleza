@@ -1,4 +1,6 @@
 import { db } from "@/lib/db"
+
+export const dynamic = 'force-dynamic'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Calendar, Users, DollarSign } from "lucide-react"
 import { UpcomingAppointments } from "@/components/dashboard/upcoming-appointments"
@@ -11,23 +13,56 @@ interface DashboardDataParams {
 }
 
 async function getDashboardData({ period }: DashboardDataParams) {
-    const now = new Date()
-    let startDate = startOfDay(now)
-    let endDate = endOfDay(now)
+    // Force Brazil Timezone for "Today"
+    // In Brazil, today started at T03:00:00Z (which is 00:00 BRT) if we are talking about UTC representation of BRT day start?
+    // Actually simpler: Create a date string for Brazil, parse it.
 
-    if (period === 'week') {
-        startDate = startOfWeek(now, { weekStartsOn: 0 }) // Sunday start
-        endDate = endOfWeek(now, { weekStartsOn: 0 })
-    } else if (period === 'month') {
-        startDate = startOfMonth(now)
-        endDate = endOfMonth(now)
+    // helper to get Brazil Date object calculated correctly
+    const now = new Date()
+    const brazilNow = new Date(now.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }))
+
+    // For start/end of day, we want the ranges that correspond to Brazil's day.
+    // E.g. Today 00:00 BRT is Today 03:00 UTC. Today 23:59 BRT is Tomorrow 02:59 UTC.
+    // Let's use string manipulation to be safe and clear.
+
+    let startDate: Date
+    let endDate: Date
+
+    if (period === 'today') {
+        const todayStr = brazilNow.toISOString().split('T')[0]
+        startDate = new Date(`${todayStr}T03:00:00Z`)
+        endDate = new Date(startDate.getTime() + 24 * 60 * 60 * 1000)
+    } else if (period === 'week') {
+        const start = startOfWeek(brazilNow, { weekStartsOn: 0 })
+        const end = endOfWeek(brazilNow, { weekStartsOn: 0 })
+        // These are local time of the server (UTC) constructed from brazilNow values. 
+        // We need to shift them to match Prisma's UTC expectation for BRT.
+        // Actually, let's keep it simple. If we use the Date objects from date-fns on 'brazilNow', 
+        // they represent the correct "time values" but in UTC. 
+        // e.g. brazilNow is 16:00. startOfWeek(brazilNow) is Sunday 00:00. 
+        // But Sunday 00:00 in valid absolute time meant for Brazil is Sunday 03:00 UTC.
+        // If we just use startOfWeek(brazilNow), we get Sunday 00:00 UTC, which is Saturday 21:00 BRT.
+        // Good enough approximation? Maybe. But "Today" is critical.
+        // Let's stick to the precise "Today" logic for the 'today' period as it's the requested one. 
+        // For Week/Month, maybe acceptable to have slight offset or fix properly.
+        // Let's fix properly using offset.
+
+        // 3 hours in ms
+        const offset = 3 * 60 * 60 * 1000
+        startDate = new Date(startOfWeek(brazilNow, { weekStartsOn: 0 }).getTime() + offset)
+        endDate = new Date(endOfWeek(brazilNow, { weekStartsOn: 0 }).getTime() + offset)
+
+    } else { // month
+        const offset = 3 * 60 * 60 * 1000
+        startDate = new Date(startOfMonth(brazilNow).getTime() + offset)
+        endDate = new Date(endOfMonth(brazilNow).getTime() + offset)
     }
 
     const appointmentsCount = await db.agendamento.count({
         where: {
             data: {
                 gte: startDate,
-                lte: endDate,
+                lt: endDate, // Changed to lt for strict boundary
             },
         },
     })
@@ -38,7 +73,7 @@ async function getDashboardData({ period }: DashboardDataParams) {
         where: {
             data: {
                 gte: startDate,
-                lte: endDate,
+                lt: endDate,
             },
             status: {
                 in: ['AGENDADO', 'CONCLUIDO']
@@ -53,15 +88,17 @@ async function getDashboardData({ period }: DashboardDataParams) {
         return acc + Number(curr.servico.preco)
     }, 0)
 
-    // Agenda de Hoje (Today's appointments)
-    const todayStart = startOfDay(new Date())
-    const todayEnd = endOfDay(new Date())
+    // Agenda de Hoje (Today's appointments) - Always today regardless of period param?
+    // "Agenda de Hoje" implies Today.
+    const todayStr = brazilNow.toISOString().split('T')[0]
+    const todayStart = new Date(`${todayStr}T03:00:00Z`)
+    const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000)
 
     const upcomingAppointments = await db.agendamento.findMany({
         where: {
             data: {
                 gte: todayStart,
-                lte: todayEnd
+                lt: todayEnd
             }
         },
         orderBy: {

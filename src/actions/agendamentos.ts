@@ -55,6 +55,7 @@ export async function criarAgendamento(
     }
 
     revalidatePath('/dashboard/agendamentos')
+    revalidatePath('/dashboard')
     redirect('/dashboard/agendamentos')
 }
 
@@ -65,6 +66,7 @@ export async function cancelarAgendamento(id: string) {
             data: { status: 'CANCELADO' }
         })
         revalidatePath('/dashboard/agendamentos')
+        revalidatePath('/dashboard')
     } catch (error) {
         console.error("Failed to cancel appointment:", error)
         throw new Error("Failed to cancel appointment")
@@ -80,6 +82,7 @@ export async function confirmarAgendamento(id: string) {
             data: { status: 'AGENDADO' }
         })
         revalidatePath('/dashboard/agendamentos')
+        revalidatePath('/dashboard')
     } catch (error) {
         console.error("Failed to confirm appointment:", error)
         throw new Error("Failed to confirm appointment")
@@ -100,6 +103,7 @@ export async function reagendarAgendamento(
         })
         revalidatePath('/dashboard/agendamentos')
         revalidatePath('/dashboard/calendario')
+        revalidatePath('/dashboard')
         return { message: "Agendamento reagendado com sucesso!" }
     } catch (error) {
         console.error("Failed to reschedule:", error)

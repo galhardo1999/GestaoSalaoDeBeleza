@@ -62,7 +62,12 @@ export function UpcomingAppointments({ appointments }: UpcomingAppointmentsProps
                 <div>
                     <h2 className="text-2xl font-medium text-gray-900">Agenda de Hoje</h2>
                     <p className="text-gray-500 capitalize mt-1" suppressHydrationWarning>
-                        {format(today, "EEEE, d 'de' MMMM", { locale: ptBR })}
+                        {new Intl.DateTimeFormat('pt-BR', {
+                            weekday: 'long',
+                            day: 'numeric',
+                            month: 'long',
+                            timeZone: 'America/Sao_Paulo'
+                        }).format(new Date())}
                     </p>
                 </div>
                 <div className="h-10 w-10 rounded-xl bg-gray-100 flex items-center justify-center text-gray-500">
@@ -80,7 +85,11 @@ export function UpcomingAppointments({ appointments }: UpcomingAppointmentsProps
                         <div key={appointment.id} className="group relative flex items-center gap-4 rounded-2xl border bg-white p-4 transition-all hover:shadow-md">
                             {/* Time Column */}
                             <div className="text-lg font-bold text-gray-900 min-w-[60px] text-center">
-                                {format(appointment.data, "HH:mm")}
+                                {new Intl.DateTimeFormat('pt-BR', {
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                    timeZone: 'America/Sao_Paulo'
+                                }).format(appointment.data)}
                             </div>
 
                             {/* Vertical Separator */}

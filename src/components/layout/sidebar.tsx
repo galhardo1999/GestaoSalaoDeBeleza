@@ -98,7 +98,7 @@ export function Sidebar({ isCollapsed, toggleCollapse, companyName, companyCnpj 
                                 )}
                                 {companyCnpj && (
                                     <p className="text-sm text-gray-400 mt-0.5">
-                                        {companyCnpj}
+                                        {companyCnpj.replace(/\D/g, "").replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2}).*/, "$1.$2.$3/$4-$5")}
                                     </p>
                                 )}
                             </div>

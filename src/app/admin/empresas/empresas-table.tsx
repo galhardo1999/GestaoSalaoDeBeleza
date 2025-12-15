@@ -56,7 +56,7 @@ export function EmpresasTable({ data }: EmpresasTableProps) {
                                 onClick={() => router.push(`/admin/empresas/${empresa.id}`)}
                             >
                                 <TableCell className="font-medium">{empresa.nome}</TableCell>
-                                <TableCell>{empresa.cnpj}</TableCell>
+                                <TableCell>{empresa.cnpj.replace(/\D/g, "").replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2}).*/, "$1.$2.$3/$4-$5")}</TableCell>
                                 <TableCell className="text-center">{empresa._count.usuarios}</TableCell>
                                 <TableCell className="text-center">
                                     {format(empresa.criadoEm, "dd/MM/yyyy", { locale: ptBR })}

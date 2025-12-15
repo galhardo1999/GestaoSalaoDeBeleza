@@ -21,8 +21,8 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
 const formSchema = z.object({
-    cnpj: z.string().min(14, {
-        message: "CNPJ inválido.",
+    cnpj: z.string().min(11, {
+        message: "Documento inválido. Digite um CPF ou CNPJ.",
     }),
     password: z.string().min(1, {
         message: "A senha é obrigatória.",
@@ -83,19 +83,29 @@ export function LoginForm() {
                             name="cnpj"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>CNPJ</FormLabel>
+                                    <FormLabel>CPF/CNPJ</FormLabel>
                                     <FormControl>
                                         <Input
                                             placeholder="00.000.000/0000-00"
                                             {...field}
                                             onChange={(e) => {
-                                                const value = e.target.value
-                                                    .replace(/\D/g, "")
-                                                    .replace(/^(\d{2})(\d)/, "$1.$2")
-                                                    .replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3")
-                                                    .replace(/\.(\d{3})(\d)/, ".$1/$2")
-                                                    .replace(/(\d{4})(\d)/, "$1-$2")
-                                                    .slice(0, 18)
+                                                let value = e.target.value.replace(/\D/g, "")
+
+                                                if (value.length > 14) value = value.slice(0, 14)
+
+                                                if (value.length > 11) {
+                                                    // CNPJ Mask
+                                                    value = value.replace(/^(\d{2})(\d)/, "$1.$2")
+                                                    value = value.replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3")
+                                                    value = value.replace(/\.(\d{3})(\d)/, ".$1/$2")
+                                                    value = value.replace(/(\d{4})(\d)/, "$1-$2")
+                                                } else {
+                                                    // CPF Mask
+                                                    value = value.replace(/^(\d{3})(\d)/, "$1.$2")
+                                                    value = value.replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3")
+                                                    value = value.replace(/\.(\d{3})(\d)/, ".$1-$2")
+                                                }
+
                                                 field.onChange(value)
                                             }}
                                             maxLength={18}

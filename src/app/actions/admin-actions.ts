@@ -108,3 +108,30 @@ export async function updateEmpresa(formData: FormData) {
         return { error: "Erro ao atualizar empresa." }
     }
 }
+
+export async function consultarCNPJ(cnpj: string) {
+    try {
+        await checkSuperAdmin()
+
+        const cleanCNPJ = cnpj.replace(/\D/g, "")
+        if (cleanCNPJ.length !== 14) {
+            return { error: "CNPJ inválido." }
+        }
+
+        const response = await fetch(`https://open.cnpja.com/office/${cleanCNPJ}`)
+
+        if (!response.ok) {
+            if (response.status === 404) return { error: "CNPJ não encontrado." }
+            if (response.status === 429) return { error: "Muitas requisições. Tente novamente em instantes." }
+            return { error: "Erro ao consultar CNPJ." }
+        }
+
+        const data = await response.json()
+        return { data }
+
+    } catch (error) {
+        console.error("CNPJ lookup error:", error)
+        return { error: "Erro ao consultar serviço de CNPJ." }
+    }
+}
+

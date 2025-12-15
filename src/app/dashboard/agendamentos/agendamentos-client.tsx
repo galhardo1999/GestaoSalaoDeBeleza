@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import {
     Table,
@@ -56,18 +56,12 @@ interface AgendamentoData {
 }
 
 interface AgendamentosClientProps {
-    agendamentos: AgendamentoData[]
+    initialAgendamentos: AgendamentoData[]
     clientes: any[]
     servicos: any[]
     colaboradores: any[]
-    pagination: {
-        currentPage: number
-        totalPages: number
-        itemsPerPage: number
-        totalItems: number
-    }
     whatsappTemplate?: string | null
-    filteredDate: string | null
+    filteredDate?: string | null
 }
 
 const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline"; className: string }> = {
@@ -81,59 +75,94 @@ const statusConfig: Record<string, { label: string; variant: "default" | "second
 const ITEMS_PER_PAGE_OPTIONS = [10, 25, 50, 100]
 
 export function AgendamentosClient({
-    agendamentos,
+    initialAgendamentos,
     clientes,
     servicos,
     colaboradores,
-    pagination,
     whatsappTemplate,
     filteredDate
 }: AgendamentosClientProps) {
     const router = useRouter()
     const searchParams = useSearchParams()
 
-    const [searchTerm, setSearchTerm] = useState(searchParams.get("q") || "")
-    const [statusFilter, setStatusFilter] = useState(searchParams.get("status") || "todos")
+    // --- Local State for UI ---
+    const [searchTerm, setSearchTerm] = useState("")
+    const [statusFilter, setStatusFilter] = useState("todos")
+    const [itemsPerPage, setItemsPerPage] = useState(10)
+    const [currentPage, setCurrentPage] = useState(1)
 
-    // Initialize date filter:
-    // 1. If URL has date, use it.
-    // 2. If props.filteredDate is present (and not null), use it.
-    // 3. Else undefined.
-    // Note: filteredDate from server handles the "default to today" logic.
-    // If URL is empty, server sends today's date in filteredDate.
-    // If URL is 'all', server sends null in filteredDate.
+    // --- Date Filter (Client-Side) ---
+    // Default to Today if no filters
     const [dateFilter, setDateFilter] = useState<Date | undefined>(
-        searchParams.get("date") && searchParams.get("date") !== 'all'
-            ? new Date(searchParams.get("date")!)
-            : (filteredDate ? new Date(`${filteredDate}T12:00:00`) : undefined) // T12:00:00 to avoid timezone shift on client parsing YYYY-MM-DD
+        new Date() // Default to today since we fetch ALL history.
     )
-    const [itemsPerPage, setItemsPerPage] = useState(pagination.itemsPerPage)
 
-    // Sync local state with URL params on change
-    const updateUrl = (key: string, value: string | null) => {
-        const params = new URLSearchParams(searchParams.toString())
-        if (value) {
-            params.set(key, value)
-        } else {
-            params.delete(key)
-        }
-        // Reset page to 1 on filter change
-        if (key !== "page") {
-            params.set("page", "1")
-        }
-        router.push(`?${params.toString()}`)
+    // --- Derived State (Client-Side Filtering) ---
+    const filteredAgendamentos = useMemo(() => {
+        return initialAgendamentos.filter(agendamento => {
+            // Filter by Search Term
+            const searchLower = searchTerm.toLowerCase()
+            const matchesSearch =
+                agendamento.cliente.nome.toLowerCase().includes(searchLower) ||
+                agendamento.servico.nome.toLowerCase().includes(searchLower)
+
+            // Filter by Status
+            const matchesStatus = statusFilter === "todos" || agendamento.status === statusFilter
+
+            // Filter by Date
+            // Note: agendamento.data is typically a string or Date object.
+            // Prisma returns Dates as objects in Client Component if passed directly,
+            // but if passed from Server Component they might be serialized.
+            // Safe to wrap in new Date().
+            let matchesDate = true
+            if (dateFilter) {
+                const apptDate = new Date(agendamento.data)
+                // Adjust for timezone if needed, but isSameDay handles local date comparison usually.
+                // However, apptDate is UTC from DB. dateFilter is Local from Calendar.
+                // We need to compare "Day part in Brazil".
+                // Hack: Compare formatted strings "YYYY-MM-DD".
+                const apptDateStr = format(apptDate, "yyyy-MM-dd")
+                const filterDateStr = format(dateFilter, "yyyy-MM-dd")
+                matchesDate = apptDateStr === filterDateStr
+            }
+
+            return matchesSearch && matchesStatus && matchesDate
+        })
+    }, [initialAgendamentos, searchTerm, statusFilter, dateFilter])
+
+    // --- Pagination Logic ---
+    const totalItems = filteredAgendamentos.length
+    const totalPages = Math.ceil(totalItems / itemsPerPage)
+
+    // Reset page when filters change
+    useEffect(() => {
+        setCurrentPage(1)
+    }, [searchTerm, statusFilter, itemsPerPage, dateFilter])
+
+    const currentAgendamentos = useMemo(() => {
+        const start = (currentPage - 1) * itemsPerPage
+        return filteredAgendamentos.slice(start, start + itemsPerPage)
+    }, [filteredAgendamentos, currentPage, itemsPerPage])
+
+
+    // --- Handlers ---
+
+    // Removed updateDateUrl entirely as we don't want server reload.
+    // Optionally we could window.history.replaceState to keep URL in sync without reload.
+    // For now, simpler is purely local.
+
+    const clearDateFilter = () => {
+        setDateFilter(undefined) // Shows ALL history if undefined
     }
 
     const handleSearch = (term: string) => {
         setSearchTerm(term)
-        const params = new URLSearchParams(searchParams.toString())
-        if (term) {
-            params.set("q", term)
-        } else {
-            params.delete("q")
+    }
+
+    const handlePageChange = (page: number) => {
+        if (page >= 1 && page <= totalPages) {
+            setCurrentPage(page)
         }
-        params.set("page", "1")
-        router.replace(`?${params.toString()}`) // Using replace for search typing
     }
 
     const formatCurrency = (value: number) => {
@@ -141,19 +170,6 @@ export function AgendamentosClient({
             style: "currency",
             currency: "BRL",
         }).format(value)
-    }
-
-    const handlePageChange = (page: number) => {
-        if (page >= 1 && page <= pagination.totalPages) {
-            const params = new URLSearchParams(searchParams.toString())
-            params.set("page", page.toString())
-            router.push(`?${params.toString()}`)
-        }
-    }
-
-    const clearDateFilter = () => {
-        setDateFilter(undefined)
-        updateUrl("date", "all")
     }
 
     return (
@@ -165,7 +181,7 @@ export function AgendamentosClient({
                         Agendamentos
                     </h1>
                     <p className="text-muted-foreground">
-                        Gerencie todos os agendamentos do salão
+                        Gerencie todos os agendamentos do salão (Visualização Diária)
                     </p>
                 </div>
                 <div className="flex gap-2">
@@ -185,7 +201,7 @@ export function AgendamentosClient({
                     />
                 </div>
 
-                {/* Date Filter */}
+                {/* Date Filter (Client) */}
                 <Popover>
                     <PopoverTrigger asChild>
                         <Button
@@ -196,7 +212,7 @@ export function AgendamentosClient({
                             )}
                         >
                             <CalendarIcon className="mr-2 h-4 w-4" />
-                            {dateFilter ? format(dateFilter, "dd/MM/yyyy", { locale: ptBR }) : "Filtrar por data"}
+                            {dateFilter ? format(dateFilter, "dd/MM/yyyy", { locale: ptBR }) : "Todos os períodos"}
                         </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
@@ -205,7 +221,6 @@ export function AgendamentosClient({
                             selected={dateFilter}
                             onSelect={(date) => {
                                 setDateFilter(date)
-                                updateUrl("date", date ? format(date, "yyyy-MM-dd") : null)
                             }}
                             initialFocus
                             locale={ptBR}
@@ -225,12 +240,10 @@ export function AgendamentosClient({
                     </Button>
                 )}
 
+                {/* Status Filter (Client) */}
                 <Select
                     value={statusFilter}
-                    onValueChange={(value) => {
-                        setStatusFilter(value)
-                        updateUrl("status", value === "todos" ? null : value)
-                    }}
+                    onValueChange={(value) => setStatusFilter(value)}
                 >
                     <SelectTrigger className="w-full sm:w-[180px] bg-white">
                         <SelectValue placeholder="Filtrar por status" />
@@ -262,7 +275,7 @@ export function AgendamentosClient({
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {agendamentos.length === 0 ? (
+                        {currentAgendamentos.length === 0 ? (
                             <TableRow>
                                 <TableCell colSpan={8} className="text-center py-8">
                                     <div className="flex flex-col items-center gap-2 text-muted-foreground">
@@ -272,7 +285,7 @@ export function AgendamentosClient({
                                 </TableCell>
                             </TableRow>
                         ) : (
-                            agendamentos.map((appointment) => {
+                            currentAgendamentos.map((appointment) => {
                                 const status = statusConfig[appointment.status] || { label: appointment.status, variant: "default", className: "" }
                                 return (
                                     <TableRow key={appointment.id}>
@@ -398,10 +411,7 @@ export function AgendamentosClient({
                         value={itemsPerPage.toString()}
                         onValueChange={(value) => {
                             setItemsPerPage(Number(value))
-                            // In a real server-side implementation, we would update the URL param for itemsPerPage if supported.
-                            // For now we'll stick to fixed or just trigger reload if needed. The current backend is hardcoded to 10?
-                            // The original page had hardcoded 10. We should ideally update the URL via `limit` param.
-                            // Logic: updateUrl('limit', value)
+                            // No URL update, client-side only
                         }}
                     >
                         <SelectTrigger className="w-[80px]">
@@ -417,24 +427,29 @@ export function AgendamentosClient({
                     </Select>
                 </div>
 
-                {pagination.totalPages > 1 && (
-                    <Pagination>
+                {totalPages > 1 && (
+                    <Pagination className="justify-end">
                         <PaginationContent>
                             <PaginationItem>
                                 <PaginationPrevious
-                                    onClick={() => handlePageChange(pagination.currentPage - 1)}
+                                    onClick={() => handlePageChange(currentPage - 1)}
                                     className={cn(
                                         "cursor-pointer",
-                                        pagination.currentPage === 1 && "pointer-events-none opacity-50"
+                                        currentPage === 1 && "pointer-events-none opacity-50"
                                     )}
                                     size="default"
                                 />
                             </PaginationItem>
-                            {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((page) => (
+
+                            {/* Simple pagination logic for brevity. 
+                                In production, prefer rendering a refined range (e.g., 1, ..., 4, 5, 6, ..., 10) 
+                                if pages are many. Implementation kept simple as per original behavior.
+                             */}
+                            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                                 <PaginationItem key={page}>
                                     <PaginationLink
                                         onClick={() => handlePageChange(page)}
-                                        isActive={pagination.currentPage === page}
+                                        isActive={currentPage === page}
                                         className="cursor-pointer"
                                         size="icon"
                                     >
@@ -442,12 +457,13 @@ export function AgendamentosClient({
                                     </PaginationLink>
                                 </PaginationItem>
                             ))}
+
                             <PaginationItem>
                                 <PaginationNext
-                                    onClick={() => handlePageChange(pagination.currentPage + 1)}
+                                    onClick={() => handlePageChange(currentPage + 1)}
                                     className={cn(
                                         "cursor-pointer",
-                                        pagination.currentPage === pagination.totalPages && "pointer-events-none opacity-50"
+                                        currentPage === totalPages && "pointer-events-none opacity-50"
                                     )}
                                     size="default"
                                 />
@@ -460,16 +476,13 @@ export function AgendamentosClient({
             {/* Summary */}
             <div className="flex justify-between items-center text-sm text-muted-foreground">
                 <span>
-                    Mostrando {agendamentos.length} de {pagination.totalItems} agendamentos
+                    Mostrando {currentAgendamentos.length} de {totalItems} agendamentos (Total Filtrado)
                 </span>
-                {/* Total Price Sum is tricky with server-side pagination. We only have current page items. 
-            We can show the sum of *current page* or request a total sum from backend. 
-            For now, showing sum of current page as per design behavior on client mock. */}
                 <span>
                     Total desta página:{" "}
                     <span className="font-semibold text-foreground">
                         {formatCurrency(
-                            agendamentos.reduce((acc, a) => acc + Number(a.servico.preco), 0)
+                            currentAgendamentos.reduce((acc, a) => acc + Number(a.servico.preco), 0)
                         )}
                     </span>
                 </span>

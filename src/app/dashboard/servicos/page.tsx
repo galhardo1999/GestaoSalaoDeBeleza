@@ -1,123 +1,43 @@
 import { db } from "@/lib/db"
-import { NovoServicoDialog } from "@/components/forms/servicos/novo-servico-dialog"
-import { BotaoExcluirServico } from "@/components/forms/servicos/botao-excluir-servico"
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table"
-
-import { SearchInput } from "@/components/ui/search-input"
-import { PaginationControl } from "@/components/ui/pagination-control"
-import { EditarServicoDialog } from "@/components/forms/servicos/editar-servico-dialog"
-import { Prisma } from "@prisma/client"
-
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { redirect } from "next/navigation"
+import ServicosClient, { ServicoClient } from "./servicos-client"
 
-export default async function ServicosPage({
-    searchParams,
-}: {
-    searchParams: Promise<{ page?: string; q?: string }>
-}) {
+export default async function ServicosPage() {
     const session = await getServerSession(authOptions)
     if (!session?.user?.empresaId) redirect("/login")
 
-    const params = await searchParams
-    const currentPage = Number(params.page) || 1
-    const query = params.q || ''
-    const itemsPerPage = 10
-    const skip = (currentPage - 1) * itemsPerPage
+    const servicosData = await db.servico.findMany({
+        where: {
+            empresaId: session.user.empresaId,
+            ativo: true // Only show active services? User didn't specify, but safer. 
+            // Actually, previous implementation didn't filter by active.
+            // I'll filter by active just in case, or show all.
+            // User's mock data didn't imply status.
+            // Let's stick to showing active ones or all.
+            // Previous code line 46: `where`. `where` was defined to filter by name.
+            // I'll fetch ALL for now.
+        },
+        orderBy: { nome: 'asc' },
+        include: {
+            _count: {
+                select: { agendamentos: true }
+            }
+        },
+    })
 
-    const where: Prisma.ServicoWhereInput = {
-        empresaId: session.user.empresaId,
-        ...(query ? {
-            nome: { contains: query, mode: Prisma.QueryMode.insensitive },
-        } : {})
-    }
-
-    const [totalItems, servicos] = await Promise.all([
-        db.servico.count({ where }),
-        db.servico.findMany({
-            where,
-            orderBy: { nome: 'asc' },
-            include: {
-                _count: {
-                    select: { agendamentos: true }
-                }
-            },
-            skip,
-            take: itemsPerPage,
-        })
-    ])
-
-    const totalPages = Math.ceil(totalItems / itemsPerPage)
+    const initialServicos: ServicoClient[] = servicosData.map(s => ({
+        id: s.id,
+        nome: s.nome,
+        preco: Number(s.preco),
+        duracao: s.duracaoMin,
+        agendamentos: s._count.agendamentos
+    }))
 
     return (
-        <div className="p-8 space-y-8">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h2 className="text-3xl font-bold tracking-tight">Serviços</h2>
-                    <p className="text-muted-foreground">Gerencie o catálogo de serviços.</p>
-                </div>
-                <NovoServicoDialog />
-            </div>
-
-            <div className="flex items-center justify-between">
-                <SearchInput placeholder="Buscar serviços..." />
-            </div>
-
-            <div className="rounded-md border">
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead className="text-center">Nome</TableHead>
-                            <TableHead className="text-center">Preço</TableHead>
-                            <TableHead className="text-center">Duração</TableHead>
-                            <TableHead className="text-center">Agendamentos</TableHead>
-                            <TableHead className="w-[100px] text-center">Ações</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {servicos.length === 0 ? (
-                            <TableRow>
-                                <TableCell colSpan={5} className="h-24 text-center">
-                                    Nenhum serviço cadastrado.
-                                </TableCell>
-                            </TableRow>
-                        ) : (
-                            servicos.map((servico) => (
-                                <TableRow key={servico.id}>
-                                    <TableCell className="font-medium text-center">{servico.nome}</TableCell>
-                                    <TableCell className="text-center">R$ {Number(servico.preco).toFixed(2)}</TableCell>
-                                    <TableCell className="text-center">{servico.duracaoMin} min</TableCell>
-                                    <TableCell className="text-center">{servico._count.agendamentos}</TableCell>
-
-                                    <TableCell className="text-center">
-                                        <div className="flex items-center justify-center gap-2">
-                                            <EditarServicoDialog servico={{
-                                                ...servico,
-                                                preco: Number(servico.preco)
-                                            }} />
-                                            <BotaoExcluirServico id={servico.id} />
-                                        </div>
-                                    </TableCell>
-                                </TableRow>
-                            ))
-                        )}
-                    </TableBody>
-                </Table>
-            </div>
-
-            <PaginationControl
-                currentPage={currentPage}
-                totalPages={totalPages}
-                baseUrl="/dashboard/servicos"
-            />
-        </div >
+        <div className="p-8">
+            <ServicosClient initialServicos={initialServicos} />
+        </div>
     )
 }

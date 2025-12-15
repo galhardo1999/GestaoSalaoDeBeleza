@@ -6,40 +6,21 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { redirect } from "next/navigation"
 
-export default async function ColaboradoresPage({
-    searchParams,
-}: {
-    searchParams: Promise<{ page?: string; q?: string }>
-}) {
+export default async function ColaboradoresPage() {
     const session = await getServerSession(authOptions)
     if (!session?.user?.empresaId) redirect("/login")
 
-    const params = await searchParams
-    const currentPage = Number(params.page) || 1
-    const query = params.q || ''
-    const itemsPerPage = 10
-    const skip = (currentPage - 1) * itemsPerPage
-
     const where: Prisma.ColaboradorWhereInput = {
         empresaId: session.user.empresaId,
-        ...(query ? {
-            OR: [
-                { nome: { contains: query, mode: Prisma.QueryMode.insensitive } },
-                { email: { contains: query, mode: Prisma.QueryMode.insensitive } },
-            ]
-        } : {})
     }
 
-    const [totalItems, colaboradores, servicos] = await Promise.all([
-        db.colaborador.count({ where }),
+    const [colaboradores, servicos] = await Promise.all([
         db.colaborador.findMany({
             where,
             orderBy: { nome: 'asc' },
-            skip,
-            take: itemsPerPage,
             include: {
                 servicos: true
-            } as any
+            } as any // Cast as any because relation might be implicit or explicit, verified in previous code
         }),
         db.servico.findMany({
             where: { ativo: true, empresaId: session.user.empresaId },
@@ -75,18 +56,10 @@ export default async function ColaboradoresPage({
         })) : []
     }))
 
-    const totalPages = Math.ceil(totalItems / itemsPerPage)
-
     return (
         <ColaboradoresClient
             colaboradores={formattedColaboradores}
             servicos={formattedServicos}
-            pagination={{
-                currentPage,
-                totalPages,
-                itemsPerPage,
-                totalItems
-            }}
         />
     )
 }

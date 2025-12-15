@@ -4,7 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { ChevronLeft, ChevronRight, LayoutDashboard, Calendar, Users, Scissors, LogOut, ListTodo, Settings, Sparkles, UserCog, Wallet, BarChart3 } from "lucide-react"
+import { ChevronLeft, ChevronRight, LayoutDashboard, Calendar, Users, Scissors, LogOut, ListTodo, Settings, Sparkles, UserCog, Wallet, BarChart3, ChevronDown, Percent, PieChart } from "lucide-react"
 import { signOut } from "next-auth/react"
 import {
     Tooltip,
@@ -12,8 +12,30 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from "@/components/ui/tooltip"
+import {
+    Collapsible,
+    CollapsibleContent,
+    CollapsibleTrigger,
+} from "@/components/ui/collapsible"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { useState, useEffect } from "react"
 
-const routes = [
+interface RouteItem {
+    label: string
+    icon: any
+    href: string
+    active?: boolean
+    submenus?: RouteItem[]
+}
+
+const routes: RouteItem[] = [
     {
         label: "Dashboard",
         icon: LayoutDashboard,
@@ -48,6 +70,18 @@ const routes = [
         label: "Financeiro",
         icon: Wallet,
         href: "/dashboard/financeiro",
+        submenus: [
+            {
+                label: "Visão Geral",
+                href: "/dashboard/financeiro",
+                icon: PieChart
+            },
+            {
+                label: "Comissões",
+                href: "/dashboard/financeiro/comissao",
+                icon: Percent
+            }
+        ]
     },
     {
         label: "Estatísticas",
@@ -66,6 +100,22 @@ interface SidebarProps {
 
 export function Sidebar({ isCollapsed, toggleCollapse, companyName, companyCnpj, userName }: SidebarProps) {
     const pathname = usePathname()
+    // State to track open collapsibles, could be based on current path
+    const [openMenus, setOpenMenus] = useState<string[]>([])
+
+    // Automatically open menu if submenu is active
+    useEffect(() => {
+        const activeRoute = routes.find(r => r.submenus?.some(sub => pathname === sub.href))
+        if (activeRoute && !openMenus.includes(activeRoute.label)) {
+            setOpenMenus(prev => [...prev, activeRoute.label])
+        }
+    }, [pathname])
+
+    const toggleMenu = (label: string) => {
+        setOpenMenus(prev =>
+            prev.includes(label) ? prev.filter(l => l !== label) : [...prev, label]
+        )
+    }
 
     return (
         <TooltipProvider delayDuration={0}>
@@ -83,7 +133,7 @@ export function Sidebar({ isCollapsed, toggleCollapse, companyName, companyCnpj,
                 </Button>
 
                 <div className="px-4 py-2 flex-1 relative">
-                    <div className="mb-8">
+                    <div className="mb-2">
                         <Link href="/dashboard" className="flex items-center overflow-hidden mb-4">
                             <div className="h-12 w-12 min-w-[3rem] rounded-2xl bg-blue-50 flex items-center justify-center mr-3 hover:opacity-80 transition shrink-0">
                                 <Sparkles className="h-6 w-6 text-blue-600" />
@@ -124,35 +174,121 @@ export function Sidebar({ isCollapsed, toggleCollapse, companyName, companyCnpj,
                     <div className="h-[1px] bg-gray-100 w-full mb-6" />
 
                     <div className="space-y-1.5">
-                        {routes.map((route) => (
-                            <Tooltip key={route.href}>
-                                <TooltipTrigger asChild>
-                                    <Link
-                                        href={route.href}
-                                        className={cn(
-                                            "text-sm group flex p-3.5 w-full justify-start font-medium cursor-pointer rounded-2xl transition-all duration-200 ease-in-out",
-                                            pathname === route.href
-                                                ? "text-blue-600 bg-blue-50 font-semibold"
-                                                : "text-gray-500 hover:text-gray-900 hover:bg-gray-50",
-                                            isCollapsed && "justify-center px-2"
-                                        )}
+                        {routes.map((route) => {
+                            const isActive = pathname === route.href || route.submenus?.some(s => pathname === s.href)
+
+                            if (route.submenus) {
+                                if (isCollapsed) {
+                                    // Collapsed mode: Dropdown
+                                    return (
+                                        <DropdownMenu key={route.href}>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button
+                                                    variant="ghost"
+                                                    className={cn(
+                                                        "w-full h-auto p-3.5 justify-center rounded-2xl",
+                                                        isActive ? "bg-blue-50 text-blue-600" : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
+                                                    )}
+                                                >
+                                                    <route.icon className={cn("h-[22px] w-[22px]", isActive && "text-blue-600")} />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent side="right" className="w-56" align="start">
+                                                <DropdownMenuLabel>{route.label}</DropdownMenuLabel>
+                                                <DropdownMenuSeparator />
+                                                {route.submenus.map(sub => (
+                                                    <DropdownMenuItem key={sub.href} asChild>
+                                                        <Link href={sub.href} className="flex items-center cursor-pointer">
+                                                            <sub.icon className="mr-2 h-4 w-4" />
+                                                            {sub.label}
+                                                        </Link>
+                                                    </DropdownMenuItem>
+                                                ))}
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    )
+                                }
+
+                                // Expanded mode: Collapsible
+                                const isOpen = openMenus.includes(route.label)
+                                return (
+                                    <Collapsible
+                                        key={route.href}
+                                        open={isOpen}
+                                        onOpenChange={() => toggleMenu(route.label)}
+                                        className="w-full"
                                     >
-                                        <div className="flex items-center flex-1">
-                                            <route.icon className={cn("h-[22px] w-[22px] transition-transform duration-200 group-hover:scale-110",
-                                                pathname === route.href ? "text-blue-600" : "text-gray-400 group-hover:text-gray-500",
-                                                !isCollapsed && "mr-3.5"
-                                            )} />
-                                            {!isCollapsed && route.label}
-                                        </div>
-                                    </Link>
-                                </TooltipTrigger>
-                                {isCollapsed && (
-                                    <TooltipContent side="right">
-                                        {route.label}
-                                    </TooltipContent>
-                                )}
-                            </Tooltip>
-                        ))}
+                                        <CollapsibleTrigger asChild>
+                                            <Button
+                                                variant="ghost"
+                                                className={cn(
+                                                    "w-full p-3.5 justify-between font-medium rounded-2xl h-auto hover:bg-gray-50",
+                                                    isActive ? "text-blue-600" : "text-gray-500"
+                                                )}
+                                            >
+                                                <div className="flex items-center">
+                                                    <route.icon className={cn("h-[22px] w-[22px] mr-3.5 transition-transform duration-200",
+                                                        isActive ? "text-blue-600" : "text-gray-400 group-hover:text-gray-500"
+                                                    )} />
+                                                    {route.label}
+                                                </div>
+                                                <ChevronDown className={cn("h-4 w-4 transition-transform duration-200", isOpen && "rotate-180")} />
+                                            </Button>
+                                        </CollapsibleTrigger>
+                                        <CollapsibleContent className="pl-4 space-y-1">
+                                            {route.submenus.map(sub => {
+                                                const isSubActive = pathname === sub.href
+                                                return (
+                                                    <Link
+                                                        key={sub.href}
+                                                        href={sub.href}
+                                                        className={cn(
+                                                            "flex items-center p-2 rounded-xl text-sm transition-colors",
+                                                            isSubActive
+                                                                ? "text-blue-600 bg-blue-50/50 font-medium"
+                                                                : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
+                                                        )}
+                                                    >
+                                                        <sub.icon className={cn("h-4 w-4 mr-3", isSubActive ? "text-blue-600" : "text-gray-400")} />
+                                                        {sub.label}
+                                                    </Link>
+                                                )
+                                            })}
+                                        </CollapsibleContent>
+                                    </Collapsible>
+                                )
+                            }
+
+                            return (
+                                <Tooltip key={route.href}>
+                                    <TooltipTrigger asChild>
+                                        <Link
+                                            href={route.href}
+                                            className={cn(
+                                                "text-sm group flex p-3.5 w-full justify-start font-medium cursor-pointer rounded-2xl transition-all duration-200 ease-in-out",
+                                                isActive
+                                                    ? "text-blue-600 bg-blue-50 font-semibold"
+                                                    : "text-gray-500 hover:text-gray-900 hover:bg-gray-50",
+                                                isCollapsed && "justify-center px-2"
+                                            )}
+                                        >
+                                            <div className="flex items-center flex-1">
+                                                <route.icon className={cn("h-[22px] w-[22px] transition-transform duration-200 group-hover:scale-110",
+                                                    isActive ? "text-blue-600" : "text-gray-400 group-hover:text-gray-500",
+                                                    !isCollapsed && "mr-3.5"
+                                                )} />
+                                                {!isCollapsed && route.label}
+                                            </div>
+                                        </Link>
+                                    </TooltipTrigger>
+                                    {isCollapsed && (
+                                        <TooltipContent side="right">
+                                            {route.label}
+                                        </TooltipContent>
+                                    )}
+                                </Tooltip>
+                            )
+                        })}
                     </div>
                 </div>
 

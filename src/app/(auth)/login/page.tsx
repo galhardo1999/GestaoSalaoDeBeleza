@@ -10,7 +10,12 @@ export const metadata: Metadata = {
 }
 
 export default async function LoginPage() {
-    const session = await getServerSession(authOptions)
+    let session = null
+    try {
+        session = await getServerSession(authOptions)
+    } catch (error) {
+        console.error("Error retrieving session:", error)
+    }
 
     if (session) {
         // @ts-ignore

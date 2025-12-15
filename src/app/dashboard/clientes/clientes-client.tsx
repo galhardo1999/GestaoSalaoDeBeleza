@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import {
     Table,
@@ -49,39 +49,55 @@ interface ClienteData {
 
 interface ClientesClientProps {
     clientes: ClienteData[]
-    pagination: {
-        currentPage: number
-        totalPages: number
-        itemsPerPage: number
-        totalItems: number
-    }
 }
 
 const ITEMS_PER_PAGE_OPTIONS = [10, 25, 50, 100]
 
-export function ClientesClient({ clientes, pagination }: ClientesClientProps) {
+export function ClientesClient({ clientes }: ClientesClientProps) {
     const router = useRouter()
-    const searchParams = useSearchParams()
-    const [searchTerm, setSearchTerm] = useState(searchParams.get("q") || "")
-    const [itemsPerPage, setItemsPerPage] = useState(pagination.itemsPerPage)
 
+    // --- Local State ---
+    const [searchTerm, setSearchTerm] = useState("")
+    const [itemsPerPage, setItemsPerPage] = useState(10)
+    const [currentPage, setCurrentPage] = useState(1)
+
+    // --- Filtering ---
+    const filteredClientes = useMemo(() => {
+        const term = searchTerm.toLowerCase()
+        if (!term) return clientes
+
+        return clientes.filter(cliente =>
+            cliente.nome.toLowerCase().includes(term) ||
+            cliente.email?.toLowerCase().includes(term) ||
+            cliente.cpf.includes(term) ||
+            cliente.codigo.includes(term) ||
+            cliente.telefone.includes(term)
+        )
+    }, [clientes, searchTerm])
+
+    // --- Pagination ---
+    const totalItems = filteredClientes.length
+    const totalPages = Math.ceil(totalItems / itemsPerPage)
+
+    const currentClientes = useMemo(() => {
+        const start = (currentPage - 1) * itemsPerPage
+        return filteredClientes.slice(start, start + itemsPerPage)
+    }, [filteredClientes, currentPage, itemsPerPage])
+
+    // Reset to page 1 on filter change
+    useEffect(() => {
+        setCurrentPage(1)
+    }, [searchTerm, itemsPerPage])
+
+
+    // --- Handlers ---
     const handleSearch = (term: string) => {
         setSearchTerm(term)
-        const params = new URLSearchParams(searchParams.toString())
-        if (term) {
-            params.set("q", term)
-        } else {
-            params.delete("q")
-        }
-        params.set("page", "1")
-        router.replace(`?${params.toString()}`)
     }
 
     const handlePageChange = (page: number) => {
-        if (page >= 1 && page <= pagination.totalPages) {
-            const params = new URLSearchParams(searchParams.toString())
-            params.set("page", page.toString())
-            router.push(`?${params.toString()}`)
+        if (page >= 1 && page <= totalPages) {
+            setCurrentPage(page)
         }
     }
 
@@ -133,7 +149,7 @@ export function ClientesClient({ clientes, pagination }: ClientesClientProps) {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {clientes.length === 0 ? (
+                        {currentClientes.length === 0 ? (
                             <TableRow>
                                 <TableCell
                                     colSpan={7}
@@ -143,7 +159,7 @@ export function ClientesClient({ clientes, pagination }: ClientesClientProps) {
                                 </TableCell>
                             </TableRow>
                         ) : (
-                            clientes.map((cliente) => (
+                            currentClientes.map((cliente) => (
                                 <TableRow key={cliente.id}>
                                     <TableCell className="font-medium">
                                         {cliente.codigo}
@@ -196,7 +212,6 @@ export function ClientesClient({ clientes, pagination }: ClientesClientProps) {
                         value={itemsPerPage.toString()}
                         onValueChange={(value) => {
                             setItemsPerPage(Number(value))
-                            // Would update URL logic in real scenario
                         }}
                     >
                         <SelectTrigger className="w-[80px]">
@@ -212,24 +227,24 @@ export function ClientesClient({ clientes, pagination }: ClientesClientProps) {
                     </Select>
                 </div>
 
-                {pagination.totalPages > 1 && (
-                    <Pagination>
+                {totalPages > 1 && (
+                    <Pagination className="justify-end">
                         <PaginationContent>
                             <PaginationItem>
                                 <PaginationPrevious
-                                    onClick={() => handlePageChange(pagination.currentPage - 1)}
+                                    onClick={() => handlePageChange(currentPage - 1)}
                                     className={cn(
                                         "cursor-pointer",
-                                        pagination.currentPage === 1 && "pointer-events-none opacity-50"
+                                        currentPage === 1 && "pointer-events-none opacity-50"
                                     )}
                                     size="default"
                                 />
                             </PaginationItem>
-                            {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((page) => (
+                            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                                 <PaginationItem key={page}>
                                     <PaginationLink
                                         onClick={() => handlePageChange(page)}
-                                        isActive={pagination.currentPage === page}
+                                        isActive={currentPage === page}
                                         className="cursor-pointer"
                                         size="icon"
                                     >
@@ -239,10 +254,10 @@ export function ClientesClient({ clientes, pagination }: ClientesClientProps) {
                             ))}
                             <PaginationItem>
                                 <PaginationNext
-                                    onClick={() => handlePageChange(pagination.currentPage + 1)}
+                                    onClick={() => handlePageChange(currentPage + 1)}
                                     className={cn(
                                         "cursor-pointer",
-                                        pagination.currentPage === pagination.totalPages && "pointer-events-none opacity-50"
+                                        currentPage === totalPages && "pointer-events-none opacity-50"
                                     )}
                                     size="default"
                                 />
@@ -254,7 +269,7 @@ export function ClientesClient({ clientes, pagination }: ClientesClientProps) {
 
             {/* Summary */}
             <div className="text-sm text-muted-foreground">
-                Exibindo {clientes.length} de {pagination.totalItems} clientes
+                Exibindo {currentClientes.length} de {totalItems} clientes (Total Filtrado)
             </div>
         </div>
     )

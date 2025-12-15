@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useState, useMemo, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import {
     Table,
     TableBody,
@@ -28,73 +28,85 @@ import {
     PaginationNext,
     PaginationPrevious,
 } from "@/components/ui/pagination"
-import { Search, Plus, Eye, Pencil, Trash2, Users } from "lucide-react"
+import { Search, Plus, Pencil, Trash2, CalendarDays } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { Badge } from "@/components/ui/badge"
 
 import { NovoColaboradorDialog } from "@/components/forms/colaboradores/novo-colaborador-dialog"
 import { EditarColaboradorDialog } from "@/components/forms/colaboradores/editar-colaborador-dialog"
 import { BotaoExcluirColaborador } from "@/components/forms/colaboradores/botao-excluir-colaborador"
 
+
+interface Servico {
+    id: string
+    nome: string
+    preco: number
+    duracaoMin: number
+    ativo: boolean
+    criadoEm: Date
+    atualizadoEm: Date
+}
+
 interface ColaboradorData {
     id: string
     codigo: string
     nome: string
-    email: string
-    foto?: string | null
+    email: string | null
+    foto: string | null
     servicosPrestados: string[]
-    servicosRaw?: any[] // Keep raw data for Edit dialog
+    servicosRaw: Servico[]
 }
 
 interface ColaboradoresClientProps {
     colaboradores: ColaboradorData[]
-    servicos: any[]
-    pagination: {
-        currentPage: number
-        totalPages: number
-        itemsPerPage: number
-        totalItems: number
-    }
+    servicos: Servico[]
 }
 
 const ITEMS_PER_PAGE_OPTIONS = [10, 25, 50, 100]
 
-export function ColaboradoresClient({
-    colaboradores,
-    servicos,
-    pagination,
-}: ColaboradoresClientProps) {
+export function ColaboradoresClient({ colaboradores, servicos }: ColaboradoresClientProps) {
     const router = useRouter()
-    const searchParams = useSearchParams()
-    const [searchTerm, setSearchTerm] = useState(searchParams.get("q") || "")
-    const [itemsPerPage, setItemsPerPage] = useState(pagination.itemsPerPage)
 
+    // --- Local State ---
+    const [searchTerm, setSearchTerm] = useState("")
+    const [itemsPerPage, setItemsPerPage] = useState(10)
+    const [currentPage, setCurrentPage] = useState(1)
+
+    // --- Filtering ---
+    const filteredColaboradores = useMemo(() => {
+        const term = searchTerm.toLowerCase()
+        if (!term) return colaboradores
+
+        return colaboradores.filter(colaborador =>
+            colaborador.nome.toLowerCase().includes(term) ||
+            colaborador.email?.toLowerCase().includes(term)
+        )
+    }, [colaboradores, searchTerm])
+
+    // --- Pagination ---
+    const totalItems = filteredColaboradores.length
+    const totalPages = Math.ceil(totalItems / itemsPerPage)
+
+    const currentColaboradores = useMemo(() => {
+        const start = (currentPage - 1) * itemsPerPage
+        return filteredColaboradores.slice(start, start + itemsPerPage)
+    }, [filteredColaboradores, currentPage, itemsPerPage])
+
+    // Reset page on filter change
+    useEffect(() => {
+        setCurrentPage(1)
+    }, [searchTerm, itemsPerPage])
+
+
+    // --- Handlers ---
     const handleSearch = (term: string) => {
         setSearchTerm(term)
-        const params = new URLSearchParams(searchParams.toString())
-        if (term) {
-            params.set("q", term)
-        } else {
-            params.delete("q")
-        }
-        params.set("page", "1")
-        router.replace(`?${params.toString()}`)
     }
 
     const handlePageChange = (page: number) => {
-        if (page >= 1 && page <= pagination.totalPages) {
-            const params = new URLSearchParams(searchParams.toString())
-            params.set("page", page.toString())
-            router.push(`?${params.toString()}`)
+        if (page >= 1 && page <= totalPages) {
+            setCurrentPage(page)
         }
-    }
-
-    const getInitials = (name: string) => {
-        return name
-            .split(" ")
-            .map((n) => n[0])
-            .join("")
-            .toUpperCase()
-            .substring(0, 2)
     }
 
     return (
@@ -122,7 +134,7 @@ export function ColaboradoresClient({
                 <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
-                        placeholder="Buscar por nome, email ou código..."
+                        placeholder="Buscar por nome ou email..."
                         value={searchTerm}
                         onChange={(e) => handleSearch(e.target.value)}
                         className="pl-10 bg-white"
@@ -135,64 +147,57 @@ export function ColaboradoresClient({
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>Código</TableHead>
-                            <TableHead>Colaborador</TableHead>
+                            <TableHead className="w-[80px]">Foto</TableHead>
+                            <TableHead>Nome</TableHead>
                             <TableHead>Email</TableHead>
-                            <TableHead>Serviços Prestados</TableHead>
+                            <TableHead>Serviços</TableHead>
                             <TableHead className="text-right">Ações</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {colaboradores.length === 0 ? (
+                        {currentColaboradores.length === 0 ? (
                             <TableRow>
                                 <TableCell
                                     colSpan={5}
                                     className="h-24 text-center text-muted-foreground"
                                 >
-                                    <div className="flex flex-col items-center gap-2">
-                                        <Users className="h-8 w-8" />
-                                        <p>Nenhum colaborador encontrado.</p>
-                                    </div>
+                                    Nenhum colaborador encontrado.
                                 </TableCell>
                             </TableRow>
                         ) : (
-                            colaboradores.map((colaborador) => (
+                            currentColaboradores.map((colaborador) => (
                                 <TableRow key={colaborador.id}>
-                                    <TableCell className="font-medium">
-                                        #{colaborador.codigo}
-                                    </TableCell>
                                     <TableCell>
-                                        <div className="flex items-center gap-3">
-                                            <Avatar className="h-9 w-9">
-                                                <AvatarImage src={colaborador.foto || undefined} alt={colaborador.nome} />
-                                                <AvatarFallback className="bg-primary/10 text-primary text-sm">
-                                                    {getInitials(colaborador.nome)}
-                                                </AvatarFallback>
-                                            </Avatar>
-                                            <span>{colaborador.nome}</span>
-                                        </div>
+                                        <Avatar className="h-10 w-10">
+                                            <AvatarImage src={colaborador.foto || undefined} />
+                                            <AvatarFallback>
+                                                {colaborador.nome.substring(0, 2).toUpperCase()}
+                                            </AvatarFallback>
+                                        </Avatar>
                                     </TableCell>
-                                    <TableCell>{colaborador.email}</TableCell>
+                                    <TableCell className="font-medium">
+                                        {colaborador.nome}
+                                    </TableCell>
+                                    <TableCell>{colaborador.email || '-'}</TableCell>
                                     <TableCell>
                                         <div className="flex flex-wrap gap-1">
-                                            {colaborador.servicosPrestados.map((servico, index) => (
-                                                <span
-                                                    key={index}
-                                                    className="inline-flex items-center rounded-full bg-teal-500/10 px-2 py-0.5 text-xs font-medium text-teal-600"
-                                                >
-                                                    {servico}
-                                                </span>
-                                            ))}
+                                            {colaborador.servicosPrestados.length > 0 ? (
+                                                colaborador.servicosPrestados.map((servico, index) => (
+                                                    <Badge key={index} variant="secondary" className="text-xs">
+                                                        {servico}
+                                                    </Badge>
+                                                ))
+                                            ) : (
+                                                <span className="text-muted-foreground text-sm">-</span>
+                                            )}
                                         </div>
                                     </TableCell>
                                     <TableCell className="text-right">
                                         <div className="flex items-center justify-end gap-2">
-                                            <Button variant="ghost" size="icon" title="Visualizar">
-                                                <Eye className="h-4 w-4" />
-                                            </Button>
                                             <EditarColaboradorDialog
                                                 colaborador={{
                                                     ...colaborador,
+                                                    email: colaborador.email || "",
                                                     servicos: colaborador.servicosRaw
                                                 }}
                                                 servicos={servicos}
@@ -201,6 +206,7 @@ export function ColaboradoresClient({
                                                     <Pencil className="h-4 w-4" />
                                                 </Button>
                                             </EditarColaboradorDialog>
+
                                             <BotaoExcluirColaborador id={colaborador.id}>
                                                 <Button
                                                     variant="ghost"
@@ -243,24 +249,24 @@ export function ColaboradoresClient({
                     </Select>
                 </div>
 
-                {pagination.totalPages > 1 && (
-                    <Pagination>
+                {totalPages > 1 && (
+                    <Pagination className="justify-end">
                         <PaginationContent>
                             <PaginationItem>
                                 <PaginationPrevious
-                                    onClick={() => handlePageChange(pagination.currentPage - 1)}
+                                    onClick={() => handlePageChange(currentPage - 1)}
                                     className={cn(
                                         "cursor-pointer",
-                                        pagination.currentPage === 1 && "pointer-events-none opacity-50"
+                                        currentPage === 1 && "pointer-events-none opacity-50"
                                     )}
                                     size="default"
                                 />
                             </PaginationItem>
-                            {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((page) => (
+                            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                                 <PaginationItem key={page}>
                                     <PaginationLink
                                         onClick={() => handlePageChange(page)}
-                                        isActive={pagination.currentPage === page}
+                                        isActive={currentPage === page}
                                         className="cursor-pointer"
                                         size="icon"
                                     >
@@ -270,10 +276,10 @@ export function ColaboradoresClient({
                             ))}
                             <PaginationItem>
                                 <PaginationNext
-                                    onClick={() => handlePageChange(pagination.currentPage + 1)}
+                                    onClick={() => handlePageChange(currentPage + 1)}
                                     className={cn(
                                         "cursor-pointer",
-                                        pagination.currentPage === pagination.totalPages && "pointer-events-none opacity-50"
+                                        currentPage === totalPages && "pointer-events-none opacity-50"
                                     )}
                                     size="default"
                                 />
@@ -285,7 +291,7 @@ export function ColaboradoresClient({
 
             {/* Summary */}
             <div className="text-sm text-muted-foreground">
-                Exibindo {colaboradores.length} de {pagination.totalItems} colaboradores
+                Exibindo {currentColaboradores.length} de {totalItems} colaboradores  (Total Filtrado)
             </div>
         </div>
     )

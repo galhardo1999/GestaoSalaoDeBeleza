@@ -6,55 +6,31 @@ import { Prisma } from "@prisma/client"
 import { format } from "date-fns"
 import { ClientesClient } from "./clientes-client"
 
-export default async function ClientesPage({
-    searchParams,
-}: {
-    searchParams: Promise<{ page?: string; q?: string }>
-}) {
+export default async function ClientesPage() {
     const session = await getServerSession(authOptions)
 
     if (!session?.user?.empresaId) {
         redirect("/login")
     }
 
-    const params = await searchParams
-    const currentPage = Math.max(1, Number(params.page) || 1)
-    const query = params.q || ''
-    const itemsPerPage = 10
-    const skip = (currentPage - 1) * itemsPerPage
-
     const where: Prisma.ClienteWhereInput = {
         empresaId: session.user.empresaId,
-        ...(query ? {
-            OR: [
-                { nome: { contains: query, mode: Prisma.QueryMode.insensitive } },
-                { email: { contains: query, mode: Prisma.QueryMode.insensitive } },
-                { cpf: { contains: query } },
-            ]
-        } : {})
     }
 
-    const [totalItems, clientes] = await Promise.all([
-        db.cliente.count({ where }),
-        db.cliente.findMany({
-            where,
-            orderBy: { nome: 'asc' },
-            include: {
-                _count: {
-                    select: { agendamentos: true }
-                },
-                agendamentos: {
-                    take: 1,
-                    orderBy: { data: 'desc' },
-                    select: { data: true }
-                }
+    const clientes = await db.cliente.findMany({
+        where,
+        orderBy: { nome: 'asc' },
+        include: {
+            _count: {
+                select: { agendamentos: true }
             },
-            skip,
-            take: itemsPerPage,
-        })
-    ])
-
-    const totalPages = Math.ceil(totalItems / itemsPerPage)
+            agendamentos: {
+                take: 1,
+                orderBy: { data: 'desc' },
+                select: { data: true }
+            }
+        },
+    })
 
     const formattedClientes = clientes.map(cliente => ({
         id: cliente.id,
@@ -73,12 +49,6 @@ export default async function ClientesPage({
     return (
         <ClientesClient
             clientes={formattedClientes}
-            pagination={{
-                currentPage,
-                totalPages,
-                itemsPerPage,
-                totalItems
-            }}
         />
     )
 }

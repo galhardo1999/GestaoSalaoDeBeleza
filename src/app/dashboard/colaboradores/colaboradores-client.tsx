@@ -253,6 +253,7 @@ export function ColaboradoresClient({
                                         "cursor-pointer",
                                         pagination.currentPage === 1 && "pointer-events-none opacity-50"
                                     )}
+                                    size="default"
                                 />
                             </PaginationItem>
                             {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((page) => (
@@ -261,6 +262,7 @@ export function ColaboradoresClient({
                                         onClick={() => handlePageChange(page)}
                                         isActive={pagination.currentPage === page}
                                         className="cursor-pointer"
+                                        size="icon"
                                     >
                                         {page}
                                     </PaginationLink>
@@ -273,6 +275,7 @@ export function ColaboradoresClient({
                                         "cursor-pointer",
                                         pagination.currentPage === pagination.totalPages && "pointer-events-none opacity-50"
                                     )}
+                                    size="default"
                                 />
                             </PaginationItem>
                         </PaginationContent>

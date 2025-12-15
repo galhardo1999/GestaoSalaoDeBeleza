@@ -205,7 +205,7 @@ export function AgendamentosClient({
                             selected={dateFilter}
                             onSelect={(date) => {
                                 setDateFilter(date)
-                                updateUrl("date", date ? date.toISOString() : null)
+                                updateUrl("date", date ? format(date, "yyyy-MM-dd") : null)
                             }}
                             initialFocus
                             locale={ptBR}
@@ -427,6 +427,7 @@ export function AgendamentosClient({
                                         "cursor-pointer",
                                         pagination.currentPage === 1 && "pointer-events-none opacity-50"
                                     )}
+                                    size="default"
                                 />
                             </PaginationItem>
                             {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((page) => (
@@ -435,6 +436,7 @@ export function AgendamentosClient({
                                         onClick={() => handlePageChange(page)}
                                         isActive={pagination.currentPage === page}
                                         className="cursor-pointer"
+                                        size="icon"
                                     >
                                         {page}
                                     </PaginationLink>
@@ -447,6 +449,7 @@ export function AgendamentosClient({
                                         "cursor-pointer",
                                         pagination.currentPage === pagination.totalPages && "pointer-events-none opacity-50"
                                     )}
+                                    size="default"
                                 />
                             </PaginationItem>
                         </PaginationContent>

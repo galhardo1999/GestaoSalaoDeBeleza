@@ -3,7 +3,16 @@
 import { db } from "@/lib/db"
 import { startOfMonth, endOfMonth, format } from "date-fns"
 
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth"
+
 export async function getMonthlyAppointmentCounts(year: number, month: number) {
+    const session = await getServerSession(authOptions)
+    if (!session || !session.user.empresaId) {
+        return {}
+    }
+    const empresaId = session.user.empresaId
+
     // Month is 0-indexed in JS Date, so we use it directly for Date constructor
     const startDate = startOfMonth(new Date(year, month))
     const endDate = endOfMonth(new Date(year, month))
@@ -33,6 +42,7 @@ export async function getMonthlyAppointmentCounts(year: number, month: number) {
 
     const allAppointments = await db.agendamento.findMany({
         where: {
+            empresaId,
             data: {
                 gte: startDate,
                 lte: endDate

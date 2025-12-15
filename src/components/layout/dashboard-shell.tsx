@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Sidebar } from "./sidebar"
 
-export function DashboardShell({ children, companyName, companyCnpj }: { children: React.ReactNode, companyName?: string, companyCnpj?: string }) {
+export function DashboardShell({ children, companyName, companyCnpj, userName }: { children: React.ReactNode, companyName?: string, companyCnpj?: string, userName?: string }) {
     const [isCollapsed, setIsCollapsed] = useState(false)
 
     return (
@@ -14,6 +14,7 @@ export function DashboardShell({ children, companyName, companyCnpj }: { childre
                     toggleCollapse={() => setIsCollapsed(!isCollapsed)}
                     companyName={companyName}
                     companyCnpj={companyCnpj}
+                    userName={userName}
                 />
             </div>
             <main className={`min-h-screen transition-all duration-300 ${isCollapsed ? 'md:pl-20' : 'md:pl-64'}`}>

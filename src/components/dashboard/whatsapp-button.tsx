@@ -52,7 +52,7 @@ export function WhatsAppButton({ phone, clientName, date, serviceName, messageTe
     }
 
     return (
-        <Button onClick={handleSend} title="Enviar WhatsApp" className="h-8 w-8 hover:bg-green-50 hover:text-green-600" {...props}>
+        <Button onClick={handleSend} title="Enviar WhatsApp" size="icon" className="h-8 w-8 hover:bg-green-50 hover:text-green-600" {...props}>
             <svg
                 viewBox="0 0 24 24"
                 fill="currentColor"

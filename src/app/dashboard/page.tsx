@@ -8,11 +8,16 @@ import { DashboardDateFilter } from "@/components/dashboard/dashboard-date-filte
 import { DashboardCalendar } from "@/components/dashboard/dashboard-calendar"
 import { startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from "date-fns"
 
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth"
+import { redirect } from "next/navigation"
+
 interface DashboardDataParams {
     period: 'today' | 'week' | 'month'
+    empresaId: string
 }
 
-async function getDashboardData({ period }: DashboardDataParams) {
+async function getDashboardData({ period, empresaId }: DashboardDataParams) {
     // Force Brazil Timezone for "Today"
     // In Brazil, today started at T03:00:00Z (which is 00:00 BRT) if we are talking about UTC representation of BRT day start?
     // Actually simpler: Create a date string for Brazil, parse it.
@@ -60,17 +65,23 @@ async function getDashboardData({ period }: DashboardDataParams) {
 
     const appointmentsCount = await db.agendamento.count({
         where: {
+            empresaId, // Scope to company
             data: {
                 gte: startDate,
-                lt: endDate, // Changed to lt for strict boundary
+                lt: endDate,
             },
         },
     })
 
-    const totalClients = await db.cliente.count()
+    const totalClients = await db.cliente.count({
+        where: {
+            empresaId
+        }
+    })
 
     const revenueAppointments = await db.agendamento.findMany({
         where: {
+            empresaId,
             data: {
                 gte: startDate,
                 lt: endDate,
@@ -96,6 +107,7 @@ async function getDashboardData({ period }: DashboardDataParams) {
 
     const upcomingAppointments = await db.agendamento.findMany({
         where: {
+            empresaId,
             data: {
                 gte: todayStart,
                 lt: todayEnd
@@ -126,12 +138,18 @@ export default async function DashboardPage({
 }) {
     const params = await searchParams
     const period = (params.period as 'today' | 'week' | 'month') || 'today'
+
+    const session = await getServerSession(authOptions)
+    if (!session || !session.user.empresaId) {
+        redirect('/login')
+    }
+
     const {
         appointmentsCount,
         totalClients,
         projectedRevenue,
         upcomingAppointments,
-    } = await getDashboardData({ period })
+    } = await getDashboardData({ period, empresaId: session.user.empresaId })
 
     const periodLabels = {
         today: "hoje",

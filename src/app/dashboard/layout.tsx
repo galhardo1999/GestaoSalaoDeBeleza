@@ -24,6 +24,7 @@ export default async function AdminLayout({
         <DashboardShell
             companyName={user?.empresa?.nome}
             companyCnpj={user?.empresa?.cnpj}
+            userName={user?.nome}
         >
             {children}
         </DashboardShell>

@@ -51,9 +51,10 @@ interface SidebarProps {
     toggleCollapse: () => void
     companyName?: string
     companyCnpj?: string
+    userName?: string
 }
 
-export function Sidebar({ isCollapsed, toggleCollapse, companyName, companyCnpj }: SidebarProps) {
+export function Sidebar({ isCollapsed, toggleCollapse, companyName, companyCnpj, userName }: SidebarProps) {
     const pathname = usePathname()
 
     return (
@@ -99,6 +100,11 @@ export function Sidebar({ isCollapsed, toggleCollapse, companyName, companyCnpj 
                                 {companyCnpj && (
                                     <p className="text-sm text-gray-400 mt-0.5">
                                         {companyCnpj.replace(/\D/g, "").replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2}).*/, "$1.$2.$3/$4-$5")}
+                                    </p>
+                                )}
+                                {userName && (
+                                    <p className="text-xs text-gray-500 mt-1 font-medium truncate" title={userName}>
+                                        Usuário: {userName}
                                     </p>
                                 )}
                             </div>

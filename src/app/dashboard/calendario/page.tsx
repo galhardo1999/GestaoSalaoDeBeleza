@@ -1,11 +1,21 @@
 import { db } from "@/lib/db"
 import { CalendarView } from "@/components/dashboard/calendar-view"
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth"
+import { redirect } from "next/navigation"
 
 export const dynamic = 'force-dynamic'
 
 export default async function CalendarioPage() {
+    const session = await getServerSession(authOptions)
+    if (!session || !session.user.empresaId) {
+        redirect('/login')
+    }
+    const empresaId = session.user.empresaId
+
     const [agendamentos, clientes, servicos, colaboradores] = await Promise.all([
         db.agendamento.findMany({
+            where: { empresaId },
             include: {
                 cliente: true,
                 servico: true,
@@ -13,13 +23,15 @@ export default async function CalendarioPage() {
             }
         }),
         db.cliente.findMany({
+            where: { empresaId },
             orderBy: { nome: 'asc' }
         }),
         db.servico.findMany({
-            where: { ativo: true },
+            where: { ativo: true, empresaId },
             orderBy: { nome: 'asc' }
         }),
         db.colaborador.findMany({
+            where: { empresaId },
             orderBy: { nome: 'asc' }
         })
     ])

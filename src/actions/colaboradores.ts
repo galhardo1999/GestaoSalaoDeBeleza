@@ -177,7 +177,7 @@ export async function editarColaborador(
     } catch (error) {
         console.error('Erro ao editar colaborador:', error)
         return {
-            message: 'Erro no Banco de Dados: Falha ao atualizar colaborador.',
+            message: `Erro: ${(error as Error).message}`,
         }
     }
 

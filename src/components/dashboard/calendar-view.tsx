@@ -22,6 +22,13 @@ import {
     subWeeks,
 } from "date-fns"
 import { ptBR } from "date-fns/locale"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
 
 // Interfaces based on Prisma Schema + View needs
 type ViewMode = "month" | "week"
@@ -33,13 +40,15 @@ export interface CalendarAppointment {
     cliente: {
         nome: string
     }
+    colaborador?: {
+        id: string
+        nome: string
+    } | null
     servico: {
+        id: string
         nome: string
         duracaoMin: number
     }
-    colaborador?: {
-        nome: string
-    } | null
 }
 
 interface CalendarViewProps {
@@ -56,6 +65,10 @@ export function CalendarView({ agendamentos, clientes, servicos, colaboradores }
     const [currentDate, setCurrentDate] = useState(new Date())
     const [selectedDate, setSelectedDate] = useState(new Date())
     const [viewMode, setViewMode] = useState<ViewMode>("month")
+
+    // Filters
+    const [selectedColaborador, setSelectedColaborador] = useState<string>("all")
+    const [selectedServico, setSelectedServico] = useState<string>("all")
 
     const navigatePrev = () => {
         if (viewMode === "month") {
@@ -80,7 +93,47 @@ export function CalendarView({ agendamentos, clientes, servicos, colaboradores }
 
     const getAppointmentsForDate = (date: Date) => {
         return agendamentos
-            .filter((apt) => isSameDay(new Date(apt.data), date) && apt.status !== 'CANCELADO')
+            .filter((apt) => {
+                const sameDay = isSameDay(new Date(apt.data), date)
+                const activeStatus = apt.status !== 'CANCELADO'
+
+                if (!sameDay || !activeStatus) return false
+
+                // Filters
+                if (selectedColaborador !== 'all' && apt.colaborador?.nome !== selectedColaborador) {
+                    // Note: Filtering by ID would be better if we had ID in the formatted object passed to view.
+                    // The view props interface says 'colaborador: { nome: string }'.
+                    // Let's check if 'colaboradores' prop has IDs. Yes it does.
+                    // But 'agendamentos' prop might only have names?
+                    // Let's check line 40: colaborador?: { nome: string } | null.
+                    // To be safe I should maybe filter by name or verify if I can update the interface.
+                    // The server page maps it. Let's filter by Name for now if ID is missing or match the prop.
+                    // Actually, let's update the interface to include ID if possible, BUT the server page (lines 37-44)
+                    // doesn't explicitly strip ID, it spreads `...apt`. So `apt.colaborador` likely has ID.
+                    // Let's trust that `apt.colaborador` has `id` even if interface is minimal.
+                    // Safe approach: Filter by Name since that's what we display and what matches the select items?
+                    // Typically 'colaboradores' list has IDs. 
+                    // Let's use ID for the select value, and check against apt.colaborador.id (if existing) or name?
+                    // Let's modify the interface to be safe.
+                }
+
+                if (selectedColaborador !== 'all') {
+                    // If appointment has no colaborador, it doesn't match a specific colaborador filter
+                    if (!apt.colaborador) return false
+                    // We will use the ID from the `colaboradores` list as value.
+                    // We need to ensure `apt.colaborador` has `id`.
+                    // The interface defined in this file (lines 29-43) is:
+                    // contributor?: { nome: string } | null
+                    // I will update the interface in a separate chunk to include ID.
+                    if ((apt.colaborador as any).id !== selectedColaborador) return false
+                }
+
+                if (selectedServico !== 'all') {
+                    if ((apt.servico as any).id !== selectedServico) return false
+                }
+
+                return true
+            })
             .sort((a, b) => new Date(a.data).getTime() - new Date(b.data).getTime())
     }
 
@@ -116,6 +169,54 @@ export function CalendarView({ agendamentos, clientes, servicos, colaboradores }
                     <p className="text-sm text-muted-foreground">Gerencie sua agenda de atendimentos</p>
                 </div>
                 <NovoAgendamentoDialog clientes={clientes} servicos={servicos} colaboradores={colaboradores} />
+            </div>
+
+            {/* Filters */}
+            <div className="flex flex-col sm:flex-row gap-4 p-4 bg-white rounded-lg border border-border shadow-sm">
+                <div className="w-full sm:w-[250px]">
+                    <Select value={selectedColaborador} onValueChange={setSelectedColaborador}>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Filtrar por Colaborador" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">Todos os Colaboradores</SelectItem>
+                            {colaboradores.map((colaborador) => (
+                                <SelectItem key={colaborador.id} value={colaborador.id}>
+                                    {colaborador.nome}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                <div className="w-full sm:w-[250px]">
+                    <Select value={selectedServico} onValueChange={setSelectedServico}>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Filtrar por Serviço" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">Todos os Serviços</SelectItem>
+                            {servicos.map((servico) => (
+                                <SelectItem key={servico.id} value={servico.id}>
+                                    {servico.nome}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                {(selectedColaborador !== 'all' || selectedServico !== 'all') && (
+                    <Button
+                        variant="ghost"
+                        onClick={() => {
+                            setSelectedColaborador('all')
+                            setSelectedServico('all')
+                        }}
+                        className="w-full sm:w-auto text-muted-foreground"
+                    >
+                        Limpar Filtros
+                    </Button>
+                )}
             </div>
 
             {/* Calendar Card */}

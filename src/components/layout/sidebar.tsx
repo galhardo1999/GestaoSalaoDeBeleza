@@ -4,7 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { ChevronLeft, ChevronRight, LayoutDashboard, Calendar, Users, Scissors, LogOut, ListTodo, Settings, Sparkles, UserCog, Wallet, BarChart3, ChevronDown, Percent, PieChart } from "lucide-react"
+import { ChevronLeft, ChevronRight, LayoutDashboard, Calendar, Users, Scissors, LogOut, ListTodo, Settings, Sparkles, UserCog, Wallet, BarChart3, ChevronDown, Percent, PieChart, Folder } from "lucide-react"
 import { signOut } from "next-auth/react"
 import {
     Tooltip,
@@ -52,19 +52,26 @@ const routes: RouteItem[] = [
         href: "/dashboard/agendamentos",
     },
     {
-        label: "Clientes",
-        icon: Users,
-        href: "/dashboard/clientes",
-    },
-    {
-        label: "Colaboradores",
-        icon: UserCog,
-        href: "/dashboard/colaboradores",
-    },
-    {
-        label: "Serviços",
-        icon: Scissors,
-        href: "/dashboard/servicos",
+        label: "Cadastros",
+        icon: Folder,
+        href: "/dashboard/cadastros",
+        submenus: [
+            {
+                label: "Clientes",
+                icon: Users,
+                href: "/dashboard/clientes",
+            },
+            {
+                label: "Colaboradores",
+                icon: UserCog,
+                href: "/dashboard/colaboradores",
+            },
+            {
+                label: "Serviços",
+                icon: Scissors,
+                href: "/dashboard/servicos",
+            },
+        ]
     },
     {
         label: "Financeiro",
@@ -186,24 +193,42 @@ export function Sidebar({ isCollapsed, toggleCollapse, companyName, companyCnpj,
                                                 <Button
                                                     variant="ghost"
                                                     className={cn(
-                                                        "w-full h-auto p-3.5 justify-center rounded-2xl",
-                                                        isActive ? "bg-blue-50 text-blue-600" : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
+                                                        "w-full h-auto p-3.5 justify-center rounded-2xl group",
+                                                        isActive ? "bg-blue-50 text-blue-600" : "text-gray-500 hover:text-gray-900 hover:bg-gray-50",
+                                                        "px-2"
                                                     )}
                                                 >
-                                                    <route.icon className={cn("h-[22px] w-[22px]", isActive && "text-blue-600")} />
+                                                    <div className="flex items-center flex-1">
+                                                        <route.icon className={cn("h-[22px] w-[22px] transition-transform duration-200 group-hover:scale-110",
+                                                            isActive ? "text-blue-600" : "text-gray-400 group-hover:text-gray-500"
+                                                        )} />
+                                                    </div>
                                                 </Button>
                                             </DropdownMenuTrigger>
-                                            <DropdownMenuContent side="right" className="w-56" align="start">
-                                                <DropdownMenuLabel>{route.label}</DropdownMenuLabel>
-                                                <DropdownMenuSeparator />
-                                                {route.submenus.map(sub => (
-                                                    <DropdownMenuItem key={sub.href} asChild>
-                                                        <Link href={sub.href} className="flex items-center cursor-pointer">
-                                                            <sub.icon className="mr-2 h-4 w-4" />
-                                                            {sub.label}
-                                                        </Link>
-                                                    </DropdownMenuItem>
-                                                ))}
+                                            <DropdownMenuContent side="right" align="start" sideOffset={20} className="w-48 ml-2">
+                                                <DropdownMenuLabel className="text-xs font-normal text-muted-foreground px-2 py-1.5">
+                                                    {route.label}
+                                                </DropdownMenuLabel>
+                                                <DropdownMenuSeparator className="-mx-1 my-1" />
+                                                {route.submenus.map(sub => {
+                                                    const isSubActive = pathname === sub.href
+                                                    return (
+                                                        <DropdownMenuItem key={sub.href} asChild className="p-0 focus:bg-transparent">
+                                                            <Link
+                                                                href={sub.href}
+                                                                className={cn(
+                                                                    "flex items-center w-full px-2 py-1.5 mx-1 my-0.5 rounded-md text-sm transition-colors cursor-pointer",
+                                                                    isSubActive
+                                                                        ? "bg-blue-50 text-blue-600 font-medium"
+                                                                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                                                                )}
+                                                            >
+                                                                <sub.icon className={cn("mr-2 h-4 w-4", isSubActive ? "text-blue-600" : "text-gray-400")} />
+                                                                {sub.label}
+                                                            </Link>
+                                                        </DropdownMenuItem>
+                                                    )
+                                                })}
                                             </DropdownMenuContent>
                                         </DropdownMenu>
                                     )
@@ -222,12 +247,14 @@ export function Sidebar({ isCollapsed, toggleCollapse, companyName, companyCnpj,
                                             <Button
                                                 variant="ghost"
                                                 className={cn(
-                                                    "w-full p-3.5 justify-between font-medium rounded-2xl h-auto hover:bg-gray-50",
-                                                    isActive ? "text-blue-600" : "text-gray-500"
+                                                    "w-full p-3.5 justify-between font-medium rounded-2xl h-auto transition-all duration-200 ease-in-out group text-sm",
+                                                    isActive
+                                                        ? "text-blue-600 bg-blue-50 font-semibold"
+                                                        : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
                                                 )}
                                             >
                                                 <div className="flex items-center">
-                                                    <route.icon className={cn("h-[22px] w-[22px] mr-3.5 transition-transform duration-200",
+                                                    <route.icon className={cn("h-[22px] w-[22px] mr-3.5 transition-transform duration-200 group-hover:scale-110",
                                                         isActive ? "text-blue-600" : "text-gray-400 group-hover:text-gray-500"
                                                     )} />
                                                     {route.label}

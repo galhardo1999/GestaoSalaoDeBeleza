@@ -42,7 +42,9 @@ export const authOptions: NextAuthOptions = {
                     id: user.id,
                     cnpj: user.cnpj,
                     name: user.nome,
-                    email: undefined, // Explicitly undefined as we use CNPJ now
+                    email: undefined,
+                    cargo: user.cargo,
+                    empresaId: user.empresaId as string,
                 }
             }
         })
@@ -53,6 +55,10 @@ export const authOptions: NextAuthOptions = {
                 session.user.id = token.id as string
                 // @ts-ignore
                 session.user.cnpj = token.cnpj as string
+                // @ts-ignore
+                session.user.cargo = token.cargo as string
+                // @ts-ignore
+                session.user.empresaId = token.empresaId as string
             }
             return session
         },
@@ -61,6 +67,10 @@ export const authOptions: NextAuthOptions = {
                 token.id = user.id
                 // @ts-ignore
                 token.cnpj = user.cnpj
+                // @ts-ignore
+                token.cargo = user.cargo
+                // @ts-ignore
+                token.empresaId = user.empresaId
             }
             return token
         }

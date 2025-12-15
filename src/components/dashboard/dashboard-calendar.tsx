@@ -100,7 +100,7 @@ export function DashboardCalendar() {
     }
 
     return (
-        <Card className="border-none shadow-none bg-white">
+        <Card className="bg-white">
             <CardContent className="p-6">
                 {/* Header */}
                 <div className="mb-6 flex items-center justify-between px-2">

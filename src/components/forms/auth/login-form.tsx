@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
-import { signIn } from "next-auth/react"
+import { signIn, getSession } from "next-auth/react"
 import { Loader2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -56,7 +56,13 @@ export function LoginForm() {
             setError("Credenciais inválidas. Verifique CNPJ e senha.")
             setIsLoading(false)
         } else {
-            router.push("/dashboard")
+            // Check session to determine redirect
+            const session = await getSession()
+            if (session?.user?.cargo === "SUPER_ADMIN") {
+                router.push("/admin")
+            } else {
+                router.push("/dashboard")
+            }
             router.refresh()
         }
     }

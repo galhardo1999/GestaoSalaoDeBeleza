@@ -15,20 +15,30 @@ import { PaginationControl } from "@/components/ui/pagination-control"
 import { EditarServicoDialog } from "@/components/forms/servicos/editar-servico-dialog"
 import { Prisma } from "@prisma/client"
 
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth"
+import { redirect } from "next/navigation"
+
 export default async function ServicosPage({
     searchParams,
 }: {
     searchParams: Promise<{ page?: string; q?: string }>
 }) {
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.empresaId) redirect("/login")
+
     const params = await searchParams
     const currentPage = Number(params.page) || 1
     const query = params.q || ''
     const itemsPerPage = 10
     const skip = (currentPage - 1) * itemsPerPage
 
-    const where: Prisma.ServicoWhereInput = query ? {
-        nome: { contains: query, mode: Prisma.QueryMode.insensitive },
-    } : {}
+    const where: Prisma.ServicoWhereInput = {
+        empresaId: session.user.empresaId,
+        ...(query ? {
+            nome: { contains: query, mode: Prisma.QueryMode.insensitive },
+        } : {})
+    }
 
     const [totalItems, servicos] = await Promise.all([
         db.servico.count({ where }),

@@ -6,7 +6,8 @@ declare module "next-auth" {
             id: string
             name: string
             cnpj: string
-            // role: string
+            cargo: "ADMIN" | "FUNCIONARIO" | "SUPER_ADMIN"
+            empresaId: string
         }
     }
 }

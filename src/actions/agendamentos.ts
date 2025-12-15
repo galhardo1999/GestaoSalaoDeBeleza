@@ -4,6 +4,8 @@ import { db } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { agendamentoSchema } from '@/lib/validations/agendamento'
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth"
 
 type ActionState = {
     errors?: {
@@ -20,6 +22,11 @@ export async function criarAgendamento(
     prevState: ActionState,
     formData: FormData
 ): Promise<ActionState> {
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.empresaId) {
+        return { message: "Erro: Usuário sem empresa definida." }
+    }
+
     const validatedFields = agendamentoSchema.safeParse({
         clienteId: formData.get('clienteId'),
         servicoId: formData.get('servicoId'),
@@ -45,6 +52,8 @@ export async function criarAgendamento(
                 colaboradorId: colaboradorId || null,
                 observacoes,
                 status: 'PENDENTE' as any,
+                empresaId: session.user.empresaId,
+                usuarioId: session.user.id
             },
         })
     } catch (error) {
@@ -60,7 +69,16 @@ export async function criarAgendamento(
 }
 
 export async function cancelarAgendamento(id: string) {
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.empresaId) return
+
     try {
+        // Ownership check
+        const count = await db.agendamento.count({
+            where: { id, empresaId: session.user.empresaId }
+        })
+        if (count === 0) throw new Error("Acesso negado")
+
         await db.agendamento.update({
             where: { id },
             data: { status: 'CANCELADO' }
@@ -73,10 +91,17 @@ export async function cancelarAgendamento(id: string) {
     }
 }
 
-
-
 export async function confirmarAgendamento(id: string) {
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.empresaId) return
+
     try {
+        // Ownership check
+        const count = await db.agendamento.count({
+            where: { id, empresaId: session.user.empresaId }
+        })
+        if (count === 0) throw new Error("Acesso negado")
+
         await db.agendamento.update({
             where: { id },
             data: { status: 'AGENDADO' }
@@ -93,12 +118,21 @@ export async function reagendarAgendamento(
     id: string,
     novaData: Date
 ): Promise<{ message?: string; error?: string }> {
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.empresaId) return { error: "Sem permissão" }
+
     try {
+        // Ownership check
+        const count = await db.agendamento.count({
+            where: { id, empresaId: session.user.empresaId }
+        })
+        if (count === 0) return { error: "Agendamento não encontrado" }
+
         await db.agendamento.update({
             where: { id },
             data: {
                 data: novaData,
-                status: 'AGENDADO' // Reset status just in case (e.g. from Cancelled to Scheduled if allowed, otherwise assumes Scheduled)
+                status: 'AGENDADO'
             }
         })
         revalidatePath('/dashboard/agendamentos')

@@ -4,6 +4,8 @@ import { db } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
 import { colaboradorSchema, colaboradorEdicaoSchema } from '@/lib/validations/colaborador'
 import { hash } from 'bcryptjs'
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth"
 
 type ActionState = {
     errors?: {
@@ -19,6 +21,11 @@ export async function criarColaborador(
     prevState: ActionState,
     formData: FormData
 ): Promise<ActionState> {
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.empresaId) {
+        return { message: "Erro: Permissão negada." }
+    }
+
     const servicosRaw = formData.getAll('servicos') as string[]
 
     const validatedFields = colaboradorSchema.safeParse({
@@ -38,8 +45,8 @@ export async function criarColaborador(
     const { nome, email, senha, foto, servicos } = validatedFields.data
 
     try {
-        const existingUser = await db.colaborador.findUnique({
-            where: { email }
+        const existingUser = await db.colaborador.findFirst({
+            where: { email } // Email should be unique globally or per company? Schema says unique globally for simplicity usually, but here email has @unique constraint.
         })
 
         if (existingUser) {
@@ -52,12 +59,26 @@ export async function criarColaborador(
 
         const hashedPassword = await hash(senha, 10)
 
+        // Verify services ownership
+        if (servicos && servicos.length > 0) {
+            const count = await db.servico.count({
+                where: {
+                    id: { in: servicos },
+                    empresaId: session.user.empresaId
+                }
+            })
+            if (count !== servicos.length) {
+                return { message: "Serviço inválido ou de outra empresa." }
+            }
+        }
+
         await db.colaborador.create({
             data: {
                 nome,
                 email,
                 senha: hashedPassword,
                 foto: foto || null,
+                empresaId: session.user.empresaId,
                 servicos: servicos && servicos.length > 0 ? {
                     connect: servicos.map(id => ({ id }))
                 } : undefined
@@ -75,7 +96,16 @@ export async function criarColaborador(
 }
 
 export async function excluirColaborador(id: string) {
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.empresaId) return
+
     try {
+        // Ownership check
+        const count = await db.colaborador.count({
+            where: { id, empresaId: session.user.empresaId }
+        })
+        if (count === 0) return
+
         await db.colaborador.delete({
             where: { id }
         })
@@ -90,6 +120,11 @@ export async function editarColaborador(
     prevState: ActionState,
     formData: FormData
 ): Promise<ActionState> {
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.empresaId) {
+        return { message: "Erro: Permissão negada" }
+    }
+
     const id = formData.get('id') as string
 
     const servicosRaw = formData.getAll('servicos') as string[]
@@ -116,6 +151,12 @@ export async function editarColaborador(
     const { nome, email, senha, foto, servicos } = validatedFields.data
 
     try {
+        // Ownership
+        const existing = await db.colaborador.findFirst({
+            where: { id, empresaId: session.user.empresaId }
+        })
+        if (!existing) return { message: "Colaborador não encontrado." }
+
         const dataToUpdate: any = {
             nome,
             email,

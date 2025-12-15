@@ -3,6 +3,8 @@
 import { db } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
 import { servicoSchema } from '@/lib/validations/servico'
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth"
 
 type ActionState = {
     errors?: {
@@ -18,6 +20,11 @@ export async function criarServico(
     prevState: ActionState,
     formData: FormData
 ): Promise<ActionState> {
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.empresaId) {
+        return { message: "Erro: Permissão negada." }
+    }
+
     const validatedFields = servicoSchema.safeParse({
         nome: formData.get('nome'),
         preco: formData.get('preco'),
@@ -40,6 +47,7 @@ export async function criarServico(
                 preco: Number(preco),
                 duracaoMin: Number(duracaoMin),
                 ativo: true,
+                empresaId: session.user.empresaId,
             },
         })
     } catch (error) {
@@ -54,7 +62,16 @@ export async function criarServico(
 }
 
 export async function excluirServico(id: string) {
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.empresaId) return
+
     try {
+        // Ownership check
+        const count = await db.servico.count({
+            where: { id, empresaId: session.user.empresaId }
+        })
+        if (count === 0) return
+
         await db.servico.delete({
             where: { id }
         })
@@ -69,6 +86,11 @@ export async function editarServico(
     prevState: ActionState,
     formData: FormData
 ): Promise<ActionState> {
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.empresaId) {
+        return { message: "Erro: Permissão negada." }
+    }
+
     const id = formData.get('id') as string
 
     const validatedFields = servicoSchema.safeParse({
@@ -87,6 +109,12 @@ export async function editarServico(
     const { nome, preco, duracaoMin } = validatedFields.data
 
     try {
+        // Ownership
+        const existing = await db.servico.findFirst({
+            where: { id, empresaId: session.user.empresaId }
+        })
+        if (!existing) return { message: "Serviço não encontrado." }
+
         await db.servico.update({
             where: { id },
             data: {

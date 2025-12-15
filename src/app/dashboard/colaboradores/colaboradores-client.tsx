@@ -125,7 +125,7 @@ export function ColaboradoresClient({
                         placeholder="Buscar por nome, email ou código..."
                         value={searchTerm}
                         onChange={(e) => handleSearch(e.target.value)}
-                        className="pl-10"
+                        className="pl-10 bg-white"
                     />
                 </div>
             </div>

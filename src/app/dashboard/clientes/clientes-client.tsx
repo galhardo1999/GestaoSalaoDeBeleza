@@ -113,7 +113,7 @@ export function ClientesClient({ clientes, pagination }: ClientesClientProps) {
                         placeholder="Buscar por nome, CPF, código ou telefone..."
                         value={searchTerm}
                         onChange={(e) => handleSearch(e.target.value)}
-                        className="pl-10"
+                        className="pl-10 bg-white"
                     />
                 </div>
             </div>

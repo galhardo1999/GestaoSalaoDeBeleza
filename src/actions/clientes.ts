@@ -4,6 +4,8 @@ import { db } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { clienteSchema } from '@/lib/validations/cliente'
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth"
 
 export type ActionState = {
     errors?: {
@@ -21,6 +23,11 @@ export async function criarCliente(
     prevState: ActionState,
     formData: FormData
 ): Promise<ActionState> {
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.empresaId) {
+        return { message: "Erro: Usuário não autenticado ou sem empresa." }
+    }
+
     const validatedFields = clienteSchema.safeParse({
         nome: formData.get('nome'),
         email: formData.get('email'),
@@ -45,6 +52,7 @@ export async function criarCliente(
                 cpf: cpf || null,
                 telefone,
                 observacoes,
+                empresaId: session.user.empresaId
             },
         })
     } catch (error) {
@@ -60,14 +68,24 @@ export async function criarCliente(
 }
 
 export async function excluirCliente(id: string) {
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.empresaId) return { error: "Sem permissão." }
+
     try {
         const agendamentosCount = await db.agendamento.count({
-            where: { clienteId: id }
+            where: { clienteId: id, empresaId: session.user.empresaId }
         })
 
         if (agendamentosCount > 0) {
             return { error: "Não é possível fazer a exclusão do cliente, pois tem lançamentos nele." }
         }
+
+        // Verify ownership
+        const cliente = await db.cliente.findFirst({
+            where: { id, empresaId: session.user.empresaId }
+        })
+
+        if (!cliente) return { error: "Cliente não encontrado ou acesso negado." }
 
         await db.cliente.delete({
             where: { id }
@@ -81,9 +99,12 @@ export async function excluirCliente(id: string) {
 }
 
 export async function buscarDetalhesCliente(id: string) {
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.empresaId) return null
+
     try {
-        const cliente = await db.cliente.findUnique({
-            where: { id },
+        const cliente = await db.cliente.findFirst({
+            where: { id, empresaId: session.user.empresaId },
             include: {
                 agendamentos: {
                     orderBy: { data: 'desc' },
@@ -107,6 +128,11 @@ export async function editarCliente(
     prevState: ActionState,
     formData: FormData
 ): Promise<ActionState> {
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.empresaId) {
+        return { message: "Erro: Sem permissão." }
+    }
+
     const id = formData.get('id') as string
 
     const validatedFields = clienteSchema.safeParse({
@@ -126,6 +152,12 @@ export async function editarCliente(
     const { nome, email, cpf, telefone, observacoes } = validatedFields.data
 
     try {
+        // Check ownership before update
+        const existing = await db.cliente.count({
+            where: { id, empresaId: session.user.empresaId }
+        })
+        if (!existing) return { message: "Cliente não encontrado." }
+
         await db.cliente.update({
             where: { id },
             data: {

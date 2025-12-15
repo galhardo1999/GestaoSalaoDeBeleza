@@ -9,6 +9,7 @@ generator client {
 enum Cargo {
   ADMIN
   FUNCIONARIO
+  SUPER_ADMIN
 }
 
 enum StatusAgendamento {
@@ -48,13 +49,16 @@ model Cliente {
   atualizadoEm DateTime @updatedAt @map("atualizado_em")
 
   agendamentos Agendamento[]
+  
+  empresaId String
+  empresa   Empresa @relation(fields: [empresaId], references: [id])
 
   @@map("clientes")
 }
 
 model Colaborador {
   id        String   @id @default(cuid())
-  codigo    Int      @unique @default(autoincrement())
+  codigo    Int      @default(autoincrement())
   nome      String
   email     String   @unique
   senha     String
@@ -63,7 +67,10 @@ model Colaborador {
   atualizadoEm DateTime @updatedAt @map("atualizado_em")
 
   agendamentos Agendamento[]
-  servicos     Servico[] // Relação N:N implícita
+  servicos     Servico[] 
+
+  empresaId String
+  empresa   Empresa @relation(fields: [empresaId], references: [id])
 
   @@map("colaboradores")
 }
@@ -78,7 +85,10 @@ model Servico {
   atualizadoEm DateTime @updatedAt @map("atualizado_em")
 
   agendamentos Agendamento[]
-  colaboradores Colaborador[] // Relação N:N implícita
+  colaboradores Colaborador[] 
+
+  empresaId String
+  empresa   Empresa @relation(fields: [empresaId], references: [id])
 
   @@map("servicos")
 }
@@ -101,6 +111,9 @@ model Agendamento {
 
   colaboradorId String? @map("colaborador_id")
   colaborador Colaborador? @relation(fields: [colaboradorId], references: [id])
+  
+  empresaId String
+  empresa   Empresa @relation(fields: [empresaId], references: [id])
 
   criadoEm    DateTime @default(now()) @map("criado_em")
   atualizadoEm DateTime @updatedAt @map("atualizado_em")
@@ -122,6 +135,10 @@ model Empresa {
   atualizadoEm DateTime @updatedAt @map("atualizado_em")
 
   usuarios Usuario[]
+  clientes Cliente[]
+  colaboradores Colaborador[]
+  servicos Servico[]
+  agendamentos Agendamento[]
 
   @@map("empresas")
 }

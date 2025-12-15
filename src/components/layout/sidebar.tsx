@@ -174,7 +174,7 @@ export function Sidebar({ isCollapsed, toggleCollapse, companyName, companyCnpj 
                     <Tooltip>
                         <TooltipTrigger asChild>
                             <Button
-                                onClick={() => signOut()}
+                                onClick={() => signOut({ callbackUrl: "/login" })}
                                 variant="ghost"
                                 className={cn(
                                     "w-full group text-gray-500 hover:text-red-500 hover:bg-red-50 justify-start rounded-xl p-3 h-auto",

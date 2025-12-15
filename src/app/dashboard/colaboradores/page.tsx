@@ -2,23 +2,33 @@ import { db } from "@/lib/db"
 import { Prisma } from "@prisma/client"
 import { ColaboradoresClient } from "./colaboradores-client"
 
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth"
+import { redirect } from "next/navigation"
+
 export default async function ColaboradoresPage({
     searchParams,
 }: {
     searchParams: Promise<{ page?: string; q?: string }>
 }) {
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.empresaId) redirect("/login")
+
     const params = await searchParams
     const currentPage = Number(params.page) || 1
     const query = params.q || ''
     const itemsPerPage = 10
     const skip = (currentPage - 1) * itemsPerPage
 
-    const where: Prisma.ColaboradorWhereInput = query ? {
-        OR: [
-            { nome: { contains: query, mode: Prisma.QueryMode.insensitive } },
-            { email: { contains: query, mode: Prisma.QueryMode.insensitive } },
-        ]
-    } : {}
+    const where: Prisma.ColaboradorWhereInput = {
+        empresaId: session.user.empresaId,
+        ...(query ? {
+            OR: [
+                { nome: { contains: query, mode: Prisma.QueryMode.insensitive } },
+                { email: { contains: query, mode: Prisma.QueryMode.insensitive } },
+            ]
+        } : {})
+    }
 
     const [totalItems, colaboradores, servicos] = await Promise.all([
         db.colaborador.count({ where }),
@@ -32,7 +42,7 @@ export default async function ColaboradoresPage({
             } as any
         }),
         db.servico.findMany({
-            where: { ativo: true },
+            where: { ativo: true, empresaId: session.user.empresaId },
             orderBy: { nome: 'asc' }
         })
     ])

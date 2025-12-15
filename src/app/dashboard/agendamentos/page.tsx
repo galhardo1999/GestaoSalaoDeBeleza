@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { Prisma } from "@prisma/client"
 import { AgendamentosClient } from "./agendamentos-client"
+import { redirect } from "next/navigation"
 import { expireAppointments } from "@/lib/agendamento-utils"
 
 export default async function AgendamentosPage({
@@ -14,6 +15,8 @@ export default async function AgendamentosPage({
     await expireAppointments()
 
     const session = await getServerSession(authOptions)
+    if (!session?.user?.empresaId) redirect("/login")
+
     const params = await searchParams
     const currentPage = Number(params.page) || 1
     const query = params.q || ''
@@ -50,6 +53,7 @@ export default async function AgendamentosPage({
     const skip = (currentPage - 1) * itemsPerPage
 
     const where: Prisma.AgendamentoWhereInput = {
+        empresaId: session.user.empresaId,
         AND: [
             query ? {
                 OR: [
@@ -72,7 +76,7 @@ export default async function AgendamentosPage({
                 colaborador: true,
             },
             orderBy: {
-                data: 'desc',
+                data: 'asc',
             },
             skip,
             take: itemsPerPage,
@@ -86,15 +90,17 @@ export default async function AgendamentosPage({
     const totalPages = Math.ceil(totalItems / itemsPerPage)
 
     const clientes = await db.cliente.findMany({
+        where: { empresaId: session.user.empresaId },
         orderBy: { nome: 'asc' }
     })
 
     const servicos = await db.servico.findMany({
-        where: { ativo: true },
+        where: { ativo: true, empresaId: session.user.empresaId },
         orderBy: { nome: 'asc' }
     })
 
     const colaboradores = await db.colaborador.findMany({
+        where: { empresaId: session.user.empresaId },
         orderBy: { nome: 'asc' }
     })
 

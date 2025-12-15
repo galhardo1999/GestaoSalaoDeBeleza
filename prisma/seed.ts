@@ -1,50 +1,84 @@
-import { PrismaClient } from '@prisma/client'
-import { hash } from 'bcryptjs'
-import { Pool } from 'pg'
-import { PrismaPg } from '@prisma/adapter-pg'
 
-const connectionString = `${process.env.DATABASE_URL}`
-const pool = new Pool({ connectionString })
-const adapter = new PrismaPg(pool)
-const prisma = new PrismaClient({ adapter })
+import { db as prisma } from '../src/lib/db'
+import { hash } from 'bcryptjs'
+
+// const prisma = new PrismaClient()
 
 async function main() {
-    console.log('Start seeding ...')
+    // 1. Clean up database
+    // We delete in order to avoid foreign key constraints
+    await prisma.agendamento.deleteMany()
+    await prisma.servico.deleteMany()
+    await prisma.colaborador.deleteMany()
+    await prisma.cliente.deleteMany()
+    await prisma.usuario.deleteMany()
+    await prisma.empresa.deleteMany()
 
-    // Create Empresa
-    const empresa = await prisma.empresa.upsert({
-        where: { cnpj: '00.000.000/0000-00' },
-        update: {},
-        create: {
-            nome: 'Beleza Premium',
-            cnpj: '00.000.000/0000-00',
-            telefone1: '(11) 99999-9999',
-            endereco: 'Rua Exemplo, 123 - Centro, São Paulo - SP',
-        },
-    })
+    console.log('Database cleaned')
 
-    console.log('Created empresa:', empresa)
-
-    // Create Admin User linked to Empresa
     const password = await hash('123456', 10)
 
-    const user = await prisma.usuario.upsert({
-        where: { cnpj: '00.000.000/0001-91' }, // Using a different CNPJ for user login if needed, or same if user is the company rep
-        update: {
-            empresaId: empresa.id
-        },
-        create: {
-            nome: 'Admin',
-            cnpj: '00.000.000/0001-91',
+    // 2. Create Super Admin
+    await prisma.usuario.create({
+        data: {
+            nome: 'Super Admin',
+            cnpj: '99.999.999/9999-99',
             senha: password,
-            cargo: 'ADMIN',
-            empresaId: empresa.id,
-        },
+            cargo: 'SUPER_ADMIN',
+            // No empresaId for Super Admin
+        }
     })
+    console.log('Super Admin created')
 
-    console.log('Created user:', user)
+    // 3. Create Company 1
+    const company1 = await prisma.empresa.create({
+        data: {
+            nome: 'Beleza Premium',
+            cnpj: '11.111.111/0001-11',
+            telefone1: '11999999999',
+            endereco: 'Rua das Flores, 123'
+        }
+    })
+    console.log('Company 1 created')
 
-    console.log('Seeding finished.')
+    // 4. Create 5 Users for Company 1
+    for (let i = 1; i <= 5; i++) {
+        await prisma.usuario.create({
+            data: {
+                nome: `Usuario ${i} - Empresa 1`,
+                cnpj: `11.111.111/000${i}-11`, // Unique CNPJs based on company pattern
+                senha: password,
+                cargo: i === 1 ? 'ADMIN' : 'FUNCIONARIO', // First one is Admin
+                empresaId: company1.id
+            }
+        })
+    }
+    console.log('5 Users for Company 1 created')
+
+    // 5. Create Company 2
+    const company2 = await prisma.empresa.create({
+        data: {
+            nome: 'Estilo & Corte',
+            cnpj: '22.222.222/0001-22',
+            telefone1: '22999999999',
+            endereco: 'Av. Brasil, 456'
+        }
+    })
+    console.log('Company 2 created')
+
+    // 6. Create 3 Users for Company 2
+    for (let i = 1; i <= 3; i++) {
+        await prisma.usuario.create({
+            data: {
+                nome: `Usuario ${i} - Empresa 2`,
+                cnpj: `22.222.222/000${i}-22`,
+                senha: password,
+                cargo: i === 1 ? 'ADMIN' : 'FUNCIONARIO',
+                empresaId: company2.id
+            }
+        })
+    }
+    console.log('3 Users for Company 2 created')
 }
 
 main()

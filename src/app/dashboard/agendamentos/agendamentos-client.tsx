@@ -181,7 +181,7 @@ export function AgendamentosClient({
                         placeholder="Buscar por cliente ou serviço..."
                         value={searchTerm}
                         onChange={(e) => handleSearch(e.target.value)}
-                        className="pl-10"
+                        className="pl-10 bg-white"
                     />
                 </div>
 
@@ -191,7 +191,7 @@ export function AgendamentosClient({
                         <Button
                             variant="outline"
                             className={cn(
-                                "w-full sm:w-[200px] justify-start text-left font-normal",
+                                "w-full sm:w-[200px] justify-start text-left font-normal bg-white",
                                 !dateFilter && "text-muted-foreground"
                             )}
                         >
@@ -232,7 +232,7 @@ export function AgendamentosClient({
                         updateUrl("status", value === "todos" ? null : value)
                     }}
                 >
-                    <SelectTrigger className="w-full sm:w-[180px]">
+                    <SelectTrigger className="w-full sm:w-[180px] bg-white">
                         <SelectValue placeholder="Filtrar por status" />
                     </SelectTrigger>
                     <SelectContent>

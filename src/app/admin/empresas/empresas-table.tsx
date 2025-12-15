@@ -11,6 +11,8 @@ import {
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { useRouter } from "next/navigation"
+import { EditarEmpresaDialog } from "@/components/forms/editar-empresa-dialog"
+import { ExcluirEmpresaDialog } from "@/components/forms/excluir-empresa-dialog"
 
 interface EmpresasTableProps {
     data: {
@@ -34,14 +36,15 @@ export function EmpresasTable({ data }: EmpresasTableProps) {
                     <TableRow>
                         <TableHead>Nome</TableHead>
                         <TableHead>CNPJ</TableHead>
-                        <TableHead>Usuários</TableHead>
-                        <TableHead>Data Cadastro</TableHead>
+                        <TableHead className="text-center">Usuários</TableHead>
+                        <TableHead className="text-center">Data Cadastro</TableHead>
+                        <TableHead className="text-right">Ações</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
                     {data.length === 0 ? (
                         <TableRow>
-                            <TableCell colSpan={4} className="h-24 text-center text-gray-500">
+                            <TableCell colSpan={5} className="h-24 text-center text-gray-500">
                                 Nenhuma empresa cadastrada.
                             </TableCell>
                         </TableRow>
@@ -54,9 +57,15 @@ export function EmpresasTable({ data }: EmpresasTableProps) {
                             >
                                 <TableCell className="font-medium">{empresa.nome}</TableCell>
                                 <TableCell>{empresa.cnpj}</TableCell>
-                                <TableCell>{empresa._count.usuarios}</TableCell>
-                                <TableCell>
+                                <TableCell className="text-center">{empresa._count.usuarios}</TableCell>
+                                <TableCell className="text-center">
                                     {format(empresa.criadoEm, "dd/MM/yyyy", { locale: ptBR })}
+                                </TableCell>
+                                <TableCell className="text-right">
+                                    <div className="flex justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+                                        <EditarEmpresaDialog empresa={empresa} />
+                                        <ExcluirEmpresaDialog id={empresa.id} nome={empresa.nome} />
+                                    </div>
                                 </TableCell>
                             </TableRow>
                         ))

@@ -66,7 +66,7 @@ export async function criarCliente(
     return { message: 'Cliente cadastrado com sucesso!' }
     // Not redirecting here to allow adding multiple
 }
-
+7
 export async function excluirCliente(id: string) {
     const session = await getServerSession(authOptions)
     if (!session?.user?.empresaId) return { error: "Sem permissão." }

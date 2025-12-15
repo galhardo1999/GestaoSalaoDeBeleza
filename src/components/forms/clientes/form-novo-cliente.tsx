@@ -28,7 +28,7 @@ export function FormNovoCliente({ onSuccess }: { onSuccess?: () => void }) {
         if (state.message === 'Cliente cadastrado com sucesso!') {
             setIsSuccess(true)
             if (onSuccess) {
-                // Delay slightly to show success message or just close
+                // Aguardar um pouco para mostrar mensagem de sucesso ou apenas fechar
                 setTimeout(() => onSuccess(), 1000)
             }
         }

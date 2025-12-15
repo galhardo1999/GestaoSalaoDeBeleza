@@ -37,7 +37,7 @@ export function LoginForm() {
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            cnpj: "", // Changed from email
+            cnpj: "", // Alterado de email
             password: "",
         },
     })
@@ -47,7 +47,7 @@ export function LoginForm() {
         setError(null)
 
         const result = await signIn("credentials", {
-            cnpj: values.cnpj.replace(/\D/g, ""), // Remove formatting before sending
+            cnpj: values.cnpj.replace(/\D/g, ""), // Remover formatação antes de enviar
             password: values.password,
             redirect: false,
         })
@@ -56,7 +56,7 @@ export function LoginForm() {
             setError("Credenciais inválidas. Verifique CNPJ e senha.")
             setIsLoading(false)
         } else {
-            // Check session to determine redirect
+            // Verificar sessão para determinar redirecionamento
             const session = await getSession()
             if (session?.user?.cargo === "SUPER_ADMIN") {
                 router.push("/admin")
@@ -94,13 +94,13 @@ export function LoginForm() {
                                                 if (value.length > 14) value = value.slice(0, 14)
 
                                                 if (value.length > 11) {
-                                                    // CNPJ Mask
+                                                    // Máscara CNPJ
                                                     value = value.replace(/^(\d{2})(\d)/, "$1.$2")
                                                     value = value.replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3")
                                                     value = value.replace(/\.(\d{3})(\d)/, ".$1/$2")
                                                     value = value.replace(/(\d{4})(\d)/, "$1-$2")
                                                 } else {
-                                                    // CPF Mask
+                                                    // Máscara CPF
                                                     value = value.replace(/^(\d{3})(\d)/, "$1.$2")
                                                     value = value.replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3")
                                                     value = value.replace(/\.(\d{3})(\d)/, ".$1-$2")

@@ -20,7 +20,7 @@ export default async function ColaboradoresPage() {
             orderBy: { nome: 'asc' },
             include: {
                 servicos: true
-            } as any // Cast as any because relation might be implicit or explicit, verified in previous code
+            } as any // Cast como any porque a relação pode ser implícita ou explícita, verificado no código anterior
         }),
         db.servico.findMany({
             where: { ativo: true, empresaId: session.user.empresaId },

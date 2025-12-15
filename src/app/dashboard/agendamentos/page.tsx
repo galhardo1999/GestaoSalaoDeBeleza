@@ -7,7 +7,7 @@ import { redirect } from "next/navigation"
 import { expireAppointments } from "@/lib/agendamento-utils"
 
 export default async function AgendamentosPage() {
-    // Check for expired appointments on page load
+    // Verificar agendamentos expirados ao carregar a página
     await expireAppointments()
 
     const session = await getServerSession(authOptions)

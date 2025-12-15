@@ -30,7 +30,7 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 
-// Interfaces based on Prisma Schema + View needs
+// Interfaces baseadas no Schema Prisma + Necessidades da View
 type ViewMode = "month" | "week"
 
 export interface CalendarAppointment {
@@ -66,7 +66,7 @@ export function CalendarView({ agendamentos, clientes, servicos, colaboradores }
     const [selectedDate, setSelectedDate] = useState(new Date())
     const [viewMode, setViewMode] = useState<ViewMode>("month")
 
-    // Filters
+    // Filtros
     const [selectedColaborador, setSelectedColaborador] = useState<string>("all")
     const [selectedServico, setSelectedServico] = useState<string>("all")
 
@@ -101,20 +101,20 @@ export function CalendarView({ agendamentos, clientes, servicos, colaboradores }
 
                 // Filters
                 if (selectedColaborador !== 'all' && apt.colaborador?.nome !== selectedColaborador) {
-                    // Note: Filtering by ID would be better if we had ID in the formatted object passed to view.
-                    // The view props interface says 'colaborador: { nome: string }'.
-                    // Let's check if 'colaboradores' prop has IDs. Yes it does.
-                    // But 'agendamentos' prop might only have names?
-                    // Let's check line 40: colaborador?: { nome: string } | null.
-                    // To be safe I should maybe filter by name or verify if I can update the interface.
-                    // The server page maps it. Let's filter by Name for now if ID is missing or match the prop.
-                    // Actually, let's update the interface to include ID if possible, BUT the server page (lines 37-44)
-                    // doesn't explicitly strip ID, it spreads `...apt`. So `apt.colaborador` likely has ID.
-                    // Let's trust that `apt.colaborador` has `id` even if interface is minimal.
-                    // Safe approach: Filter by Name since that's what we display and what matches the select items?
-                    // Typically 'colaboradores' list has IDs. 
-                    // Let's use ID for the select value, and check against apt.colaborador.id (if existing) or name?
-                    // Let's modify the interface to be safe.
+                    // Nota: Filtrar por ID seria melhor se tivéssemos o ID no objeto formatado passado para a view.
+                    // A interface de props da view diz 'colaborador: { nome: string }'.
+                    // Vamos verificar se a prop 'colaboradores' tem IDs. Sim, tem.
+                    // Mas a prop 'agendamentos' pode ter apenas nomes?
+                    // Vamos verificar a linha 40: colaborador?: { nome: string } | null.
+                    // Para garantir, eu deveria filtrar por nome ou verificar se posso atualizar a interface.
+                    // A página do servidor mapeia isso. Vamos filtrar por Nome por enquanto se o ID estiver faltando ou corresponder à prop.
+                    // Na verdade, vamos atualizar a interface para incluir o ID se possível, MAS a página do servidor (linhas 37-44)
+                    // não remove explicitamente o ID, ela espalha `...apt`. Então `apt.colaborador` provavelmente tem ID.
+                    // Vamos confiar que `apt.colaborador` tem `id` mesmo que a interface seja mínima.
+                    // Abordagem segura: Filtrar por Nome já que é isso que exibimos e o que corresponde aos itens do select?
+                    // Tipicamente a lista de 'colaboradores' tem IDs.
+                    // Vamos usar o ID para o valor do select, e verificar contra apt.colaborador.id (se existir) ou nome?
+                    // Vamos modificar a interface para ser mais seguro.
                 }
 
                 if (selectedColaborador !== 'all') {
@@ -137,20 +137,20 @@ export function CalendarView({ agendamentos, clientes, servicos, colaboradores }
             .sort((a, b) => new Date(a.data).getTime() - new Date(b.data).getTime())
     }
 
-    // Month view calendar days
+    // Dias do calendário na visualização mensal
     const monthStart = startOfMonth(currentDate)
     const monthEnd = endOfMonth(currentDate)
     const calendarStart = startOfWeek(monthStart, { locale: ptBR })
     const calendarEnd = endOfWeek(monthEnd, { locale: ptBR })
     const monthDays = eachDayOfInterval({ start: calendarStart, end: calendarEnd })
 
-    // Week view days
+    // Dias da visualização semanal
     const weekStart = startOfWeek(currentDate, { locale: ptBR })
     const weekEnd = endOfWeek(currentDate, { locale: ptBR })
     const weekDaysArray = eachDayOfInterval({ start: weekStart, end: weekEnd })
 
-    // Helper to colorize appointments based on something (e.g., service or status)
-    // For now, consistent color or random based on ID char
+    // Auxiliar para colorir agendamentos baseado em algo (ex: serviço ou status)
+    // Por enquanto, cor consistente ou aleatória baseada no char do ID
     const getAppointmentColor = (status: string) => {
         switch (status) {
             case 'AGENDADO': return 'bg-emerald-500'
@@ -162,7 +162,7 @@ export function CalendarView({ agendamentos, clientes, servicos, colaboradores }
 
     return (
         <div className="space-y-6 h-full flex flex-col">
-            {/* Header */}
+            {/* Cabeçalho */}
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h1 className="text-2xl font-semibold text-gray-900">Calendário</h1>

@@ -73,7 +73,7 @@ export async function cancelarAgendamento(id: string) {
     if (!session?.user?.empresaId) return
 
     try {
-        // Ownership check
+        // Verificação de propriedade
         const count = await db.agendamento.count({
             where: { id, empresaId: session.user.empresaId }
         })
@@ -96,7 +96,7 @@ export async function confirmarAgendamento(id: string) {
     if (!session?.user?.empresaId) return
 
     try {
-        // Ownership check
+        // Verificação de propriedade
         const count = await db.agendamento.count({
             where: { id, empresaId: session.user.empresaId }
         })
@@ -114,6 +114,29 @@ export async function confirmarAgendamento(id: string) {
     }
 }
 
+export async function concluirAgendamento(id: string) {
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.empresaId) return
+
+    try {
+        // Verificação de propriedade
+        const count = await db.agendamento.count({
+            where: { id, empresaId: session.user.empresaId }
+        })
+        if (count === 0) throw new Error("Acesso negado")
+
+        await db.agendamento.update({
+            where: { id },
+            data: { status: 'CONCLUIDO' }
+        })
+        revalidatePath('/dashboard/agendamentos')
+        revalidatePath('/dashboard')
+    } catch (error) {
+        console.error("Failed to conclude appointment:", error)
+        throw new Error("Failed to conclude appointment")
+    }
+}
+
 export async function reagendarAgendamento(
     id: string,
     novaData: Date
@@ -122,7 +145,7 @@ export async function reagendarAgendamento(
     if (!session?.user?.empresaId) return { error: "Sem permissão" }
 
     try {
-        // Ownership check
+        // Verificação de propriedade
         const count = await db.agendamento.count({
             where: { id, empresaId: session.user.empresaId }
         })

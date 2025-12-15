@@ -26,7 +26,7 @@ export async function createEmpresa(formData: FormData) {
     const telefone1 = formData.get("telefone1") as string
     const telefone2 = formData.get("telefone2") as string
 
-    // Address fields
+    // Campos de endereço
     const cep = formData.get("cep") as string
     const endereco = formData.get("endereco") as string
     const numero = formData.get("numero") as string
@@ -42,7 +42,7 @@ export async function createEmpresa(formData: FormData) {
         await db.empresa.create({
             data: {
                 nome: nomeEmpresa,
-                cnpj: cnpjEmpresa.replace(/\D/g, ""), // Store only numbers
+                cnpj: cnpjEmpresa.replace(/\D/g, ""), // Armazenar apenas números
                 telefone1: telefone1.replace(/\D/g, ""),
                 telefone2: telefone2.replace(/\D/g, ""),
                 cep,

@@ -18,17 +18,17 @@ interface DashboardDataParams {
 }
 
 async function getDashboardData({ period, empresaId }: DashboardDataParams) {
-    // Force Brazil Timezone for "Today"
-    // In Brazil, today started at T03:00:00Z (which is 00:00 BRT) if we are talking about UTC representation of BRT day start?
-    // Actually simpler: Create a date string for Brazil, parse it.
+    // Forçar fuso horário do Brasil para "Hoje"
+    // No Brasil, hoje começou às T03:00:00Z (que é 00:00 BRT) se estivermos falando sobre representação UTC do início do dia BRT.
+    // Na verdade mais simples: Criar string de data para Brasil, e analisar.
 
-    // helper to get Brazil Date object calculated correctly
+    // auxiliar para obter objeto Date do Brasil calculado corretamente
     const now = new Date()
     const brazilNow = new Date(now.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }))
 
-    // For start/end of day, we want the ranges that correspond to Brazil's day.
-    // E.g. Today 00:00 BRT is Today 03:00 UTC. Today 23:59 BRT is Tomorrow 02:59 UTC.
-    // Let's use string manipulation to be safe and clear.
+    // Para início/fim do dia, queremos os intervalos que correspondem ao dia do Brasil.
+    // Ex: Hoje 00:00 BRT é Hoje 03:00 UTC. Hoje 23:59 BRT é Amanhã 02:59 UTC.
+    // Vamos usar manipulação de string para ser seguro e claro.
 
     let startDate: Date
     let endDate: Date
@@ -40,24 +40,24 @@ async function getDashboardData({ period, empresaId }: DashboardDataParams) {
     } else if (period === 'week') {
         const start = startOfWeek(brazilNow, { weekStartsOn: 0 })
         const end = endOfWeek(brazilNow, { weekStartsOn: 0 })
-        // These are local time of the server (UTC) constructed from brazilNow values. 
-        // We need to shift them to match Prisma's UTC expectation for BRT.
-        // Actually, let's keep it simple. If we use the Date objects from date-fns on 'brazilNow', 
-        // they represent the correct "time values" but in UTC. 
-        // e.g. brazilNow is 16:00. startOfWeek(brazilNow) is Sunday 00:00. 
-        // But Sunday 00:00 in valid absolute time meant for Brazil is Sunday 03:00 UTC.
-        // If we just use startOfWeek(brazilNow), we get Sunday 00:00 UTC, which is Saturday 21:00 BRT.
-        // Good enough approximation? Maybe. But "Today" is critical.
-        // Let's stick to the precise "Today" logic for the 'today' period as it's the requested one. 
-        // For Week/Month, maybe acceptable to have slight offset or fix properly.
-        // Let's fix properly using offset.
+        // Estes são horário local do servidor (UTC) construídos a partir dos valores de brazilNow.
+        // Precisamos deslocá-los para corresponder à expectativa UTC do Prisma para BRT.
+        // Na verdade, vamos manter simples. Se usarmos os objetos Date de date-fns em 'brazilNow',
+        // eles representam os "valores de tempo" corretos mas em UTC.
+        // ex: brazilNow é 16:00. startOfWeek(brazilNow) é Domingo 00:00.
+        // Mas Domingo 00:00 em tempo absoluto válido para o Brasil é Domingo 03:00 UTC.
+        // Se usarmos apenas startOfWeek(brazilNow), obtemos Domingo 00:00 UTC, que é Sábado 21:00 BRT.
+        // Aproximação boa o suficiente? Talvez. Mas "Hoje" é crítico.
+        // Vamos manter a lógica precisa de "Hoje" para o período 'today' pois é o solicitado.
+        // Para Semana/Mês, talvez aceitável ter leve deslocamento ou corrigir adequadamente.
+        // Vamos corrigir adequadamente usando offset.
 
-        // 3 hours in ms
+        // 3 horas em ms
         const offset = 3 * 60 * 60 * 1000
         startDate = new Date(startOfWeek(brazilNow, { weekStartsOn: 0 }).getTime() + offset)
         endDate = new Date(endOfWeek(brazilNow, { weekStartsOn: 0 }).getTime() + offset)
 
-    } else { // month
+    } else { // mês
         const offset = 3 * 60 * 60 * 1000
         startDate = new Date(startOfMonth(brazilNow).getTime() + offset)
         endDate = new Date(endOfMonth(brazilNow).getTime() + offset)
@@ -65,7 +65,7 @@ async function getDashboardData({ period, empresaId }: DashboardDataParams) {
 
     const appointmentsCount = await db.agendamento.count({
         where: {
-            empresaId, // Scope to company
+            empresaId, // Escopo por empresa
             data: {
                 gte: startDate,
                 lt: endDate,
@@ -99,8 +99,8 @@ async function getDashboardData({ period, empresaId }: DashboardDataParams) {
         return acc + Number(curr.servico.preco)
     }, 0)
 
-    // Agenda de Hoje (Today's appointments) - Always today regardless of period param?
-    // "Agenda de Hoje" implies Today.
+    // Agenda de Hoje - Sempre hoje independente do parâmetro period?
+    // "Agenda de Hoje" implica Hoje.
     const todayStr = brazilNow.toISOString().split('T')[0]
     const todayStart = new Date(`${todayStr}T03:00:00Z`)
     const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000)

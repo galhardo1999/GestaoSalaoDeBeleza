@@ -39,12 +39,13 @@ import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 
-// Imports from existing system
+// Importações do sistema existente
 import { NovoAgendamentoDialog } from "@/components/forms/agendamentos/novo-agendamento-dialog"
 import { BotaoCancelarAgendamento } from "@/components/forms/agendamentos/botao-cancelar-agendamento"
 import { ReagendarDialog } from "@/components/forms/agendamentos/reagendar-dialog"
 import { WhatsAppButton } from "@/components/dashboard/whatsapp-button"
 import { BotaoConfirmarAgendamento } from "@/components/forms/agendamentos/botao-confirmar-agendamento"
+import { BotaoConcluirAgendamento } from "@/components/forms/agendamentos/botao-concluir-agendamento"
 
 interface AgendamentoData {
     id: string
@@ -52,7 +53,7 @@ interface AgendamentoData {
     status: string
     cliente: { nome: string; telefone: string }
     servico: { nome: string; preco: number }
-    colaborador: { nome: string } | null
+    colaborador: { id: string; nome: string } | null
 }
 
 interface AgendamentosClientProps {
@@ -65,7 +66,7 @@ interface AgendamentosClientProps {
 }
 
 const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline"; className: string }> = {
-    AGENDADO: { label: "Confirmado", variant: "default", className: "bg-teal-500 hover:bg-teal-600" }, // Mapping 'Confirmado' style to AGENDADO
+    AGENDADO: { label: "Confirmado", variant: "default", className: "bg-teal-500 hover:bg-teal-600" }, // Mapeando estilo 'Confirmado' para AGENDADO
     PENDENTE: { label: "Pendente", variant: "secondary", className: "bg-amber-500 hover:bg-amber-600 text-white" },
     CANCELADO: { label: "Cancelado", variant: "destructive", className: "" },
     CONCLUIDO: { label: "Concluído", variant: "outline", className: "border-slate-500 text-slate-600" },
@@ -85,59 +86,60 @@ export function AgendamentosClient({
     const router = useRouter()
     const searchParams = useSearchParams()
 
-    // --- Local State for UI ---
+    // --- Estado Local para UI ---
     const [searchTerm, setSearchTerm] = useState("")
     const [statusFilter, setStatusFilter] = useState("todos")
+    const [collaboratorFilter, setCollaboratorFilter] = useState("todos")
     const [itemsPerPage, setItemsPerPage] = useState(10)
     const [currentPage, setCurrentPage] = useState(1)
 
-    // --- Date Filter (Client-Side) ---
-    // Default to Today if no filters
+    // --- Filtro de Data (Cliente) ---
+    // Padrão para Hoje se não houver filtros
     const [dateFilter, setDateFilter] = useState<Date | undefined>(
-        new Date() // Default to today since we fetch ALL history.
+        new Date() // Padrão para hoje, já que buscamos TODO o histórico.
     )
 
-    // --- Derived State (Client-Side Filtering) ---
+    // --- Estado Derivado (Filtragem Client-Side) ---
     const filteredAgendamentos = useMemo(() => {
         return initialAgendamentos.filter(agendamento => {
-            // Filter by Search Term
+            // Filtrar por Termo de Busca
             const searchLower = searchTerm.toLowerCase()
             const matchesSearch =
                 agendamento.cliente.nome.toLowerCase().includes(searchLower) ||
                 agendamento.servico.nome.toLowerCase().includes(searchLower)
 
-            // Filter by Status
+            // Filtrar por Status
             const matchesStatus = statusFilter === "todos" || agendamento.status === statusFilter
 
-            // Filter by Date
-            // Note: agendamento.data is typically a string or Date object.
-            // Prisma returns Dates as objects in Client Component if passed directly,
-            // but if passed from Server Component they might be serialized.
-            // Safe to wrap in new Date().
+            // Filtrar por Colaborador
+            const matchesCollaborator = collaboratorFilter === "todos" || agendamento.colaborador?.id === collaboratorFilter
+
+            // Filtrar por Data
+            // ... (lógica de data existente) ...
             let matchesDate = true
             if (dateFilter) {
                 const apptDate = new Date(agendamento.data)
-                // Adjust for timezone if needed, but isSameDay handles local date comparison usually.
-                // However, apptDate is UTC from DB. dateFilter is Local from Calendar.
-                // We need to compare "Day part in Brazil".
-                // Hack: Compare formatted strings "YYYY-MM-DD".
+                // Ajustar para fuso horário se necessário, mas isSameDay lida com comparação de data local geralmente.
+                // No entanto, apptDate é UTC do DB. dateFilter é Local do Calendário.
+                // Precisamos comparar "Parte do dia no Brasil".
+                // Hack: Comparar strings formatadas "YYYY-MM-DD".
                 const apptDateStr = format(apptDate, "yyyy-MM-dd")
                 const filterDateStr = format(dateFilter, "yyyy-MM-dd")
                 matchesDate = apptDateStr === filterDateStr
             }
 
-            return matchesSearch && matchesStatus && matchesDate
+            return matchesSearch && matchesStatus && matchesDate && matchesCollaborator
         })
-    }, [initialAgendamentos, searchTerm, statusFilter, dateFilter])
+    }, [initialAgendamentos, searchTerm, statusFilter, dateFilter, collaboratorFilter])
 
-    // --- Pagination Logic ---
+    // --- Lógica de Paginação ---
     const totalItems = filteredAgendamentos.length
     const totalPages = Math.ceil(totalItems / itemsPerPage)
 
-    // Reset page when filters change
+    // Redefinir página quando filtros mudam
     useEffect(() => {
         setCurrentPage(1)
-    }, [searchTerm, statusFilter, itemsPerPage, dateFilter])
+    }, [searchTerm, statusFilter, itemsPerPage, dateFilter, collaboratorFilter])
 
     const currentAgendamentos = useMemo(() => {
         const start = (currentPage - 1) * itemsPerPage
@@ -145,14 +147,14 @@ export function AgendamentosClient({
     }, [filteredAgendamentos, currentPage, itemsPerPage])
 
 
-    // --- Handlers ---
+    // --- Manipuladores ---
 
-    // Removed updateDateUrl entirely as we don't want server reload.
-    // Optionally we could window.history.replaceState to keep URL in sync without reload.
-    // For now, simpler is purely local.
+    // Removido updateDateUrl inteiramente pois não queremos recarregamento do servidor.
+    // Opcionalmente poderíamos window.history.replaceState para manter URL sincronizada sem recarregar.
+    // Por enquanto, mais simples é puramente local.
 
     const clearDateFilter = () => {
-        setDateFilter(undefined) // Shows ALL history if undefined
+        setDateFilter(undefined) // Mostra TODO o histórico se indefinido
     }
 
     const handleSearch = (term: string) => {
@@ -174,7 +176,7 @@ export function AgendamentosClient({
 
     return (
         <div className="p-8 space-y-6">
-            {/* Header */}
+            {/* Cabeçalho */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-display font-bold text-foreground">
@@ -189,7 +191,7 @@ export function AgendamentosClient({
                 </div>
             </div>
 
-            {/* Filters */}
+            {/* Filtros */}
             <div className="flex flex-col sm:flex-row gap-4">
                 <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -201,19 +203,33 @@ export function AgendamentosClient({
                     />
                 </div>
 
-                {/* Date Filter (Client) */}
+                {/* Filtro de Data (Cliente) */}
                 <Popover>
                     <PopoverTrigger asChild>
-                        <Button
-                            variant="outline"
-                            className={cn(
-                                "w-full sm:w-[200px] justify-start text-left font-normal bg-white",
-                                !dateFilter && "text-muted-foreground"
+                        <div className="relative">
+                            <Button
+                                variant="outline"
+                                className={cn(
+                                    "w-full sm:w-[200px] justify-start text-left font-normal bg-white pr-8", // Adicionado pr-8 para espaço do ícone
+                                    !dateFilter && "text-muted-foreground"
+                                )}
+                            >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {dateFilter ? format(dateFilter, "dd/MM/yyyy", { locale: ptBR }) : "Todos os períodos"}
+                            </Button>
+                            {dateFilter && (
+                                <div
+                                    role="button"
+                                    onClick={(e) => {
+                                        e.stopPropagation() // Impedir abertura do popover
+                                        clearDateFilter()
+                                    }}
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-slate-100 rounded-full cursor-pointer text-muted-foreground hover:text-foreground"
+                                >
+                                    <X className="h-3 w-3" />
+                                </div>
                             )}
-                        >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {dateFilter ? format(dateFilter, "dd/MM/yyyy", { locale: ptBR }) : "Todos os períodos"}
-                        </Button>
+                        </div>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
                         <Calendar
@@ -229,18 +245,7 @@ export function AgendamentosClient({
                     </PopoverContent>
                 </Popover>
 
-                {dateFilter && (
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={clearDateFilter}
-                        className="shrink-0"
-                    >
-                        <X className="h-4 w-4" />
-                    </Button>
-                )}
-
-                {/* Status Filter (Client) */}
+                {/* Filtro de Status (Cliente) */}
                 <Select
                     value={statusFilter}
                     onValueChange={(value) => setStatusFilter(value)}
@@ -257,21 +262,39 @@ export function AgendamentosClient({
                         <SelectItem value="NAO_COMPARECEU">Não Compareceu</SelectItem>
                     </SelectContent>
                 </Select>
+
+                {/* Filtro de Colaborador (Cliente) */}
+                <Select
+                    value={collaboratorFilter}
+                    onValueChange={(value) => setCollaboratorFilter(value)}
+                >
+                    <SelectTrigger className="w-full sm:w-[200px] bg-white">
+                        <SelectValue placeholder="Filtrar por colaborador" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="todos">Todos os colaboradores</SelectItem>
+                        {colaboradores.map((colaborador) => (
+                            <SelectItem key={colaborador.id} value={colaborador.id}>
+                                {colaborador.nome}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
             </div>
 
-            {/* Table */}
+            {/* Tabela */}
             <div className="rounded-lg border bg-card">
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>Data</TableHead>
-                            <TableHead>Hora</TableHead>
-                            <TableHead>Cliente</TableHead>
-                            <TableHead>Serviço</TableHead>
-                            <TableHead>Colaborador</TableHead>
-                            <TableHead>Preço</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead className="text-right">Ações</TableHead>
+                            <TableHead className="w-[100px]">Data</TableHead>
+                            <TableHead className="w-[80px]">Hora</TableHead>
+                            <TableHead className="min-w-[180px]">Cliente</TableHead>
+                            <TableHead className="min-w-[150px]">Serviço</TableHead>
+                            <TableHead className="min-w-[150px]">Colaborador</TableHead>
+                            <TableHead className="w-[100px]">Preço</TableHead>
+                            <TableHead className="w-[140px]">Status</TableHead>
+                            <TableHead className="w-[100px] text-right">Ações</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -346,6 +369,7 @@ export function AgendamentosClient({
                                                 {/* AGENDADO (Confirmado): Reagendar, Cancelar */}
                                                 {appointment.status === 'AGENDADO' && (
                                                     <>
+                                                        <BotaoConcluirAgendamento id={appointment.id} />
                                                         <ReagendarDialog id={appointment.id} currentDate={new Date(appointment.data)}>
                                                             <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-blue-50 text-blue-600" title="Reagendar">
                                                                 <CalendarClock className="w-4 h-4" />
@@ -403,7 +427,7 @@ export function AgendamentosClient({
                 </Table>
             </div>
 
-            {/* Pagination */}
+            {/* Paginação */}
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-2">
                     <span className="text-sm text-muted-foreground">Itens por página:</span>
@@ -411,7 +435,7 @@ export function AgendamentosClient({
                         value={itemsPerPage.toString()}
                         onValueChange={(value) => {
                             setItemsPerPage(Number(value))
-                            // No URL update, client-side only
+                            // Sem atualização de URL, apenas client-side
                         }}
                     >
                         <SelectTrigger className="w-[80px]">
@@ -441,9 +465,9 @@ export function AgendamentosClient({
                                 />
                             </PaginationItem>
 
-                            {/* Simple pagination logic for brevity. 
-                                In production, prefer rendering a refined range (e.g., 1, ..., 4, 5, 6, ..., 10) 
-                                if pages are many. Implementation kept simple as per original behavior.
+                            {/* Lógica de paginação simples por brevidade.
+                                Em produção, preferir renderizar um intervalo refinado (ex: 1, ..., 4, 5, 6, ..., 10)
+                                se houver muitas páginas. Implementação mantida simples conforme comportamento original.
                              */}
                             {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                                 <PaginationItem key={page}>
@@ -473,7 +497,7 @@ export function AgendamentosClient({
                 )}
             </div>
 
-            {/* Summary */}
+            {/* Resumo */}
             <div className="flex justify-between items-center text-sm text-muted-foreground">
                 <span>
                     Mostrando {currentAgendamentos.length} de {totalItems} agendamentos (Total Filtrado)

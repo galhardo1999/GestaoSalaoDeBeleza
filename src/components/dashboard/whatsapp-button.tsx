@@ -17,20 +17,20 @@ export function WhatsAppButton({ phone, clientName, date, serviceName, messageTe
             return
         }
 
-        // Remove non-digits
+        // Remover não-dígitos
         const cleanPhone = phone.replace(/\D/g, "")
-        // Assume BR +55 if generic length (10 or 11 digits: DD + Number)
+        // Assumir BR +55 se comprimento genérico (10 ou 11 dígitos: DD + Número)
         const finalPhone = cleanPhone.length <= 11 ? `55${cleanPhone}` : cleanPhone
 
-        // Default template if none provided
+        // Modelo padrão se nenhum for fornecido
         let message = messageTemplate || "Olá {cliente}, confirmamos seu agendamento de {servico} para o dia {data} às {hora}."
 
-        // Simple manual formatting to avoid heavy date-fns dependency in client component if not needed, 
-        // but since we receive a Date object, standard methods work.
-        // Adjust for timezone? The Date object passed from server component (serialized) comes as string usually if not careful?
-        // In Next.js Server Actions/Components, Dates are passed as Date objects if using standard props, 
-        // but over network boundary effectively strings. 
-        // However, if we receive it as Date check:
+        // Formatação manual simples para evitar dependência pesada de date-fns no componente client se não for necessário,
+        // mas como recebemos um objeto Date, métodos padrão funcionam.
+        // Ajustar para fuso horário? O objeto Date passado do componente server (serializado) geralmente vem como string se não tomar cuidado?
+        // Em Server Actions/Components do Next.js, Dates são passados como objetos Date se usar props padrão,
+        // mas através da rede efetivamente strings.
+        // No entanto, se recebermos como Date verifique:
         const d = new Date(date)
 
         const day = d.getDate().toString().padStart(2, '0')

@@ -38,7 +38,7 @@ export function EmpresaForm() {
             const form = formRef.current
             if (!form) return
 
-            // Helper to safe set value
+            // Auxiliar para definir valor com segurança
             const setVal = (name: string, val: string) => {
                 const input = form.elements.namedItem(name) as HTMLInputElement
                 if (input) input.value = val
@@ -46,7 +46,7 @@ export function EmpresaForm() {
 
             if (d.company?.name) setVal("nomeEmpresa", d.company.name)
 
-            // Address
+            // Endereço
             if (d.address?.zip) {
                 const cep = d.address.zip.replace(/\D/g, "")
                 setVal("cep", cep.replace(/^(\d{5})(\d{1,3})/, "$1-$2"))
@@ -57,7 +57,7 @@ export function EmpresaForm() {
             if (d.address?.city) setVal("cidade", d.address.city)
             if (d.address?.state) setVal("estado", d.address.state)
 
-            // Helper to format phone
+            // Auxiliar para formatar telefone
             const formatPhone = (area: string, number: string) => {
                 const combined = `${area}${number}`.replace(/\D/g, "")
                 if (combined.length > 10) {
@@ -69,7 +69,7 @@ export function EmpresaForm() {
                 return combined
             }
 
-            // Phones
+            // Telefones
             if (d.phones && d.phones.length > 0) {
                 const p1 = d.phones[0]
                 setVal("telefone1", formatPhone(p1.area, p1.number))
@@ -94,7 +94,7 @@ export function EmpresaForm() {
             setError(result.error)
             setIsLoading(false)
         }
-        // If success, redirect happens in server action
+        // Se sucesso, redirecionamento acontece na server action
     }
 
     return (
@@ -126,7 +126,7 @@ export function EmpresaForm() {
                                             let value = e.target.value.replace(/\D/g, "")
                                             if (value.length > 14) value = value.slice(0, 14)
 
-                                            // Mask: XX.XXX.XXX/XXXX-XX
+                                            // Máscara: XX.XXX.XXX/XXXX-XX
                                             if (value.length > 12) {
                                                 value = value.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2}).*/, "$1.$2.$3/$4-$5")
                                             } else if (value.length > 8) {
@@ -155,7 +155,7 @@ export function EmpresaForm() {
                             <Input id="nomeEmpresa" name="nomeEmpresa" required placeholder="Ex: Salão Top" />
                         </div>
 
-                        {/* Contact Section */}
+                        {/* Seção de Contato */}
                         <h3 className="text-lg font-medium pt-4">Contato</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
@@ -263,7 +263,7 @@ export function EmpresaForm() {
                         </div>
                     </div>
 
-                    {/* Section Removed: Usuário Administrador */}
+                    {/* Seção Removida: Usuário Administrador */}
 
                     {error && (
                         <div className="text-sm text-red-500 font-medium p-3 bg-red-50 rounded-md">

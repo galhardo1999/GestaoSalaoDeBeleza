@@ -55,7 +55,7 @@ export function CompanyUsersManager({ empresaId, usuarios }: CompanyUsersManager
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
-    // Reset state on close
+    // Resetar estado ao fechar
     const handleClose = () => {
         setIsCreateOpen(false)
         setIsEditOpen(false)
@@ -106,7 +106,7 @@ export function CompanyUsersManager({ empresaId, usuarios }: CompanyUsersManager
         const result = await deleteCompanyUser(selectedUser.id, empresaId)
 
         if (result?.error) {
-            setError(result.error) // This might be hidden if dialog closes, but we keep it open on error ideally
+            setError(result.error) // Isso pode ficar oculto se o diálogo fechar, mas idealmente mantemos aberto em erro
             setIsLoading(false)
         } else {
             handleClose()
@@ -188,7 +188,7 @@ export function CompanyUsersManager({ empresaId, usuarios }: CompanyUsersManager
                 </Table>
             </div>
 
-            {/* Create Dialog */}
+            {/* Diálogo de Criação */}
             <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
                 <DialogContent>
                     <DialogHeader>
@@ -236,7 +236,7 @@ export function CompanyUsersManager({ empresaId, usuarios }: CompanyUsersManager
                 </DialogContent>
             </Dialog>
 
-            {/* Edit Dialog */}
+            {/* Diálogo de Edição */}
             <Dialog open={isEditOpen} onOpenChange={(open) => !open && handleClose()}>
                 <DialogContent>
                     <DialogHeader>
@@ -286,7 +286,7 @@ export function CompanyUsersManager({ empresaId, usuarios }: CompanyUsersManager
                 </DialogContent>
             </Dialog>
 
-            {/* Delete Dialog */}
+            {/* Diálogo de Exclusão */}
             <Dialog open={isDeleteOpen} onOpenChange={(open) => !open && handleClose()}>
                 <DialogContent>
                     <DialogHeader>

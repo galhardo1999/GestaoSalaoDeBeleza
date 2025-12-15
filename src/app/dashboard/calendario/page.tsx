@@ -41,14 +41,14 @@ export default async function CalendarioPage() {
         preco: Number(s.preco)
     }))
 
-    // Transform Decimal to Number if needed, but for View we prioritize matching the interface
-    // The interface expects servico { nome, duracaoMin }. Extra fields are ignored or fine.
-    // We just pass it directly if types align, or map if needed.
-    // Prisma Decimal is not compatible with number usually, but we don't use price in the view yet.
-    // However, to be safe and clean:
+    // Transformar Decimal em Number se necessário, mas para View priorizamos corresponder à interface
+    // A interface espera servico { nome, duracaoMin }. Campos extras são ignorados ou aceitáveis.
+    // Nós apenas passamos diretamente se os tipos alinharem, ou mapeamos se necessário.
+    // Prisma Decimal não é compatível com number geralmente, mas não usamos preço na view ainda.
+    // No entanto, para ser seguro e limpo:
     const formattedAgendamentos = agendamentos.map(apt => ({
         ...apt,
-        status: apt.status.toString(), // Ensure enum is string
+        status: apt.status.toString(), // Garantir que enum seja string
         servico: {
             ...apt.servico,
             preco: Number(apt.servico.preco)

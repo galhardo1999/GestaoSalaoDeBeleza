@@ -67,12 +67,12 @@ const ITEMS_PER_PAGE_OPTIONS = [10, 25, 50, 100]
 export function ColaboradoresClient({ colaboradores, servicos }: ColaboradoresClientProps) {
     const router = useRouter()
 
-    // --- Local State ---
+    // --- Estado Local ---
     const [searchTerm, setSearchTerm] = useState("")
     const [itemsPerPage, setItemsPerPage] = useState(10)
     const [currentPage, setCurrentPage] = useState(1)
 
-    // --- Filtering ---
+    // --- Filtragem ---
     const filteredColaboradores = useMemo(() => {
         const term = searchTerm.toLowerCase()
         if (!term) return colaboradores
@@ -83,7 +83,7 @@ export function ColaboradoresClient({ colaboradores, servicos }: ColaboradoresCl
         )
     }, [colaboradores, searchTerm])
 
-    // --- Pagination ---
+    // --- Paginação ---
     const totalItems = filteredColaboradores.length
     const totalPages = Math.ceil(totalItems / itemsPerPage)
 
@@ -92,13 +92,13 @@ export function ColaboradoresClient({ colaboradores, servicos }: ColaboradoresCl
         return filteredColaboradores.slice(start, start + itemsPerPage)
     }, [filteredColaboradores, currentPage, itemsPerPage])
 
-    // Reset page on filter change
+    // Redefinir página ao mudar filtro
     useEffect(() => {
         setCurrentPage(1)
     }, [searchTerm, itemsPerPage])
 
 
-    // --- Handlers ---
+    // --- Manipuladores ---
     const handleSearch = (term: string) => {
         setSearchTerm(term)
     }
@@ -111,7 +111,7 @@ export function ColaboradoresClient({ colaboradores, servicos }: ColaboradoresCl
 
     return (
         <div className="p-8 space-y-6">
-            {/* Header */}
+            {/* Cabeçalho */}
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h1 className="font-playfair text-2xl font-semibold text-foreground md:text-3xl">
@@ -129,7 +129,7 @@ export function ColaboradoresClient({ colaboradores, servicos }: ColaboradoresCl
                 </NovoColaboradorDialog>
             </div>
 
-            {/* Filters */}
+            {/* Filtros */}
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                 <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -142,7 +142,7 @@ export function ColaboradoresClient({ colaboradores, servicos }: ColaboradoresCl
                 </div>
             </div>
 
-            {/* Table */}
+            {/* Tabela */}
             <div className="rounded-lg border bg-card">
                 <Table>
                     <TableHeader>
@@ -226,7 +226,7 @@ export function ColaboradoresClient({ colaboradores, servicos }: ColaboradoresCl
                 </Table>
             </div>
 
-            {/* Pagination */}
+            {/* Paginação */}
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-2">
                     <span className="text-sm text-muted-foreground">Itens por página:</span>
@@ -289,7 +289,7 @@ export function ColaboradoresClient({ colaboradores, servicos }: ColaboradoresCl
                 )}
             </div>
 
-            {/* Summary */}
+            {/* Resumo */}
             <div className="text-sm text-muted-foreground">
                 Exibindo {currentColaboradores.length} de {totalItems} colaboradores  (Total Filtrado)
             </div>

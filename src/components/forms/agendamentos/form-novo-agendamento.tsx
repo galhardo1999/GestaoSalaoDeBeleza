@@ -17,7 +17,7 @@ import { Textarea } from '@/components/ui/textarea'
 
 interface FormNovoAgendamentoProps {
     clientes: { id: string; nome: string }[]
-    servicos: { id: string; nome: string; preco: any }[] // preco is Decimal
+    servicos: { id: string; nome: string; preco: any }[] // preco é Decimal
     colaboradores: { id: string; nome: string }[]
 }
 
@@ -37,7 +37,7 @@ export function FormNovoAgendamento({ clientes, servicos, colaboradores }: FormN
 
     return (
         <form action={dispatch} className="space-y-4">
-            {/* Date & Time Picker */}
+            {/* Seletor de Data e Hora */}
             <div className="space-y-2">
                 <Label htmlFor="data">Data e Hora</Label>
                 <Input
@@ -51,7 +51,7 @@ export function FormNovoAgendamento({ clientes, servicos, colaboradores }: FormN
                 )}
             </div>
 
-            {/* Client Selection */}
+            {/* Seleção de Cliente */}
             <div className="space-y-2">
                 <Label htmlFor="clienteId">Cliente</Label>
                 <Select name="clienteId" defaultValue="">
@@ -72,7 +72,7 @@ export function FormNovoAgendamento({ clientes, servicos, colaboradores }: FormN
             </div>
 
             {/* Service Selection */}
-            {/* Service Selection */}
+            {/* Seleção de Serviço */}
             <div className="space-y-2">
                 <Label htmlFor="servicoId">Serviço</Label>
                 <Select name="servicoId" defaultValue="">
@@ -92,7 +92,7 @@ export function FormNovoAgendamento({ clientes, servicos, colaboradores }: FormN
                 )}
             </div>
 
-            {/* Collaborator Selection */}
+            {/* Seleção de Colaborador */}
             <div className="space-y-2">
                 <Label htmlFor="colaboradorId">Colaborador (Opcional)</Label>
                 <Select name="colaboradorId" defaultValue="">
@@ -112,13 +112,13 @@ export function FormNovoAgendamento({ clientes, servicos, colaboradores }: FormN
                 )}
             </div>
 
-            {/* Notes */}
+            {/* Observações */}
             <div className="space-y-2">
                 <Label htmlFor="observacoes">Observações (Opcional)</Label>
                 <Textarea name="observacoes" id="observacoes" placeholder="" />
             </div>
 
-            {/* Submit Button */}
+            {/* Botão de Envio */}
             <SubmitButton />
 
             {state.message && (

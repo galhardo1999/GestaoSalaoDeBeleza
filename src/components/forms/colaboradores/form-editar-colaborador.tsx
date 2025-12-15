@@ -52,7 +52,7 @@ export function FormEditarColaborador({ collaborator, onSuccess, servicos = [] }
         }
     }, [state.message, onSuccess])
 
-    // Helper to check if collaborator has a service
+    // Auxiliar para verificar se colaborador tem um serviço
     const hasService = (serviceId: string) => {
         return collaborator.servicos?.some((s: any) => s.id === serviceId)
     }

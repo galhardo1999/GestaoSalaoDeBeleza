@@ -66,7 +66,7 @@ export async function excluirServico(id: string) {
     if (!session?.user?.empresaId) return
 
     try {
-        // Ownership check
+        // Verificação de propriedade
         const count = await db.servico.count({
             where: { id, empresaId: session.user.empresaId }
         })
@@ -109,7 +109,7 @@ export async function editarServico(
     const { nome, preco, duracaoMin } = validatedFields.data
 
     try {
-        // Ownership
+        // Propriedade
         const existing = await db.servico.findFirst({
             where: { id, empresaId: session.user.empresaId }
         })

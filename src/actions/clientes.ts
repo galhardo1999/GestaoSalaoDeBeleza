@@ -64,9 +64,9 @@ export async function criarCliente(
 
     revalidatePath('/dashboard/clientes')
     return { message: 'Cliente cadastrado com sucesso!' }
-    // Not redirecting here to allow adding multiple
+    // Não redirecionar aqui para permitir adicionar múltiplos
 }
-7
+
 export async function excluirCliente(id: string) {
     const session = await getServerSession(authOptions)
     if (!session?.user?.empresaId) return { error: "Sem permissão." }
@@ -80,7 +80,7 @@ export async function excluirCliente(id: string) {
             return { error: "Não é possível fazer a exclusão do cliente, pois tem lançamentos nele." }
         }
 
-        // Verify ownership
+        // Verificar propriedade
         const cliente = await db.cliente.findFirst({
             where: { id, empresaId: session.user.empresaId }
         })
@@ -152,7 +152,7 @@ export async function editarCliente(
     const { nome, email, cpf, telefone, observacoes } = validatedFields.data
 
     try {
-        // Check ownership before update
+        // Verificar propriedade antes da atualização
         const existing = await db.cliente.count({
             where: { id, empresaId: session.user.empresaId }
         })

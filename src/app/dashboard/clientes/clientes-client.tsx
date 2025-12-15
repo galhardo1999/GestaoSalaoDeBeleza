@@ -56,12 +56,12 @@ const ITEMS_PER_PAGE_OPTIONS = [10, 25, 50, 100]
 export function ClientesClient({ clientes }: ClientesClientProps) {
     const router = useRouter()
 
-    // --- Local State ---
+    // --- Estado Local ---
     const [searchTerm, setSearchTerm] = useState("")
     const [itemsPerPage, setItemsPerPage] = useState(10)
     const [currentPage, setCurrentPage] = useState(1)
 
-    // --- Filtering ---
+    // --- Filtragem ---
     const filteredClientes = useMemo(() => {
         const term = searchTerm.toLowerCase()
         if (!term) return clientes
@@ -75,7 +75,7 @@ export function ClientesClient({ clientes }: ClientesClientProps) {
         )
     }, [clientes, searchTerm])
 
-    // --- Pagination ---
+    // --- Paginação ---
     const totalItems = filteredClientes.length
     const totalPages = Math.ceil(totalItems / itemsPerPage)
 
@@ -84,13 +84,13 @@ export function ClientesClient({ clientes }: ClientesClientProps) {
         return filteredClientes.slice(start, start + itemsPerPage)
     }, [filteredClientes, currentPage, itemsPerPage])
 
-    // Reset to page 1 on filter change
+    // Redefinir para página 1 ao mudar filtro
     useEffect(() => {
         setCurrentPage(1)
     }, [searchTerm, itemsPerPage])
 
 
-    // --- Handlers ---
+    // --- Manipuladores ---
     const handleSearch = (term: string) => {
         setSearchTerm(term)
     }
@@ -103,7 +103,7 @@ export function ClientesClient({ clientes }: ClientesClientProps) {
 
     return (
         <div className="p-8 space-y-6">
-            {/* Header */}
+            {/* Cabeçalho */}
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h1 className="font-playfair text-2xl font-semibold text-foreground md:text-3xl">
@@ -121,7 +121,7 @@ export function ClientesClient({ clientes }: ClientesClientProps) {
                 </NovoClienteDialog>
             </div>
 
-            {/* Filters */}
+            {/* Filtros */}
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                 <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -134,7 +134,7 @@ export function ClientesClient({ clientes }: ClientesClientProps) {
                 </div>
             </div>
 
-            {/* Table */}
+            {/* Tabela */}
             <div className="rounded-lg border bg-card">
                 <Table>
                     <TableHeader>
@@ -204,7 +204,7 @@ export function ClientesClient({ clientes }: ClientesClientProps) {
                 </Table>
             </div>
 
-            {/* Pagination */}
+            {/* Paginação */}
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-2">
                     <span className="text-sm text-muted-foreground">Itens por página:</span>
@@ -267,7 +267,7 @@ export function ClientesClient({ clientes }: ClientesClientProps) {
                 )}
             </div>
 
-            {/* Summary */}
+            {/* Resumo */}
             <div className="text-sm text-muted-foreground">
                 Exibindo {currentClientes.length} de {totalItems} clientes (Total Filtrado)
             </div>

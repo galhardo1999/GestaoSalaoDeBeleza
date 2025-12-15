@@ -67,12 +67,12 @@ export function DashboardCalendar() {
 
     const days = []
 
-    // Empty cells for days before the first day of month
+    // Células vazias para dias antes do primeiro dia do mês
     for (let i = 0; i < firstDayOfMonth; i++) {
         days.push(<div key={`empty-${i}`} className="h-10" />)
     }
 
-    // Days of the month
+    // Dias do mês
     for (let day = 1; day <= daysInMonth; day++) {
         const dayKey = getDayKey(day)
         const eventCount = eventsData[dayKey] || 0
@@ -87,7 +87,7 @@ export function DashboardCalendar() {
                     isSelected(day)
                         ? "bg-slate-900 text-white shadow-md"
                         : isToday(day)
-                            ? "bg-pink-50 text-pink-600 font-semibold" // Approximating 'rose-light'
+                            ? "bg-pink-50 text-pink-600 font-semibold" // Aproximando 'rose-light'
                             : "text-gray-900 hover:bg-gray-100"
                 )}
             >

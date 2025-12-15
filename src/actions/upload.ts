@@ -14,17 +14,17 @@ export async function uploadLogo(formData: FormData) {
         const bytes = await file.arrayBuffer()
         const buffer = Buffer.from(bytes)
 
-        // Validate file type (basic check)
+        // Validar tipo de arquivo (verificação básica)
         const allowedTypes = ["image/jpeg", "image/png", "image/jpg", "image/avif", "image/webp"]
         if (!allowedTypes.includes(file.type)) {
             return { success: false, error: "Formato de arquivo não suportado" }
         }
 
-        // Ensure directory exists
+        // Garantir que o diretório existe
         const uploadDir = join(process.cwd(), "public", "uploads")
         await mkdir(uploadDir, { recursive: true })
 
-        // Create unique filename
+        // Criar nome de arquivo único
         const extension = file.type.split("/")[1]
         const filename = `${randomUUID()}.${extension}`
         const filepath = join(uploadDir, filename)

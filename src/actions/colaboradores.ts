@@ -46,7 +46,7 @@ export async function criarColaborador(
 
     try {
         const existingUser = await db.colaborador.findFirst({
-            where: { email } // Email should be unique globally or per company? Schema says unique globally for simplicity usually, but here email has @unique constraint.
+            where: { email } // Email deve ser único globalmente ou por empresa? Schema diz único globalmente por simplicidade geralmente, mas aqui email tem restrição @unique.
         })
 
         if (existingUser) {
@@ -59,7 +59,7 @@ export async function criarColaborador(
 
         const hashedPassword = await hash(senha, 10)
 
-        // Verify services ownership
+        // Verificar propriedade dos serviços
         if (servicos && servicos.length > 0) {
             const count = await db.servico.count({
                 where: {
@@ -100,7 +100,7 @@ export async function excluirColaborador(id: string) {
     if (!session?.user?.empresaId) return
 
     try {
-        // Ownership check
+        // Verificação de propriedade
         const count = await db.colaborador.count({
             where: { id, empresaId: session.user.empresaId }
         })
@@ -129,7 +129,7 @@ export async function editarColaborador(
 
     const servicosRaw = formData.getAll('servicos') as string[]
 
-    // Explicitly handle empty password by removing it if it's empty string
+    // Tratar explicitamente senha vazia removendo-a se for string vazia
     const rawData = {
         id,
         nome: formData.get('nome'),
@@ -139,7 +139,7 @@ export async function editarColaborador(
         servicos: servicosRaw
     }
 
-    // @ts-ignore - Validating with optional password
+    // @ts-ignore - Validando com senha opcional
     const validatedFields = colaboradorEdicaoSchema.safeParse(rawData)
 
     if (!validatedFields.success) {
@@ -151,7 +151,7 @@ export async function editarColaborador(
     const { nome, email, senha, foto, servicos } = validatedFields.data
 
     try {
-        // Ownership
+        // Propriedade
         const existing = await db.colaborador.findFirst({
             where: { id, empresaId: session.user.empresaId }
         })

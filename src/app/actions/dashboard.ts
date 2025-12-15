@@ -13,7 +13,7 @@ export async function getMonthlyAppointmentCounts(year: number, month: number) {
     }
     const empresaId = session.user.empresaId
 
-    // Month is 0-indexed in JS Date, so we use it directly for Date constructor
+    // Mês é 0-indexado em JS Date, então usamos diretamente para o construtor Date
     const startDate = startOfMonth(new Date(year, month))
     const endDate = endOfMonth(new Date(year, month))
 
@@ -33,12 +33,12 @@ export async function getMonthlyAppointmentCounts(year: number, month: number) {
         }
     })
 
-    // Transform to Map-like object: "YYYY-MM-DD" -> count
-    // Note: groupBy with Date usually returns the full exact timestamp. 
-    // If appointments are at different times, they won't group by DAY automatically unless stored as dates only.
-    // Since 'data' is DateTime, we likely get individual counts per timestamp.
-    // We should better query all and aggregate in JS or use a raw query for date truncation.
-    // Given Prisma limitations with date truncation, let's fetch simplified list and reduce.
+    // Transformar em objeto tipo Map: "YYYY-MM-DD" -> contagem
+    // Nota: groupBy com Date geralmente retorna o timestamp exato completo.
+    // Se agendamentos forem em horários diferentes, eles não agruparão por DIA automaticamente a menos que armazenados apenas como datas.
+    // Como 'data' é DateTime, provavalmente obteremos contagens individuais por timestamp.
+    // Deveríamos consultar tudo e agregar em JS ou usar uma query bruta para truncamento de data.
+    // Dadas limitações do Prisma com truncamento de data, vamos buscar lista simplificada e reduzir.
 
     const allAppointments = await db.agendamento.findMany({
         where: {
@@ -59,10 +59,10 @@ export async function getMonthlyAppointmentCounts(year: number, month: number) {
     const counts: Record<string, number> = {}
 
     allAppointments.forEach(apt => {
-        // Format to YYYY-MM-DD
-        // We use split to ensure we don't get timezone shifts if possible, 
-        // but using simple string manipulation on the ISO string or date-fns format is safer with UTC awareness.
-        // Let's assume server time is consistent.
+        // Formatar para YYYY-MM-DD
+        // Usamos split para garantir que não haja mudança de fuso se possível,
+        // mas usar manipulação de string simples na string ISO ou date-fns é mais seguro com consciência de UTC.
+        // Vamos assumir que o tempo do servidor é consistente.
         const dateKey = format(apt.data, 'yyyy-MM-dd')
         counts[dateKey] = (counts[dateKey] || 0) + 1
     })

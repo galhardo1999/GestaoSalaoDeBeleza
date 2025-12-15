@@ -89,11 +89,11 @@ export default function ServicosClient({ initialServicos }: ServicosClientProps)
     }
 
     return (
-        // Assuming DashboardLayout is already wrapping the page content in page.tsx or layout.tsx
-        // The previous implementation didn't import DashboardLayout in page.tsx, it was likely in proper layout.
-        // I will remove DashboardLayout wrapper here and let the parent handle it, or just use a div as wrapper
+        // Assumindo que o DashboardLayout já está envolvendo o conteúdo da página em page.tsx ou layout.tsx
+        // A implementação anterior não importava DashboardLayout em page.tsx, estava provavelmente no layout correto.
+        // Vou remover o wrapper DashboardLayout aqui e deixar o pai lidar com isso, ou apenas usar uma div como wrapper
         <div className="space-y-6">
-            {/* Header */}
+            {/* Cabeçalho */}
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h1 className="font-playfair text-2xl font-semibold text-foreground md:text-3xl">
@@ -106,7 +106,7 @@ export default function ServicosClient({ initialServicos }: ServicosClientProps)
                 <NovoServicoDialog />
             </div>
 
-            {/* Filters */}
+            {/* Filtros */}
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                 <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -122,7 +122,7 @@ export default function ServicosClient({ initialServicos }: ServicosClientProps)
                 </div>
             </div>
 
-            {/* Table */}
+            {/* Tabela */}
             <div className="rounded-lg border bg-card">
                 <Table>
                     <TableHeader>
@@ -178,7 +178,7 @@ export default function ServicosClient({ initialServicos }: ServicosClientProps)
                 </Table>
             </div>
 
-            {/* Pagination */}
+            {/* Paginação */}
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-2">
                     <span className="text-sm text-muted-foreground">Itens por página:</span>
@@ -239,7 +239,7 @@ export default function ServicosClient({ initialServicos }: ServicosClientProps)
                 )}
             </div>
 
-            {/* Summary */}
+            {/* Resumo */}
             <div className="text-sm text-muted-foreground">
                 Exibindo {paginatedServicos.length} de {filteredServicos.length} serviços
             </div>

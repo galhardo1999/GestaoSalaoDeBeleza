@@ -35,10 +35,10 @@ export function UpcomingAppointments({ appointments }: UpcomingAppointmentsProps
                 return "bg-gray-100 text-gray-600 hover:bg-gray-100"
             case 'CONFIRMADO':
                 return "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50" // Stylistically matching "Confirmado" in image seems to be outlined or light gray? Image shows "Concluido" as gray pill, "Confirmado" as white pill with border? Let's look closer. 
-            // Actually image shows:
-            // Maria Silva (Concluído) -> Gray background pill.
-            // Carla Santos (Confirmado) -> White background, gray border? Or very light gray.
-            // Let's stick to a clean look.
+            // Na verdade, a imagem mostra:
+            // Maria Silva (Concluído) -> Pílula de fundo cinza.
+            // Carla Santos (Confirmado) -> Fundo branco, borda cinza? Ou cinza muito claro.
+            // Vamos manter um visual limpo.
             case 'AGENDADO':
                 return "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
             case 'PENDENTE':
@@ -83,7 +83,7 @@ export function UpcomingAppointments({ appointments }: UpcomingAppointmentsProps
                 ) : (
                     appointments.map((appointment) => (
                         <div key={appointment.id} className="group relative flex items-center gap-4 rounded-2xl border bg-white p-4 transition-all hover:shadow-md">
-                            {/* Time Column */}
+                            {/* Coluna de Tempo */}
                             <div className="text-lg font-bold text-gray-900 min-w-[60px] text-center">
                                 {new Intl.DateTimeFormat('pt-BR', {
                                     hour: '2-digit',
@@ -92,10 +92,10 @@ export function UpcomingAppointments({ appointments }: UpcomingAppointmentsProps
                                 }).format(appointment.data)}
                             </div>
 
-                            {/* Vertical Separator */}
+                            {/* Separador Vertical */}
                             <div className="h-10 w-[1px] bg-gray-100" />
 
-                            {/* Content Column */}
+                            {/* Coluna de Conteúdo */}
                             <div className="flex-1 space-y-1">
                                 <div className="flex items-center gap-3 flex-wrap">
                                     <h3 className="font-bold text-gray-900 text-lg">
@@ -110,7 +110,7 @@ export function UpcomingAppointments({ appointments }: UpcomingAppointmentsProps
                                 </p>
                             </div>
 
-                            {/* Collaborator Column */}
+                            {/* Coluna de Colaborador */}
                             <div className="flex items-center gap-3 pl-4">
                                 <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600">
                                     <User className="h-5 w-5" />

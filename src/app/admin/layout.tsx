@@ -10,7 +10,7 @@ export default async function AdminLayout({
 }) {
     const session = await getServerSession(authOptions)
 
-    // Strictly enforce SUPER_ADMIN role for this layout
+    // Impor estritamente a função SUPER_ADMIN para este layout
     if (session?.user?.cargo !== "SUPER_ADMIN") {
         redirect("/dashboard")
     }

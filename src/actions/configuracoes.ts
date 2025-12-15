@@ -14,7 +14,7 @@ export async function getCompanySettings(userId: string) {
         return {
             success: true,
             data: user?.empresa,
-            userEmail: user?.cnpj // Using CNPJ as login/email identifier if needed, or check schema for email
+            userEmail: user?.cnpj // Usando CNPJ como identificador de login/email se necessário, ou verificar schema para email
         }
     } catch (error) {
         return { success: false, error: "Erro ao buscar configurações" }
@@ -40,7 +40,7 @@ export async function updateCompanySettings(userId: string, data: {
         }
 
         if (user.empresaId) {
-            // Update existing company
+            // Atualizar empresa existente
             await db.empresa.update({
                 where: { id: user.empresaId },
                 data: {
@@ -53,14 +53,14 @@ export async function updateCompanySettings(userId: string, data: {
                 },
             })
         } else {
-            // Create new company and link to user
-            // Note: In a real app, we might need CNPJ here if it's required and not provided.
-            // Assuming for now update is mainly for existing or partial updates.
-            // However, the design shows CNPJ as read-only, implying it exists.
-            // If it doesn't exist, we might have an issue. 
-            // Let's assume for this task that if it doesn't exist, we can't fully create it without CNPJ.
-            // But the prompt says "user has to have a company". 
-            // So I'll handle the case where it might be missing if safe, or return error.
+            // Criar nova empresa e vincular ao usuário
+            // Nota: Em um app real, poderíamos precisar do CNPJ aqui se for obrigatório e não fornecido.
+            // Assumindo por enquanto que a atualização é principalmente para atualizações existentes ou parciais.
+            // No entanto, o design mostra o CNPJ como somente leitura, implicando que ele existe.
+            // Se não existir, podemos ter um problema.
+            // Vamos assumir para esta tarefa que se não existir, não podemos criá-lo totalmente sem CNPJ.
+            // Mas o prompt diz "usuário tem que ter uma empresa".
+            // Então vamos tratar o caso onde pode estar faltando se for seguro, ou retornar erro.
             return { success: false, error: "Empresa não encontrada para este usuário" }
         }
 

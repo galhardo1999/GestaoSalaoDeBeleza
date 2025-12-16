@@ -43,6 +43,7 @@ export default async function ColaboradoresPage() {
         codigo: c.codigo.toString(),
         nome: c.nome,
         email: c.email,
+        cpf: c.cpf,
         foto: c.foto,
         servicosPrestados: c.servicos ? c.servicos.map((s: any) => s.nome) : [],
         servicosRaw: c.servicos ? c.servicos.map((s: any) => ({

@@ -67,6 +67,12 @@ export function FormNovoColaborador({ onSuccess, servicos = [] }: { onSuccess?: 
             </div>
 
             <div className="space-y-2">
+                <Label htmlFor="cpf">CPF</Label>
+                <Input name="cpf" id="cpf" placeholder="000.000.000-00" />
+                {/* Error handling for CPF if needed, though state.errors might need type update */}
+            </div>
+
+            <div className="space-y-2">
                 <Label htmlFor="senha">Senha *</Label>
                 <Input name="senha" id="senha" type="password" required placeholder="******" />
                 {state.errors?.senha && (

@@ -262,7 +262,7 @@ export function Sidebar({ isCollapsed, toggleCollapse, companyName, companyCnpj,
                                                 <ChevronDown className={cn("h-4 w-4 transition-transform duration-200", isOpen && "rotate-180")} />
                                             </Button>
                                         </CollapsibleTrigger>
-                                        <CollapsibleContent className="pl-4 space-y-1">
+                                        <CollapsibleContent className="pl-4 pt-2 space-y-1">
                                             {route.submenus.map(sub => {
                                                 const isSubActive = pathname === sub.href
                                                 return (

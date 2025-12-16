@@ -55,8 +55,24 @@ export async function criarCliente(
                 empresaId: session.user.empresaId
             },
         })
-    } catch (error) {
+    } catch (error: any) {
         console.error('Erro ao criar cliente:', error)
+        if (error.code === 'P2002') {
+            if (error.meta?.target?.includes('cpf')) {
+                return {
+                    errors: {
+                        cpf: ['Este CPF já está cadastrado.']
+                    }
+                }
+            }
+            if (error.meta?.target?.includes('email')) {
+                return {
+                    errors: {
+                        email: ['Este email já existe.']
+                    }
+                }
+            }
+        }
         return {
             message: 'Erro no Banco de Dados: Falha ao cadastrar cliente.',
         }

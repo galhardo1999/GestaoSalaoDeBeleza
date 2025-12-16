@@ -21,6 +21,23 @@ interface DetalhesClienteDialogProps {
     clienteId: string
 }
 
+const formatStatus = (status: string) => {
+    switch (status) {
+        case "NAO_COMPARECEU":
+            return "Não Compareceu"
+        case "CONCLUIDO":
+            return "Concluído"
+        case "CANCELADO":
+            return "Cancelado"
+        case "AGENDADO":
+            return "Agendado"
+        case "PENDENTE":
+            return "Pendente"
+        default:
+            return status
+    }
+}
+
 export function DetalhesClienteDialog({ children, clienteId }: DetalhesClienteDialogProps) {
     const [open, setOpen] = useState(false)
     const [cliente, setCliente] = useState<any>(null)
@@ -144,10 +161,10 @@ export function DetalhesClienteDialog({ children, clienteId }: DetalhesClienteDi
                                                         <td className="p-4 align-middle">
                                                             <Badge variant={
                                                                 agendamento.status === "CONCLUIDO" ? "default" :
-                                                                    agendamento.status === "CANCELADO" ? "destructive" :
+                                                                    agendamento.status === "CANCELADO" || agendamento.status === "NAO_COMPARECEU" ? "destructive" :
                                                                         "outline"
                                                             }>
-                                                                {agendamento.status}
+                                                                {formatStatus(agendamento.status)}
                                                             </Badge>
                                                         </td>
                                                     </tr>

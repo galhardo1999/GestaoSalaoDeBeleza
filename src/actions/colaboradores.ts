@@ -31,6 +31,7 @@ export async function criarColaborador(
     const validatedFields = colaboradorSchema.safeParse({
         nome: formData.get('nome'),
         email: formData.get('email'),
+        cpf: formData.get('cpf'),
         senha: formData.get('senha'),
         foto: formData.get('foto'),
         servicos: servicosRaw,
@@ -42,11 +43,11 @@ export async function criarColaborador(
         }
     }
 
-    const { nome, email, senha, foto, servicos } = validatedFields.data
+    const { nome, email, cpf, senha, foto, servicos } = validatedFields.data
 
     try {
         const existingUser = await db.colaborador.findFirst({
-            where: { email } // Email deve ser único globalmente ou por empresa? Schema diz único globalmente por simplicidade geralmente, mas aqui email tem restrição @unique.
+            where: { email }
         })
 
         if (existingUser) {
@@ -54,6 +55,18 @@ export async function criarColaborador(
                 errors: {
                     email: ['Este email já está em uso.'],
                 },
+            }
+        }
+
+        if (cpf) {
+            const existingCpf = await db.colaborador.findFirst({
+                where: { cpf }
+            })
+
+            if (existingCpf) {
+                return {
+                    message: 'Erro: Este CPF já está cadastrado para outro colaborador.'
+                }
             }
         }
 
@@ -76,6 +89,7 @@ export async function criarColaborador(
             data: {
                 nome,
                 email,
+                cpf: cpf || null,
                 senha: hashedPassword,
                 foto: foto || null,
                 empresaId: session.user.empresaId,
@@ -134,6 +148,7 @@ export async function editarColaborador(
         id,
         nome: formData.get('nome'),
         email: formData.get('email'),
+        cpf: formData.get('cpf'),
         senha: formData.get('senha') || undefined,
         foto: formData.get('foto'),
         servicos: servicosRaw
@@ -148,7 +163,7 @@ export async function editarColaborador(
         }
     }
 
-    const { nome, email, senha, foto, servicos } = validatedFields.data
+    const { nome, email, cpf, senha, foto, servicos } = validatedFields.data
 
     try {
         // Propriedade
@@ -157,9 +172,20 @@ export async function editarColaborador(
         })
         if (!existing) return { message: "Colaborador não encontrado." }
 
+        // Verificar uniqueness do CPF se foi fornecido e mudou
+        if (cpf && cpf !== existing.cpf) {
+            const existingCpf = await db.colaborador.findFirst({
+                where: { cpf }
+            })
+            if (existingCpf && existingCpf.id !== id) {
+                return { message: "Erro: Este CPF já está em uso por outro colaborador." }
+            }
+        }
+
         const dataToUpdate: any = {
             nome,
             email,
+            cpf: cpf || null,
             foto,
             servicos: {
                 set: servicos ? servicos.map(id => ({ id })) : []

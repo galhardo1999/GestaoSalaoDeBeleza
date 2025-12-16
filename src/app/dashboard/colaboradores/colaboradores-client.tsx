@@ -52,6 +52,7 @@ interface ColaboradorData {
     codigo: string
     nome: string
     email: string | null
+    cpf: string | null
     foto: string | null
     servicosPrestados: string[]
     servicosRaw: Servico[]
@@ -62,14 +63,14 @@ interface ColaboradoresClientProps {
     servicos: Servico[]
 }
 
-const ITEMS_PER_PAGE_OPTIONS = [10, 25, 50, 100]
+const ITEMS_PER_PAGE_OPTIONS = [25, 50, 100]
 
 export function ColaboradoresClient({ colaboradores, servicos }: ColaboradoresClientProps) {
     const router = useRouter()
 
     // --- Estado Local ---
     const [searchTerm, setSearchTerm] = useState("")
-    const [itemsPerPage, setItemsPerPage] = useState(10)
+    const [itemsPerPage, setItemsPerPage] = useState(25)
     const [currentPage, setCurrentPage] = useState(1)
 
     // --- Filtragem ---
@@ -79,7 +80,7 @@ export function ColaboradoresClient({ colaboradores, servicos }: ColaboradoresCl
 
         return colaboradores.filter(colaborador =>
             colaborador.nome.toLowerCase().includes(term) ||
-            colaborador.email?.toLowerCase().includes(term)
+            colaborador.cpf?.toLowerCase().includes(term)
         )
     }, [colaboradores, searchTerm])
 
@@ -149,7 +150,7 @@ export function ColaboradoresClient({ colaboradores, servicos }: ColaboradoresCl
                         <TableRow>
                             <TableHead className="w-[80px]">Foto</TableHead>
                             <TableHead>Nome</TableHead>
-                            <TableHead>Email</TableHead>
+                            <TableHead>CPF</TableHead>
                             <TableHead>Serviços</TableHead>
                             <TableHead className="text-right">Ações</TableHead>
                         </TableRow>
@@ -178,7 +179,7 @@ export function ColaboradoresClient({ colaboradores, servicos }: ColaboradoresCl
                                     <TableCell className="font-medium">
                                         {colaborador.nome}
                                     </TableCell>
-                                    <TableCell>{colaborador.email || '-'}</TableCell>
+                                    <TableCell>{colaborador.cpf || '-'}</TableCell>
                                     <TableCell>
                                         <div className="flex flex-wrap gap-1">
                                             {colaborador.servicosPrestados.length > 0 ? (

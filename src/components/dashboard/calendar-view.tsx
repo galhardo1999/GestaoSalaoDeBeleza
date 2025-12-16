@@ -171,58 +171,10 @@ export function CalendarView({ agendamentos, clientes, servicos, colaboradores }
                 <NovoAgendamentoDialog clientes={clientes} servicos={servicos} colaboradores={colaboradores} />
             </div>
 
-            {/* Filters */}
-            <div className="flex flex-col sm:flex-row gap-4 p-4 bg-white rounded-lg border border-border shadow-sm">
-                <div className="w-full sm:w-[250px]">
-                    <Select value={selectedColaborador} onValueChange={setSelectedColaborador}>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Filtrar por Colaborador" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">Todos os Colaboradores</SelectItem>
-                            {colaboradores.map((colaborador) => (
-                                <SelectItem key={colaborador.id} value={colaborador.id}>
-                                    {colaborador.nome}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
-
-                <div className="w-full sm:w-[250px]">
-                    <Select value={selectedServico} onValueChange={setSelectedServico}>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Filtrar por Serviço" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">Todos os Serviços</SelectItem>
-                            {servicos.map((servico) => (
-                                <SelectItem key={servico.id} value={servico.id}>
-                                    {servico.nome}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
-
-                {(selectedColaborador !== 'all' || selectedServico !== 'all') && (
-                    <Button
-                        variant="ghost"
-                        onClick={() => {
-                            setSelectedColaborador('all')
-                            setSelectedServico('all')
-                        }}
-                        className="w-full sm:w-auto text-muted-foreground"
-                    >
-                        Limpar Filtros
-                    </Button>
-                )}
-            </div>
-
             {/* Calendar Card */}
             <Card className="shadow-sm border-border flex-1 flex flex-col">
                 <CardHeader className="border-b border-border pb-4">
-                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex flex-col xl:flex-row gap-4 xl:items-center xl:justify-between">
                         {/* Navigation */}
                         <div className="flex items-center gap-2">
                             <Button variant="outline" size="icon" className="rounded-lg" onClick={navigatePrev}>
@@ -238,28 +190,78 @@ export function CalendarView({ agendamentos, clientes, servicos, colaboradores }
                             </CardTitle>
                         </div>
 
-                        {/* View Toggle & Today */}
-                        <div className="flex items-center gap-2">
-                            <Button variant="outline" className="rounded-lg" onClick={goToToday}>
-                                Hoje
-                            </Button>
-                            <div className="flex rounded-lg border border-border bg-muted p-1">
-                                <Button
-                                    variant={viewMode === "month" ? "default" : "ghost"}
-                                    size="sm"
-                                    className="rounded-md px-4"
-                                    onClick={() => setViewMode("month")}
-                                >
-                                    Mês
+                        <div className="flex flex-col sm:flex-row gap-4 items-center">
+                            {/* Filters */}
+                            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                                <div className="w-full sm:w-[200px]">
+                                    <Select value={selectedColaborador} onValueChange={setSelectedColaborador}>
+                                        <SelectTrigger className="bg-background">
+                                            <SelectValue placeholder="Colaborador" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">Todos os Colaboradores</SelectItem>
+                                            {colaboradores.map((colaborador) => (
+                                                <SelectItem key={colaborador.id} value={colaborador.id}>
+                                                    {colaborador.nome}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                <div className="w-full sm:w-[200px]">
+                                    <Select value={selectedServico} onValueChange={setSelectedServico}>
+                                        <SelectTrigger className="bg-background">
+                                            <SelectValue placeholder="Serviço" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">Todos os Serviços</SelectItem>
+                                            {servicos.map((servico) => (
+                                                <SelectItem key={servico.id} value={servico.id}>
+                                                    {servico.nome}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                {(selectedColaborador !== 'all' || selectedServico !== 'all') && (
+                                    <Button
+                                        variant="ghost"
+                                        onClick={() => {
+                                            setSelectedColaborador('all')
+                                            setSelectedServico('all')
+                                        }}
+                                        className="text-muted-foreground px-2"
+                                    >
+                                        Limpar
+                                    </Button>
+                                )}
+                            </div>
+
+                            {/* View Toggle & Today */}
+                            <div className="flex items-center gap-2 ml-auto sm:ml-0">
+                                <Button variant="outline" className="rounded-lg" onClick={goToToday}>
+                                    Hoje
                                 </Button>
-                                <Button
-                                    variant={viewMode === "week" ? "default" : "ghost"}
-                                    size="sm"
-                                    className="rounded-md px-4"
-                                    onClick={() => setViewMode("week")}
-                                >
-                                    Semana
-                                </Button>
+                                <div className="flex rounded-lg border border-border bg-muted p-1">
+                                    <Button
+                                        variant={viewMode === "month" ? "default" : "ghost"}
+                                        size="sm"
+                                        className="rounded-md px-4"
+                                        onClick={() => setViewMode("month")}
+                                    >
+                                        Mês
+                                    </Button>
+                                    <Button
+                                        variant={viewMode === "week" ? "default" : "ghost"}
+                                        size="sm"
+                                        className="rounded-md px-4"
+                                        onClick={() => setViewMode("week")}
+                                    >
+                                        Semana
+                                    </Button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -442,6 +444,6 @@ export function CalendarView({ agendamentos, clientes, servicos, colaboradores }
                     )}
                 </CardContent>
             </Card>
-        </div>
+        </div >
     )
 }

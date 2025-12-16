@@ -57,7 +57,7 @@ interface ClientesClientProps {
     itemsPerPage: number
 }
 
-const ITEMS_PER_PAGE_OPTIONS = [10, 25, 50, 100]
+const ITEMS_PER_PAGE_OPTIONS = [25, 50, 100]
 
 export function ClientesClient({
     clientes,

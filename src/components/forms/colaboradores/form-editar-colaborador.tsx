@@ -78,6 +78,12 @@ export function FormEditarColaborador({ collaborator, onSuccess, servicos = [] }
             </div>
 
             <div className="space-y-2">
+                <Label htmlFor="cpf">CPF</Label>
+                <Input name="cpf" id="cpf" defaultValue={collaborator.cpf || ''} placeholder="000.000.000-00" />
+                {/* Error handling for CPF */}
+            </div>
+
+            <div className="space-y-2">
                 <Label htmlFor="foto">Foto</Label>
                 <div className="flex items-center gap-4">
                     {fotoBase64 && (

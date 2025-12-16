@@ -22,7 +22,7 @@ export default async function ClientesPage({
     const params = await searchParams
     const search = typeof params.q === 'string' ? params.q : ''
     const page = typeof params.page === 'string' ? parseInt(params.page) : 1
-    const limit = 10
+    const limit = 25
     const skip = (page - 1) * limit
 
     const where: Prisma.ClienteWhereInput = {

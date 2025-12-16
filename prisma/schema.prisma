@@ -41,7 +41,7 @@ model Cliente {
   id        String   @id @default(cuid())
   nome      String
   email     String?
-  cpf       String?
+  cpf       String?  @unique
   telefone  String
   observacoes String?
   codigo    Int      @unique @default(autoincrement())
@@ -61,6 +61,7 @@ model Colaborador {
   codigo    Int      @default(autoincrement())
   nome      String
   email     String   @unique
+  cpf       String?  @unique
   senha     String
   foto      String?
   criadoEm  DateTime @default(now()) @map("criado_em")

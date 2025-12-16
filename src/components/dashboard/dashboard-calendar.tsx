@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { useRouter, useSearchParams, usePathname } from "next/navigation"
 import { getMonthlyAppointmentCounts } from "@/app/actions/dashboard"
 
 const DAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"]
@@ -14,8 +15,21 @@ const MONTHS = [
 ]
 
 export function DashboardCalendar() {
-    const [currentDate, setCurrentDate] = useState(new Date())
-    const [selectedDate, setSelectedDate] = useState(new Date())
+    const router = useRouter()
+    const pathname = usePathname()
+    const searchParams = useSearchParams()
+
+    const dateParam = searchParams.get("date")
+    // Initialize selectedDate from URL or default to today
+    const [selectedDate, setSelectedDate] = useState(() => {
+        if (dateParam) {
+            const [y, m, d] = dateParam.split('-').map(Number)
+            return new Date(y, m - 1, d)
+        }
+        return new Date()
+    })
+
+    const [currentDate, setCurrentDate] = useState(new Date(selectedDate)) // Start calendar view at selected date
     const [eventsData, setEventsData] = useState<Record<string, number>>({})
 
     const year = currentDate.getFullYear()
@@ -81,7 +95,16 @@ export function DashboardCalendar() {
         days.push(
             <button
                 key={day}
-                onClick={() => setSelectedDate(new Date(year, month, day))}
+                onClick={() => {
+                    const newDate = new Date(year, month, day)
+                    setSelectedDate(newDate)
+                    // Update URL
+                    const params = new URLSearchParams(searchParams)
+                    // Format YYYY-MM-DD manually to avoid timezone issues
+                    const dateStr = `${newDate.getFullYear()}-${String(newDate.getMonth() + 1).padStart(2, '0')}-${String(newDate.getDate()).padStart(2, '0')}`
+                    params.set("date", dateStr)
+                    router.push(`${pathname}?${params.toString()}`)
+                }}
                 className={cn(
                     "relative flex h-10 w-10 items-center justify-center rounded-xl text-sm font-medium transition-all duration-200",
                     isSelected(day)

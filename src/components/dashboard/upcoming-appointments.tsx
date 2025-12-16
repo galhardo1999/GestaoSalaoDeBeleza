@@ -22,23 +22,22 @@ interface UpcomingAppointment {
     } | null
 }
 
+// ... imports
+
 interface UpcomingAppointmentsProps {
     appointments: UpcomingAppointment[]
+    date?: Date
 }
 
-export function UpcomingAppointments({ appointments }: UpcomingAppointmentsProps) {
-    const today = new Date()
+export function UpcomingAppointments({ appointments, date }: UpcomingAppointmentsProps) {
+    const displayDate = date || new Date()
 
     const getStatusVariant = (status: string) => {
         switch (status) {
             case 'CONCLUIDO':
                 return "bg-gray-100 text-gray-600 hover:bg-gray-100"
             case 'CONFIRMADO':
-                return "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50" // Stylistically matching "Confirmado" in image seems to be outlined or light gray? Image shows "Concluido" as gray pill, "Confirmado" as white pill with border? Let's look closer. 
-            // Na verdade, a imagem mostra:
-            // Maria Silva (Concluído) -> Pílula de fundo cinza.
-            // Carla Santos (Confirmado) -> Fundo branco, borda cinza? Ou cinza muito claro.
-            // Vamos manter um visual limpo.
+                return "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
             case 'AGENDADO':
                 return "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
             case 'PENDENTE':
@@ -60,14 +59,14 @@ export function UpcomingAppointments({ appointments }: UpcomingAppointmentsProps
         <Card className="col-span-3 bg-white shadow-sm border-border">
             <div className="p-6 flex items-start justify-between">
                 <div>
-                    <h2 className="text-2xl font-medium text-gray-900">Agenda de Hoje</h2>
+                    <h2 className="text-2xl font-medium text-gray-900">Agenda do dia</h2>
                     <p className="text-gray-500 capitalize mt-1" suppressHydrationWarning>
                         {new Intl.DateTimeFormat('pt-BR', {
                             weekday: 'long',
                             day: 'numeric',
                             month: 'long',
                             timeZone: 'America/Sao_Paulo'
-                        }).format(new Date())}
+                        }).format(displayDate)}
                     </p>
                 </div>
                 <div className="h-10 w-10 rounded-xl bg-gray-100 flex items-center justify-center text-gray-500">

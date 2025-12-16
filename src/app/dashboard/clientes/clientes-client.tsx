@@ -1,7 +1,8 @@
 "use client"
 
-import { useState, useMemo, useEffect } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useState } from "react"
+import { useRouter, useSearchParams, usePathname } from "next/navigation"
+import { useDebouncedCallback } from "use-debounce"
 import {
     Table,
     TableBody,
@@ -28,7 +29,7 @@ import {
     PaginationPrevious,
 } from "@/components/ui/pagination"
 import { Search, Plus, Eye, Pencil, Trash2 } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { cn, formatCPF, formatTelefone } from "@/lib/utils"
 
 import { NovoClienteDialog } from "@/components/forms/clientes/novo-cliente-dialog"
 import { DetalhesClienteDialog } from "@/components/clientes/detalhes-cliente-dialog"
@@ -49,56 +50,53 @@ interface ClienteData {
 
 interface ClientesClientProps {
     clientes: ClienteData[]
+    currentPage: number
+    totalPages: number
+    totalCount: number
+    initialSearch: string
+    itemsPerPage: number
 }
 
 const ITEMS_PER_PAGE_OPTIONS = [10, 25, 50, 100]
 
-export function ClientesClient({ clientes }: ClientesClientProps) {
+export function ClientesClient({
+    clientes,
+    currentPage,
+    totalPages,
+    totalCount,
+    initialSearch,
+    itemsPerPage
+}: ClientesClientProps) {
     const router = useRouter()
+    const pathname = usePathname()
+    const searchParams = useSearchParams()
 
-    // --- Estado Local ---
-    const [searchTerm, setSearchTerm] = useState("")
-    const [itemsPerPage, setItemsPerPage] = useState(10)
-    const [currentPage, setCurrentPage] = useState(1)
-
-    // --- Filtragem ---
-    const filteredClientes = useMemo(() => {
-        const term = searchTerm.toLowerCase()
-        if (!term) return clientes
-
-        return clientes.filter(cliente =>
-            cliente.nome.toLowerCase().includes(term) ||
-            cliente.email?.toLowerCase().includes(term) ||
-            cliente.cpf.includes(term) ||
-            cliente.codigo.includes(term) ||
-            cliente.telefone.includes(term)
-        )
-    }, [clientes, searchTerm])
-
-    // --- Paginação ---
-    const totalItems = filteredClientes.length
-    const totalPages = Math.ceil(totalItems / itemsPerPage)
-
-    const currentClientes = useMemo(() => {
-        const start = (currentPage - 1) * itemsPerPage
-        return filteredClientes.slice(start, start + itemsPerPage)
-    }, [filteredClientes, currentPage, itemsPerPage])
-
-    // Redefinir para página 1 ao mudar filtro
-    useEffect(() => {
-        setCurrentPage(1)
-    }, [searchTerm, itemsPerPage])
-
+    // --- Estado Local para controle do input ---
+    const [searchTerm, setSearchTerm] = useState(initialSearch)
 
     // --- Manipuladores ---
-    const handleSearch = (term: string) => {
-        setSearchTerm(term)
-    }
+    const handleSearch = useDebouncedCallback((term: string) => {
+        const params = new URLSearchParams(searchParams)
+        if (term) {
+            params.set('q', term)
+        } else {
+            params.delete('q')
+        }
+        params.set('page', '1') // Resetar para primeira página na busca
+        router.replace(`${pathname}?${params.toString()}`)
+    }, 300)
 
     const handlePageChange = (page: number) => {
-        if (page >= 1 && page <= totalPages) {
-            setCurrentPage(page)
-        }
+        const params = new URLSearchParams(searchParams)
+        params.set('page', page.toString())
+        router.push(`${pathname}?${params.toString()}`)
+    }
+
+    const handleItemsPerPageChange = (value: string) => {
+        const params = new URLSearchParams(searchParams)
+        params.set('limit', value)
+        params.set('page', '1') // Resetar para primeira página ao mudar o limite
+        router.push(`${pathname}?${params.toString()}`)
     }
 
     return (
@@ -127,8 +125,11 @@ export function ClientesClient({ clientes }: ClientesClientProps) {
                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                         placeholder="Buscar por nome, CPF, código ou telefone..."
-                        value={searchTerm}
-                        onChange={(e) => handleSearch(e.target.value)}
+                        defaultValue={initialSearch}
+                        onChange={(e) => {
+                            setSearchTerm(e.target.value)
+                            handleSearch(e.target.value)
+                        }}
                         className="pl-10 bg-white"
                     />
                 </div>
@@ -139,40 +140,34 @@ export function ClientesClient({ clientes }: ClientesClientProps) {
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>Código</TableHead>
-                            <TableHead>Nome</TableHead>
-                            <TableHead>CPF</TableHead>
-                            <TableHead>Telefone</TableHead>
-                            <TableHead className="text-center">Agendamentos</TableHead>
-                            <TableHead>Último Agendamento</TableHead>
+                            <TableHead className="w-[10%]">Código</TableHead>
+                            <TableHead className="w-[25%]">Nome</TableHead>
+                            <TableHead className="w-[20%]">CPF</TableHead>
+                            <TableHead className="w-[20%]">Telefone</TableHead>
+                            <TableHead className="w-[25%]">Email</TableHead>
                             <TableHead className="text-right">Ações</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {currentClientes.length === 0 ? (
+                        {clientes.length === 0 ? (
                             <TableRow>
                                 <TableCell
-                                    colSpan={7}
+                                    colSpan={6}
                                     className="h-24 text-center text-muted-foreground"
                                 >
                                     Nenhum cliente encontrado.
                                 </TableCell>
                             </TableRow>
                         ) : (
-                            currentClientes.map((cliente) => (
+                            clientes.map((cliente) => (
                                 <TableRow key={cliente.id}>
                                     <TableCell className="font-medium">
                                         {cliente.codigo}
                                     </TableCell>
                                     <TableCell>{cliente.nome}</TableCell>
-                                    <TableCell>{cliente.cpf}</TableCell>
-                                    <TableCell>{cliente.telefone}</TableCell>
-                                    <TableCell className="text-center">
-                                        <span className="inline-flex items-center justify-center rounded-full bg-primary/10 px-2.5 py-0.5 text-sm font-medium text-primary">
-                                            {cliente.agendamentos}
-                                        </span>
-                                    </TableCell>
-                                    <TableCell>{cliente.ultimoAgendamento}</TableCell>
+                                    <TableCell>{formatCPF(cliente.cpf)}</TableCell>
+                                    <TableCell>{formatTelefone(cliente.telefone)}</TableCell>
+                                    <TableCell>{cliente.email}</TableCell>
                                     <TableCell className="text-right">
                                         <div className="flex items-center justify-end gap-2">
                                             <DetalhesClienteDialog clienteId={cliente.id}>
@@ -211,11 +206,11 @@ export function ClientesClient({ clientes }: ClientesClientProps) {
                     <Select
                         value={itemsPerPage.toString()}
                         onValueChange={(value) => {
-                            setItemsPerPage(Number(value))
+                            handleItemsPerPageChange(value)
                         }}
                     >
-                        <SelectTrigger className="w-[80px]">
-                            <SelectValue />
+                        <SelectTrigger className="w-[70px]">
+                            <SelectValue placeholder={itemsPerPage.toString()} />
                         </SelectTrigger>
                         <SelectContent>
                             {ITEMS_PER_PAGE_OPTIONS.map((option) => (
@@ -228,38 +223,33 @@ export function ClientesClient({ clientes }: ClientesClientProps) {
                 </div>
 
                 {totalPages > 1 && (
-                    <Pagination className="justify-end">
+                    <Pagination>
                         <PaginationContent>
                             <PaginationItem>
                                 <PaginationPrevious
-                                    onClick={() => handlePageChange(currentPage - 1)}
-                                    className={cn(
-                                        "cursor-pointer",
-                                        currentPage === 1 && "pointer-events-none opacity-50"
-                                    )}
-                                    size="default"
+                                    href="#"
+                                    onClick={(e) => {
+                                        e.preventDefault()
+                                        if (currentPage > 1) handlePageChange(currentPage - 1)
+                                    }}
+                                    className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
                                 />
                             </PaginationItem>
-                            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                                <PaginationItem key={page}>
-                                    <PaginationLink
-                                        onClick={() => handlePageChange(page)}
-                                        isActive={currentPage === page}
-                                        className="cursor-pointer"
-                                        size="icon"
-                                    >
-                                        {page}
-                                    </PaginationLink>
-                                </PaginationItem>
-                            ))}
+
+                            <PaginationItem>
+                                <span className="text-sm text-muted-foreground px-4">
+                                    Página {currentPage} de {totalPages}
+                                </span>
+                            </PaginationItem>
+
                             <PaginationItem>
                                 <PaginationNext
-                                    onClick={() => handlePageChange(currentPage + 1)}
-                                    className={cn(
-                                        "cursor-pointer",
-                                        currentPage === totalPages && "pointer-events-none opacity-50"
-                                    )}
-                                    size="default"
+                                    href="#"
+                                    onClick={(e) => {
+                                        e.preventDefault()
+                                        if (currentPage < totalPages) handlePageChange(currentPage + 1)
+                                    }}
+                                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
                                 />
                             </PaginationItem>
                         </PaginationContent>
@@ -269,7 +259,7 @@ export function ClientesClient({ clientes }: ClientesClientProps) {
 
             {/* Resumo */}
             <div className="text-sm text-muted-foreground">
-                Exibindo {currentClientes.length} de {totalItems} clientes (Total Filtrado)
+                Mostrando {clientes.length} de {totalCount} registros
             </div>
         </div>
     )

@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useEffect, useState } from 'react'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 const initialState = {
     message: '',
@@ -36,67 +37,81 @@ export function FormNovoCliente({ onSuccess }: { onSuccess?: () => void }) {
 
     return (
         <form action={dispatch} className="space-y-4">
-            <div className="space-y-2">
-                <Label>Código</Label>
-                <Input disabled value="Gerado automaticamente" />
-            </div>
+            <Tabs defaultValue="dados" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="dados">Dados Gerais</TabsTrigger>
+                    <TabsTrigger value="observacoes">Observações</TabsTrigger>
+                </TabsList>
 
-            <div className="space-y-2">
-                <Label htmlFor="nome">Nome *</Label>
-                <Input name="nome" id="nome" required placeholder="Ex: Maria Silva" />
-                {state.errors?.nome && (
-                    <p className="text-sm text-red-500 font-medium">{state.errors.nome}</p>
-                )}
-            </div>
+                <TabsContent value="dados" className="space-y-4 mt-4" forceMount={true}>
 
-            <div className="space-y-2">
-                <Label htmlFor="telefone">Telefone *</Label>
-                <Input
-                    name="telefone"
-                    id="telefone"
-                    required
-                    placeholder="(11) 99999-9999"
-                    maxLength={15}
-                    onChange={(e) => {
-                        let value = e.target.value.replace(/\D/g, "")
-                        if (value.length > 11) value = value.slice(0, 11)
 
-                        if (value.length > 10) {
-                            value = value.replace(/^(\d{2})(\d{5})(\d{4})/, "($1) $2-$3")
-                        } else if (value.length > 6) {
-                            value = value.replace(/^(\d{2})(\d{4})(\d{0,4})/, "($1) $2-$3")
-                        } else if (value.length > 2) {
-                            value = value.replace(/^(\d{2})(\d{0,5})/, "($1) $2")
-                        }
+                    <div className="space-y-2">
+                        <Label htmlFor="nome">Nome *</Label>
+                        <Input name="nome" id="nome" required placeholder="Ex: Maria Silva" />
+                        {state.errors?.nome && (
+                            <p className="text-sm text-red-500 font-medium">{state.errors.nome}</p>
+                        )}
+                    </div>
 
-                        e.target.value = value
-                    }}
-                />
-                {state.errors?.telefone && (
-                    <p className="text-sm text-red-500 font-medium">{state.errors.telefone}</p>
-                )}
-            </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="telefone">Telefone *</Label>
+                        <Input
+                            name="telefone"
+                            id="telefone"
+                            required
+                            placeholder="(11) 99999-9999"
+                            maxLength={15}
+                            onChange={(e) => {
+                                let value = e.target.value.replace(/\D/g, "")
+                                if (value.length > 11) value = value.slice(0, 11)
 
-            <div className="space-y-2">
-                <Label htmlFor="cpf">CPF</Label>
-                <Input name="cpf" id="cpf" placeholder="000.000.000-00" />
-                {state.errors?.cpf && (
-                    <p className="text-sm text-red-500 font-medium">{state.errors.cpf}</p>
-                )}
-            </div>
+                                if (value.length > 10) {
+                                    value = value.replace(/^(\d{2})(\d{5})(\d{4})/, "($1) $2-$3")
+                                } else if (value.length > 6) {
+                                    value = value.replace(/^(\d{2})(\d{4})(\d{0,4})/, "($1) $2-$3")
+                                } else if (value.length > 2) {
+                                    value = value.replace(/^(\d{2})(\d{0,5})/, "($1) $2")
+                                }
 
-            <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input name="email" id="email" type="email" placeholder="maria@email.com" />
-                {state.errors?.email && (
-                    <p className="text-sm text-red-500 font-medium">{state.errors.email}</p>
-                )}
-            </div>
+                                e.target.value = value
+                            }}
+                        />
+                        {state.errors?.telefone && (
+                            <p className="text-sm text-red-500 font-medium">{state.errors.telefone}</p>
+                        )}
+                    </div>
 
-            <div className="space-y-2">
-                <Label htmlFor="observacoes">Observações</Label>
-                <Textarea name="observacoes" id="observacoes" placeholder="" />
-            </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="cpf">CPF</Label>
+                        <Input name="cpf" id="cpf" placeholder="000.000.000-00" />
+                        {state.errors?.cpf && (
+                            <p className="text-sm text-red-500 font-medium">{state.errors.cpf}</p>
+                        )}
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="email">Email</Label>
+                        <Input name="email" id="email" type="email" placeholder="maria@email.com" />
+                        {state.errors?.email && (
+                            <p className="text-sm text-red-500 font-medium">{state.errors.email}</p>
+                        )}
+                    </div>
+                </TabsContent>
+
+                <TabsContent value="observacoes" className="space-y-4 mt-4" forceMount={true}>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="observacoes">Observações</Label>
+                        <Textarea
+                            name="observacoes"
+                            id="observacoes"
+                            placeholder="Digite aqui as observações sobre o cliente..."
+                            className="min-h-[300px]"
+                        />
+                    </div>
+                </TabsContent>
+            </Tabs>
 
             <SubmitButton />
 

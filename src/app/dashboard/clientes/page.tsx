@@ -6,20 +6,46 @@ import { Prisma } from "@prisma/client"
 import { format } from "date-fns"
 import { ClientesClient } from "./clientes-client"
 
-export default async function ClientesPage() {
+type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>
+
+export default async function ClientesPage({
+    searchParams
+}: {
+    searchParams: SearchParams
+}) {
     const session = await getServerSession(authOptions)
 
     if (!session?.user?.empresaId) {
         redirect("/login")
     }
 
+    const params = await searchParams
+    const search = typeof params.q === 'string' ? params.q : ''
+    const page = typeof params.page === 'string' ? parseInt(params.page) : 1
+    const limit = 10
+    const skip = (page - 1) * limit
+
     const where: Prisma.ClienteWhereInput = {
         empresaId: session.user.empresaId,
+        OR: search ? [
+            { nome: { contains: search, mode: 'insensitive' } },
+            { email: { contains: search, mode: 'insensitive' } },
+            { cpf: { contains: search } },
+            { telefone: { contains: search } },
+            // Adicionar busca por código se for número
+            ...(!isNaN(Number(search)) ? [{ codigo: Number(search) }] : [])
+        ] : undefined
     }
+
+    // Buscar total para paginação
+    const totalClientes = await db.cliente.count({ where })
+    const totalPages = Math.ceil(totalClientes / limit)
 
     const clientes = await db.cliente.findMany({
         where,
         orderBy: { nome: 'asc' },
+        skip,
+        take: limit,
         include: {
             _count: {
                 select: { agendamentos: true }
@@ -49,6 +75,11 @@ export default async function ClientesPage() {
     return (
         <ClientesClient
             clientes={formattedClientes}
+            currentPage={page}
+            totalPages={totalPages}
+            totalCount={totalClientes}
+            initialSearch={search}
+            itemsPerPage={limit}
         />
     )
 }

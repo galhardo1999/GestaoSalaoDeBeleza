@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { createEmpresa, consultarCNPJ } from "@/app/actions/admin-actions"
+import { createEmpresa, consultarCNPJ } from "@/actions/admin"
 import { useState, useRef } from "react"
 import { Loader2, Search } from "lucide-react"
 

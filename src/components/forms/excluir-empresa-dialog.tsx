@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { Trash } from "lucide-react"
-import { deleteEmpresa } from "@/app/actions/admin-actions"
+import { deleteEmpresa } from "@/actions/admin"
 import { useState } from "react"
 
 interface ExcluirEmpresaDialogProps {

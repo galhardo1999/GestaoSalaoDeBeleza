@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { useRouter, useSearchParams, usePathname } from "next/navigation"
-import { getMonthlyAppointmentCounts } from "@/app/actions/dashboard"
+import { getMonthlyAppointmentCounts } from "@/actions/dashboard"
 
 const DAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"]
 const MONTHS = [

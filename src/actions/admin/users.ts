@@ -3,8 +3,17 @@
 import { db } from "@/lib/db"
 import { hash } from "bcryptjs"
 import { revalidatePath } from "next/cache"
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth"
 
 export async function createCompanyUser(empresaId: string, formData: FormData) {
+    const session = await getServerSession(authOptions)
+
+    // @ts-ignore
+    if (!session || (session.user.cargo !== "SUPER_ADMIN" && session.user.empresaId !== empresaId)) {
+        return { error: "Acesso não autorizado." }
+    }
+
     const nome = formData.get("nome") as string
     const cnpj = formData.get("cnpj") as string
     const cargo = formData.get("cargo") as "ADMIN" | "FUNCIONARIO"
@@ -37,6 +46,13 @@ export async function createCompanyUser(empresaId: string, formData: FormData) {
 }
 
 export async function updateCompanyUser(userId: string, empresaId: string, formData: FormData) {
+    const session = await getServerSession(authOptions)
+
+    // @ts-ignore
+    if (!session || (session.user.cargo !== "SUPER_ADMIN" && session.user.empresaId !== empresaId)) {
+        return { error: "Acesso não autorizado." }
+    }
+
     const nome = formData.get("nome") as string
     const cargo = formData.get("cargo") as "ADMIN" | "FUNCIONARIO"
     const senha = formData.get("senha") as string | null
@@ -67,6 +83,13 @@ export async function updateCompanyUser(userId: string, empresaId: string, formD
 }
 
 export async function deleteCompanyUser(userId: string, empresaId: string) {
+    const session = await getServerSession(authOptions)
+
+    // @ts-ignore
+    if (!session || (session.user.cargo !== "SUPER_ADMIN" && session.user.empresaId !== empresaId)) {
+        return { error: "Acesso não autorizado." }
+    }
+
     try {
         await db.usuario.delete({
             where: { id: userId }

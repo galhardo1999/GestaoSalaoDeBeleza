@@ -32,7 +32,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { Loader2, MoreHorizontal, Plus, Trash, Pencil } from "lucide-react"
-import { createCompanyUser, updateCompanyUser, deleteCompanyUser } from "@/app/actions/admin-users-actions"
+import { createCompanyUser, updateCompanyUser, deleteCompanyUser } from "@/actions/admin/users"
 
 interface User {
     id: string

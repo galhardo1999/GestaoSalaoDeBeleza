@@ -8,7 +8,7 @@ export function DashboardShell({ children, companyName, companyCnpj, userName }:
 
     return (
         <div className="h-full relative bg-gray-50">
-            <div className={`hidden h-full md:flex md:flex-col md:fixed md:inset-y-0 z-[80] transition-all duration-300 bg-white border-r ${isCollapsed ? 'md:w-20' : 'md:w-64'}`}>
+            <div className={`hidden h-full md:flex md:flex-col md:fixed md:inset-y-0 z-40 transition-all duration-300 bg-white border-r ${isCollapsed ? 'md:w-20' : 'md:w-64'}`}>
                 <Sidebar
                     isCollapsed={isCollapsed}
                     toggleCollapse={() => setIsCollapsed(!isCollapsed)}

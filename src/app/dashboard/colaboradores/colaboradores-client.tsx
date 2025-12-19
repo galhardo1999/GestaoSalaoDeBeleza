@@ -148,6 +148,7 @@ export function ColaboradoresClient({ colaboradores, servicos }: ColaboradoresCl
                 <Table>
                     <TableHeader>
                         <TableRow>
+                            <TableHead className="w-[60px]">Cód.</TableHead>
                             <TableHead className="w-[80px]">Foto</TableHead>
                             <TableHead>Nome</TableHead>
                             <TableHead>CPF</TableHead>
@@ -159,7 +160,7 @@ export function ColaboradoresClient({ colaboradores, servicos }: ColaboradoresCl
                         {currentColaboradores.length === 0 ? (
                             <TableRow>
                                 <TableCell
-                                    colSpan={5}
+                                    colSpan={6}
                                     className="h-24 text-center text-muted-foreground"
                                 >
                                     Nenhum colaborador encontrado.
@@ -168,6 +169,9 @@ export function ColaboradoresClient({ colaboradores, servicos }: ColaboradoresCl
                         ) : (
                             currentColaboradores.map((colaborador) => (
                                 <TableRow key={colaborador.id}>
+                                    <TableCell className="font-medium text-muted-foreground">
+                                        {colaborador.codigo}
+                                    </TableCell>
                                     <TableCell>
                                         <Avatar className="h-10 w-10">
                                             <AvatarImage src={colaborador.foto || undefined} />

@@ -3,12 +3,20 @@ import { CalendarView } from "@/components/dashboard/calendar-view"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { redirect } from "next/navigation"
+import { SelectCompanyState } from "@/components/dashboard/select-company-state"
 
 export const dynamic = 'force-dynamic'
 
 export default async function CalendarioPage() {
     const session = await getServerSession(authOptions)
     if (!session || !session.user.empresaId) {
+        if (session?.user?.cargo === "SUPER_ADMIN") {
+            return (
+                <div className="p-8 h-full">
+                    <SelectCompanyState />
+                </div>
+            )
+        }
         redirect('/login')
     }
     const empresaId = session.user.empresaId

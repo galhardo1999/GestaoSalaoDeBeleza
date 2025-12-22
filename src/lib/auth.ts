@@ -65,7 +65,7 @@ export const authOptions: NextAuthOptions = {
             }
             return session
         },
-        async jwt({ token, user }) {
+        async jwt({ token, user, trigger, session }) {
             if (user) {
                 token.id = user.id
                 // @ts-ignore
@@ -75,6 +75,21 @@ export const authOptions: NextAuthOptions = {
                 // @ts-ignore
                 token.empresaId = user.empresaId
             }
+
+            // Always fetch fresh data from DB to ensure company switch is reflected
+            // This is critical for the "switch company" feature to work across pages
+            if (token && token.id) {
+                const freshUser = await db.usuario.findUnique({
+                    where: { id: token.id as string },
+                    select: { empresaId: true, cargo: true }
+                })
+
+                if (freshUser) {
+                    token.empresaId = freshUser.empresaId
+                    token.cargo = freshUser.cargo
+                }
+            }
+
             return token
         }
     }

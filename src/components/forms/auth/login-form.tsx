@@ -53,7 +53,7 @@ export function LoginForm() {
         })
 
         if (result?.error) {
-            setError("Credenciais inválidas. Verifique CNPJ e senha.")
+            setError("Credenciais inválidas. Verifique CPF/CNPJ e senha.")
             setIsLoading(false)
         } else {
             // Verificar sessão para determinar redirecionamento
@@ -72,7 +72,7 @@ export function LoginForm() {
             <CardHeader>
                 <CardTitle>Acesso ao Sistema</CardTitle>
                 <CardDescription>
-                    Entre com seu CNPJ e senha para continuar.
+                    Entre com seu CPF/CNPJ e senha para continuar.
                 </CardDescription>
             </CardHeader>
             <CardContent>

@@ -13,4 +13,5 @@ export const agendamentoSchema = z.object({
     }),
     colaboradorId: z.string().optional(),
     observacoes: z.string().optional(),
+    valor: z.string().or(z.number()).transform(val => Number(val)).optional(),
 });

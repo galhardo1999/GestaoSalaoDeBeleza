@@ -59,7 +59,7 @@ export function FormNovoColaborador({ onSuccess, servicos = [] }: { onSuccess?: 
             </div>
 
             <div className="space-y-2">
-                <Label htmlFor="email">Email *</Label>
+                <Label htmlFor="email">Email</Label>
                 <Input name="email" id="email" type="email" required placeholder="joao@email.com" />
                 {state.errors?.email && (
                     <p className="text-sm text-red-500 font-medium">{state.errors.email}</p>
@@ -67,13 +67,13 @@ export function FormNovoColaborador({ onSuccess, servicos = [] }: { onSuccess?: 
             </div>
 
             <div className="space-y-2">
-                <Label htmlFor="cpf">CPF</Label>
+                <Label htmlFor="cpf">CPF *</Label>
                 <Input name="cpf" id="cpf" placeholder="000.000.000-00" />
                 {/* Error handling for CPF if needed, though state.errors might need type update */}
             </div>
 
             <div className="space-y-2">
-                <Label htmlFor="senha">Senha *</Label>
+                <Label htmlFor="senha">Senha</Label>
                 <Input name="senha" id="senha" type="password" required placeholder="******" />
                 {state.errors?.senha && (
                     <p className="text-sm text-red-500 font-medium">{state.errors.senha}</p>
@@ -97,7 +97,7 @@ export function FormNovoColaborador({ onSuccess, servicos = [] }: { onSuccess?: 
             </div>
 
             <div className="space-y-2">
-                <Label>Serviços Realizados</Label>
+                <Label>Serviços Realizados *</Label>
                 <div className="border rounded-md p-3 space-y-2 max-h-40 overflow-y-auto">
                     {servicos.length === 0 ? (
                         <p className="text-sm text-muted-foreground">Nenhum serviço cadastrado.</p>

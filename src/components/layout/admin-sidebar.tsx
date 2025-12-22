@@ -4,7 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { ChevronLeft, ChevronRight, LayoutDashboard, Building2, Ticket, LogOut, Settings, ShieldCheck } from "lucide-react"
+import { ChevronLeft, ChevronRight, LayoutDashboard, Building2, Ticket, LogOut, Settings, ShieldCheck, Monitor } from "lucide-react"
 import { signOut } from "next-auth/react"
 import {
     Tooltip,
@@ -109,6 +109,24 @@ export function AdminSidebar({ isCollapsed, toggleCollapse }: AdminSidebarProps)
                 </div>
 
                 <div className="px-4 py-2 mb-4 space-y-1.5">
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Link href="/dashboard" className="w-full">
+                                <Button
+                                    variant="ghost"
+                                    className={cn(
+                                        "w-full group text-gray-500 hover:text-blue-600 hover:bg-blue-50 justify-start rounded-xl p-3 h-auto",
+                                        isCollapsed && "justify-center px-2"
+                                    )}
+                                >
+                                    <Monitor className={cn("h-5 w-5 transition-transform duration-200 group-hover:scale-110", !isCollapsed && "mr-3")} />
+                                    {!isCollapsed && "Sistema"}
+                                </Button>
+                            </Link>
+                        </TooltipTrigger>
+                        {isCollapsed && <TooltipContent side="right">Sistema</TooltipContent>}
+                    </Tooltip>
+
                     <div className="h-[1px] bg-gray-100 w-full my-2" />
                     <Tooltip>
                         <TooltipTrigger asChild>
@@ -121,7 +139,7 @@ export function AdminSidebar({ isCollapsed, toggleCollapse }: AdminSidebarProps)
                                 )}
                             >
                                 <LogOut className={cn("h-5 w-5 transition-transform duration-200 group-hover:scale-110", !isCollapsed && "mr-3")} />
-                                {!isCollapsed && "Sair"}
+                                <span className={cn(isCollapsed && "hidden")}>Sair</span>
                             </Button>
                         </TooltipTrigger>
                         {isCollapsed && <TooltipContent side="right">Sair</TooltipContent>}

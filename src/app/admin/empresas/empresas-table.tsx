@@ -13,6 +13,7 @@ import { ptBR } from "date-fns/locale"
 import { useRouter } from "next/navigation"
 import { EditarEmpresaDialog } from "@/components/forms/editar-empresa-dialog"
 import { ExcluirEmpresaDialog } from "@/components/forms/excluir-empresa-dialog"
+import { formatDocumento } from "@/lib/utils"
 
 interface EmpresasTableProps {
     data: {
@@ -34,6 +35,7 @@ export function EmpresasTable({ data }: EmpresasTableProps) {
             <Table>
                 <TableHeader>
                     <TableRow>
+                        <TableHead>Código</TableHead>
                         <TableHead>Nome</TableHead>
                         <TableHead>CNPJ</TableHead>
                         <TableHead className="text-center">Usuários</TableHead>
@@ -55,8 +57,11 @@ export function EmpresasTable({ data }: EmpresasTableProps) {
                                 className="cursor-pointer hover:bg-gray-50"
                                 onClick={() => router.push(`/admin/empresas/${empresa.id}`)}
                             >
+                                <TableCell className="font-mono text-xs text-muted-foreground">
+                                    {empresa.id.substring(0, 8)}...
+                                </TableCell>
                                 <TableCell className="font-medium">{empresa.nome}</TableCell>
-                                <TableCell>{empresa.cnpj.replace(/\D/g, "").replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2}).*/, "$1.$2.$3/$4-$5")}</TableCell>
+                                <TableCell>{formatDocumento(empresa.cnpj)}</TableCell>
                                 <TableCell className="text-center">{empresa._count.usuarios}</TableCell>
                                 <TableCell className="text-center">
                                     {format(empresa.criadoEm, "dd/MM/yyyy", { locale: ptBR })}

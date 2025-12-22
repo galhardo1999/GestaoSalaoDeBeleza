@@ -33,6 +33,7 @@ import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { Loader2, MoreHorizontal, Plus, Trash, Pencil } from "lucide-react"
 import { createCompanyUser, updateCompanyUser, deleteCompanyUser } from "@/actions/admin/users"
+import { formatDocumento } from "@/lib/utils"
 
 interface User {
     id: string
@@ -126,10 +127,10 @@ export function CompanyUsersManager({ empresaId, usuarios }: CompanyUsersManager
                 <Table>
                     <TableHeader>
                         <TableRow>
+                            <TableHead>Data Criação</TableHead>
                             <TableHead>Nome</TableHead>
                             <TableHead>CNPJ (Login)</TableHead>
                             <TableHead>Cargo</TableHead>
-                            <TableHead>Data Criação</TableHead>
                             <TableHead className="w-[70px]"></TableHead>
                         </TableRow>
                     </TableHeader>
@@ -143,12 +144,12 @@ export function CompanyUsersManager({ empresaId, usuarios }: CompanyUsersManager
                         ) : (
                             usuarios.map((usuario) => (
                                 <TableRow key={usuario.id}>
-                                    <TableCell className="font-medium">{usuario.nome}</TableCell>
-                                    <TableCell>{usuario.cnpj}</TableCell>
-                                    <TableCell>{usuario.cargo}</TableCell>
                                     <TableCell>
                                         {format(new Date(usuario.criadoEm), "dd/MM/yyyy", { locale: ptBR })}
                                     </TableCell>
+                                    <TableCell className="font-medium">{usuario.nome}</TableCell>
+                                    <TableCell>{formatDocumento(usuario.cnpj)}</TableCell>
+                                    <TableCell>{usuario.cargo}</TableCell>
                                     <TableCell>
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>

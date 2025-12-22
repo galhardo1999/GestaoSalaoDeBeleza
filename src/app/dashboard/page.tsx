@@ -29,11 +29,37 @@ export default async function DashboardPage({
     const displayDate = targetDate.toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' })
 
     const session = await getServerSession(authOptions)
-    if (!session || !session.user.empresaId) {
+
+    // Allow SUPER_ADMIN to access without empresaId, but redirect others
+    if (!session) {
+        redirect('/login')
+    }
+
+    if (session.user.cargo !== "SUPER_ADMIN" && !session.user.empresaId) {
         redirect('/login')
     }
 
     const firstName = session.user.name?.split(' ')[0] || 'Usuário'
+
+    if (session.user.cargo === "SUPER_ADMIN" && !session.user.empresaId) {
+        return (
+            <div className="flex-1 space-y-4 p-8 pt-6">
+                <div className="flex items-center justify-between space-y-2">
+                    <div>
+                        <h2 className="text-3xl font-bold tracking-tight">Bem Vindo, {firstName}!✨</h2>
+                        <p className="text-muted-foreground capitalize">{displayDate}</p>
+                    </div>
+                </div>
+                <div className="flex h-[50vh] flex-col items-center justify-center space-y-4 rounded-lg border-2 border-dashed">
+                    <h3 className="text-lg font-semibold text-gray-900">Nenhuma empresa selecionada</h3>
+                    <p className="text-sm text-gray-500">Selecione uma empresa no menu lateral para visualizar os dados.</p>
+                </div>
+            </div>
+        )
+    }
+
+    // Checking strictly that empresaId exists here to satisfy TS for components below
+    if (!session.user.empresaId) return null
 
     return (
         <div className="flex-1 space-y-4 p-8 pt-6">

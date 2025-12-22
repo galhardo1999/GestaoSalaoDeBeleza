@@ -5,6 +5,7 @@ import { db } from "@/lib/db"
 import { Prisma } from "@prisma/client"
 import { format } from "date-fns"
 import { ClientesClient } from "./clientes-client"
+import { SelectCompanyState } from "@/components/dashboard/select-company-state"
 
 type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>
 
@@ -15,7 +16,13 @@ export default async function ClientesPage({
 }) {
     const session = await getServerSession(authOptions)
 
+
+    // ...
+
     if (!session?.user?.empresaId) {
+        if (session?.user?.cargo === "SUPER_ADMIN") {
+            return <SelectCompanyState />
+        }
         redirect("/login")
     }
 

@@ -4,7 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { ChevronLeft, ChevronRight, LayoutDashboard, Calendar, Users, Scissors, LogOut, ListTodo, Settings, Sparkles, UserCog, Wallet, BarChart3, ChevronDown, Percent, PieChart, Folder } from "lucide-react"
+import { ChevronLeft, ChevronRight, LayoutDashboard, Calendar, Users, Scissors, LogOut, ListTodo, Settings, Sparkles, UserCog, Wallet, BarChart3, ChevronDown, Percent, PieChart, Folder, ChevronsUpDown, Loader2 } from "lucide-react"
 import { signOut } from "next-auth/react"
 import {
     Tooltip,
@@ -97,26 +97,52 @@ const routes: RouteItem[] = [
     },
 ]
 
+
+import { getCompaniesForSwitcher, switchCompany } from "@/actions/super-admin"
+// ...
 interface SidebarProps {
     isCollapsed: boolean
     toggleCollapse: () => void
     companyName?: string
     companyCnpj?: string
     userName?: string
+    userCargo?: string
 }
 
-export function Sidebar({ isCollapsed, toggleCollapse, companyName, companyCnpj, userName }: SidebarProps) {
+export function Sidebar({ isCollapsed, toggleCollapse, companyName, companyCnpj, userName, userCargo }: SidebarProps) {
     const pathname = usePathname()
     // State to track open collapsibles, could be based on current path
     const [openMenus, setOpenMenus] = useState<string[]>([])
+    const [companies, setCompanies] = useState<{ value: string, label: string, cnpj: string }[]>([])
+    const [isLoadingCompanies, setIsLoadingCompanies] = useState(false)
+    const [isSwitcherOpen, setIsSwitcherOpen] = useState(false)
 
-    // Automatically open menu if submenu is active
     useEffect(() => {
-        const activeRoute = routes.find(r => r.submenus?.some(sub => pathname === sub.href))
-        if (activeRoute && !openMenus.includes(activeRoute.label)) {
-            setOpenMenus(prev => [...prev, activeRoute.label])
+        if (userCargo === "SUPER_ADMIN") {
+            const load = async () => {
+                setIsLoadingCompanies(true)
+                try {
+                    const data = await getCompaniesForSwitcher()
+                    setCompanies(data)
+                } catch (error) {
+                    console.error("Failed to load companies", error)
+                } finally {
+                    setIsLoadingCompanies(false)
+                }
+            }
+            load()
         }
-    }, [pathname])
+    }, [userCargo])
+
+    const handleSwitch = async (empresaId: string) => {
+        try {
+            await switchCompany(empresaId)
+            window.location.reload()
+        } catch (error) {
+            console.error("Failed to switch company", error)
+            alert("Erro ao trocar de empresa")
+        }
+    }
 
     const toggleMenu = (label: string) => {
         setOpenMenus(prev =>
@@ -157,23 +183,80 @@ export function Sidebar({ isCollapsed, toggleCollapse, companyName, companyCnpj,
                             )}
                         </Link>
 
-                        {!isCollapsed && (companyName || companyCnpj) && (
+                        {!isCollapsed && (
                             <div className="pl-1 animate-in fade-in duration-300 selection:bg-none">
-                                {companyName && (
-                                    <p className="text-sm font-bold text-gray-900 truncate" title={companyName}>
-                                        {companyName}
-                                    </p>
-                                )}
-                                {companyCnpj && (
-                                    <p className="text-sm text-gray-400 mt-0.5">
-                                        {companyCnpj.replace(/\D/g, "").replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2}).*/, "$1.$2.$3/$4-$5")}
-                                    </p>
-                                )}
-                                {userName && (
-                                    <p className="text-xs text-gray-500 mt-1 font-medium truncate" title={userName}>
-                                        Usuário: {userName}
-                                    </p>
-                                )}
+                                {/* DEBUG: userCargo={String(userCargo)} */}
+                                {userCargo === "SUPER_ADMIN" ? (
+                                    <DropdownMenu open={isSwitcherOpen} onOpenChange={setIsSwitcherOpen}>
+                                        <DropdownMenuTrigger asChild>
+                                            <div className="cursor-pointer hover:bg-gray-100 p-2 rounded-md -ml-2 transition-colors group">
+                                                <div className="flex items-center justify-between">
+                                                    <div>
+                                                        {companyName ? (
+                                                            <>
+                                                                <p className="text-sm font-bold text-gray-900 truncate max-w-[180px]" title={companyName}>
+                                                                    {companyName}
+                                                                </p>
+                                                                {companyCnpj && (
+                                                                    <p className="text-sm text-gray-400 mt-0.5">
+                                                                        {companyCnpj.replace(/\D/g, "").replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2}).*/, "$1.$2.$3/$4-$5")}
+                                                                    </p>
+                                                                )}
+                                                            </>
+                                                        ) : (
+                                                            <p className="text-sm font-semibold text-blue-600">
+                                                                Selecionar Empresa
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                    <ChevronsUpDown className="h-4 w-4 text-gray-400 group-hover:text-gray-600" />
+                                                </div>
+                                                {userName && (
+                                                    <p className="text-xs text-gray-500 mt-1 font-medium truncate" title={userName}>
+                                                        {userCargo === "SUPER_ADMIN" ? "Administrador" : `Usuário: ${userName}`}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent className="w-64 max-h-[300px] overflow-y-auto" align="start">
+                                            <DropdownMenuLabel>Trocar Empresa</DropdownMenuLabel>
+                                            <DropdownMenuSeparator />
+                                            {isLoadingCompanies ? (
+                                                <div className="flex items-center justify-center p-4">
+                                                    <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                                                </div>
+                                            ) : (
+                                                companies.map((company) => (
+                                                    <DropdownMenuItem
+                                                        key={company.value} onSelect={() => handleSwitch(company.value)}
+                                                        className="flex flex-col items-start gap-1 cursor-pointer"
+                                                    >
+                                                        <span className="font-medium">{company.label}</span>
+                                                        <span className="text-xs text-gray-400">{company.cnpj.replace(/\D/g, "").replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2}).*/, "$1.$2.$3/$4-$5")}</span>
+                                                    </DropdownMenuItem>
+                                                ))
+                                            )}
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                ) : (companyName || companyCnpj) ? (
+                                    <>
+                                        {companyName && (
+                                            <p className="text-sm font-bold text-gray-900 truncate" title={companyName}>
+                                                {companyName}
+                                            </p>
+                                        )}
+                                        {companyCnpj && (
+                                            <p className="text-sm text-gray-400 mt-0.5">
+                                                {companyCnpj.replace(/\D/g, "").replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2}).*/, "$1.$2.$3/$4-$5")}
+                                            </p>
+                                        )}
+                                        {userName && (
+                                            <p className="text-xs text-gray-500 mt-1 font-medium truncate" title={userName}>
+                                                {userCargo === "SUPER_ADMIN" ? "Administrador" : `Usuário: ${userName}`}
+                                            </p>
+                                        )}
+                                    </>
+                                ) : null}
                             </div>
                         )}
                     </div>

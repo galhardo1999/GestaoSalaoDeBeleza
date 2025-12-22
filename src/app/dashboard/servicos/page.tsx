@@ -3,10 +3,16 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import ServicosClient, { ServicoClient } from "./servicos-client"
+import { SelectCompanyState } from "@/components/dashboard/select-company-state"
 
 export default async function ServicosPage() {
     const session = await getServerSession(authOptions)
-    if (!session?.user?.empresaId) redirect("/login")
+    if (!session?.user?.empresaId) {
+        if (session?.user?.cargo === "SUPER_ADMIN") {
+            return <SelectCompanyState />
+        }
+        redirect("/login")
+    }
 
     const servicosData = await db.servico.findMany({
         where: {

@@ -3,12 +3,23 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { getCompanySettings } from "@/actions/configuracoes"
 import { redirect } from "next/navigation"
+import { SelectCompanyState } from "@/components/dashboard/select-company-state"
 
 export default async function ConfiguracoesPage() {
     const session = await getServerSession(authOptions)
 
+
+
     if (!session || !session.user) {
         redirect("/login")
+    }
+
+    if (!session.user.empresaId && session.user.cargo === "SUPER_ADMIN") {
+        return (
+            <div className="p-8">
+                <SelectCompanyState />
+            </div>
+        )
     }
 
     const { data: company, userEmail } = await getCompanySettings(session.user.id)

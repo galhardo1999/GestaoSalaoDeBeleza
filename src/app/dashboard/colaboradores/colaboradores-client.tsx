@@ -29,7 +29,7 @@ import {
     PaginationPrevious,
 } from "@/components/ui/pagination"
 import { Search, Plus, Pencil, Trash2, CalendarDays } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { cn, formatCPF } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 
 import { NovoColaboradorDialog } from "@/components/forms/colaboradores/novo-colaborador-dialog"
@@ -75,13 +75,22 @@ export function ColaboradoresClient({ colaboradores, servicos }: ColaboradoresCl
 
     // --- Filtragem ---
     const filteredColaboradores = useMemo(() => {
-        const term = searchTerm.toLowerCase()
+        const term = searchTerm.toLowerCase().trim()
         if (!term) return colaboradores
 
-        return colaboradores.filter(colaborador =>
-            colaborador.nome.toLowerCase().includes(term) ||
-            colaborador.cpf?.toLowerCase().includes(term)
-        )
+        // Remove caracteres não numéricos para busca de CPF limpa
+        const cleanTerm = term.replace(/\D/g, "")
+
+        return colaboradores.filter(colaborador => {
+            const nomeMatch = colaborador.nome.toLowerCase().includes(term)
+
+            // Busca CPF: compara o termo limpo com o CPF limpo (que já está no banco assim)
+            // OU se o termo original combina (caso o usuário digite algo parcial)
+            const cpfClean = colaborador.cpf?.replace(/\D/g, "") || ""
+            const cpfMatch = cleanTerm.length > 0 && cpfClean.includes(cleanTerm)
+
+            return nomeMatch || cpfMatch
+        })
     }, [colaboradores, searchTerm])
 
     // --- Paginação ---
@@ -183,7 +192,7 @@ export function ColaboradoresClient({ colaboradores, servicos }: ColaboradoresCl
                                     <TableCell className="font-medium">
                                         {colaborador.nome}
                                     </TableCell>
-                                    <TableCell>{colaborador.cpf || '-'}</TableCell>
+                                    <TableCell>{formatCPF(colaborador.cpf) || '-'}</TableCell>
                                     <TableCell>
                                         <div className="flex flex-wrap gap-1">
                                             {colaborador.servicosPrestados.length > 0 ? (

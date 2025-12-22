@@ -43,7 +43,10 @@ export async function criarColaborador(
         }
     }
 
-    const { nome, email, cpf, senha, foto, servicos } = validatedFields.data
+    const { nome, email, cpf: cpfRaw, senha, foto, servicos } = validatedFields.data
+
+    // Remove formatação do CPF
+    const cpf = cpfRaw ? cpfRaw.replace(/\D/g, '') : null;
 
     try {
         const existingUser = await db.colaborador.findFirst({
@@ -85,18 +88,43 @@ export async function criarColaborador(
             }
         }
 
-        await db.colaborador.create({
-            data: {
-                nome,
-                email,
-                cpf: cpf || null,
-                senha: hashedPassword,
-                foto: foto || null,
-                empresaId: session.user.empresaId,
-                servicos: servicos && servicos.length > 0 ? {
-                    connect: servicos.map(id => ({ id }))
-                } : undefined
-            } as any,
+        // Verificar se já existe um usuário com este CPF (usado como login)
+        if (cpf && senha) {
+            const existingUsuario = await db.usuario.findUnique({
+                where: { cnpj: cpf }
+            })
+            if (existingUsuario) {
+                return { message: "Erro: Já existe um usuário de sistema com este CPF." }
+            }
+        }
+
+        await db.$transaction(async (tx) => {
+            await tx.colaborador.create({
+                data: {
+                    nome,
+                    email,
+                    cpf: cpf || null,
+                    senha: hashedPassword,
+                    foto: foto || null,
+                    empresaId: session.user.empresaId,
+                    servicos: servicos && servicos.length > 0 ? {
+                        connect: servicos.map(id => ({ id }))
+                    } : undefined
+                } as any,
+            })
+
+            // Criar usuário de sistema se tiver CPF (login) e senha
+            if (cpf && senha) {
+                await tx.usuario.create({
+                    data: {
+                        nome,
+                        cnpj: cpf, // Usa CPF como login
+                        senha: hashedPassword,
+                        cargo: 'FUNCIONARIO',
+                        empresaId: session.user.empresaId
+                    }
+                })
+            }
         })
     } catch (error) {
         console.error('Erro ao criar colaborador:', error)

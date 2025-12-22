@@ -52,6 +52,7 @@ export async function criarAgendamento(
                 colaboradorId: colaboradorId || null,
                 observacoes,
                 status: 'PENDENTE' as any,
+                valor: validatedFields.data.valor as any, // Cast temporário para evitar erro de tipo enquanto o Prisma gera o client atualizado
                 empresaId: session.user.empresaId,
                 usuarioId: session.user.id
             },

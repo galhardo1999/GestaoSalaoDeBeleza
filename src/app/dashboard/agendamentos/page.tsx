@@ -5,13 +5,23 @@ import { Prisma } from "@prisma/client"
 import { AgendamentosClient } from "./agendamentos-client"
 import { redirect } from "next/navigation"
 import { expireAppointments } from "@/lib/agendamento-utils"
+import { SelectCompanyState } from "@/components/dashboard/select-company-state"
 
 export default async function AgendamentosPage() {
     // Verificar agendamentos expirados ao carregar a página
     await expireAppointments()
 
+
+
+    // ... 
+
     const session = await getServerSession(authOptions)
-    if (!session?.user?.empresaId) redirect("/login")
+    if (!session?.user?.empresaId) {
+        if (session?.user?.cargo === "SUPER_ADMIN") {
+            return <SelectCompanyState />
+        }
+        redirect("/login")
+    }
 
     const where: Prisma.AgendamentoWhereInput = {
         empresaId: session.user.empresaId,

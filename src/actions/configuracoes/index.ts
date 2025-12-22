@@ -28,6 +28,8 @@ export async function updateCompanySettings(userId: string, data: {
     endereco?: string
     logo?: string
     mensagemWhatsapp?: string
+    googleAvaliacaoUrl?: string
+    instagramUrl?: string
 }) {
     try {
         const user = await db.usuario.findUnique({
@@ -50,6 +52,8 @@ export async function updateCompanySettings(userId: string, data: {
                     endereco: data.endereco,
                     logo: data.logo,
                     mensagemWhatsapp: data.mensagemWhatsapp,
+                    googleAvaliacaoUrl: data.googleAvaliacaoUrl,
+                    instagramUrl: data.instagramUrl,
                 },
             })
         } else {

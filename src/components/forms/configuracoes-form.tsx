@@ -31,6 +31,8 @@ const formSchema = z.object({
     cnpj: z.string().optional(),
     email: z.string().optional(),
     mensagemWhatsapp: z.string().optional(),
+    googleAvaliacaoUrl: z.string().optional(),
+    instagramUrl: z.string().optional(),
 })
 
 interface ConfiguracoesFormProps {
@@ -54,6 +56,8 @@ export function ConfiguracoesForm({ initialData, userId, userEmail }: Configurac
             cnpj: initialData?.cnpj || "",
             email: userEmail || "",
             mensagemWhatsapp: initialData?.mensagemWhatsapp || "",
+            googleAvaliacaoUrl: initialData?.googleAvaliacaoUrl || "",
+            instagramUrl: initialData?.instagramUrl || "",
         },
     })
 
@@ -67,6 +71,8 @@ export function ConfiguracoesForm({ initialData, userId, userEmail }: Configurac
                 endereco: initialData?.endereco,
                 logo: logoPreview || undefined,
                 mensagemWhatsapp: values.mensagemWhatsapp,
+                googleAvaliacaoUrl: values.googleAvaliacaoUrl,
+                instagramUrl: values.instagramUrl,
             })
 
             if (result.success) {
@@ -243,6 +249,34 @@ export function ConfiguracoesForm({ initialData, userId, userEmail }: Configurac
                                         <FormDescription className="text-xs text-gray-500">
                                             O email não pode ser alterado
                                         </FormDescription>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            <FormField
+                                control={form.control}
+                                name="googleAvaliacaoUrl"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Link para Avaliação no Google</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="https://g.page/..." {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            <FormField
+                                control={form.control}
+                                name="instagramUrl"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Instagram</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="https://instagram.com/..." {...field} />
+                                        </FormControl>
                                         <FormMessage />
                                     </FormItem>
                                 )}

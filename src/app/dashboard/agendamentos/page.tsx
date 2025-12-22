@@ -75,6 +75,13 @@ export default async function AgendamentosPage({
         atualizadoEm: s.atualizadoEm
     }))
 
+    const formattedColaboradores = colaboradores.map(c => ({
+        id: c.id,
+        nome: c.nome,
+        // Add other fields if necessary, explicitly avoiding Decimal
+        // If 'comissao' exists and is needed, format it: comissao: Number(c.comissao)
+    }))
+
     const formattedAgendamentos = agendamentos.map(a => ({
         id: a.id,
         data: a.data,
@@ -109,7 +116,7 @@ export default async function AgendamentosPage({
             initialAgendamentos={formattedAgendamentos}
             clientes={clientes}
             servicos={formattedServicos}
-            colaboradores={colaboradores}
+            colaboradores={formattedColaboradores}
             whatsappTemplate={whatsappTemplate}
             filteredDate={dateParam}
         />

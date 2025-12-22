@@ -17,6 +17,40 @@ export async function DashboardMetrics({ date, empresaId }: DashboardMetricsProp
     const startOfDay = new Date(Date.UTC(year, month, day, 3, 0, 0))
     const endOfDay = new Date(Date.UTC(year, month, day, 26, 59, 59))
 
+    // Fetch active collaborators and their status
+    const now = new Date()
+    const activeCollaborators = await db.colaborador.findMany({
+        where: { empresaId },
+        include: {
+            agendamentos: {
+                where: {
+                    data: {
+                        gte: new Date(now.setHours(0, 0, 0, 0)),
+                        lt: new Date(now.setHours(23, 59, 59, 999))
+                    },
+                    status: {
+                        notIn: ['CANCELADO', 'NAO_COMPARECEU']
+                    }
+                },
+                include: {
+                    servico: true
+                }
+            }
+        }
+    })
+
+    const currentTimeKey = new Date()
+
+    const availableCollaboratorsCount = activeCollaborators.filter(colaborador => {
+        const currentAppointment = colaborador.agendamentos.find(apt => {
+            const start = new Date(apt.data)
+            const end = new Date(start.getTime() + apt.servico.duracaoMin * 60000)
+            return currentTimeKey >= start && currentTimeKey <= end
+        })
+        return !currentAppointment
+    }).length
+
+
     const [appointmentsCount, totalClients] = await Promise.all([
         db.agendamento.count({
             where: {
@@ -62,6 +96,20 @@ export async function DashboardMetrics({ date, empresaId }: DashboardMetricsProp
                     </p>
                 </CardContent>
             </Card>
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">
+                        Profissionais Disp.
+                    </CardTitle>
+                    <Users className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold">{availableCollaboratorsCount}</div>
+                    <p className="text-xs text-muted-foreground">
+                        Livres agora
+                    </p>
+                </CardContent>
+            </Card>
         </>
     )
 }
@@ -69,7 +117,7 @@ export async function DashboardMetrics({ date, empresaId }: DashboardMetricsProp
 export function DashboardMetricsSkeleton() {
     return (
         <>
-            {[1, 2].map((i) => (
+            {[1, 2, 3].map((i) => (
                 <Card key={i}>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <div className="h-4 w-24 bg-gray-200 rounded animate-pulse" />

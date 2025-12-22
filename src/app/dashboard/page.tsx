@@ -74,7 +74,7 @@ export default async function DashboardPage({
             <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-3">
                 {/* Left Column */}
                 <div className="space-y-4 lg:col-span-2">
-                    <div className="grid gap-4 md:grid-cols-2">
+                    <div className="grid gap-4 md:grid-cols-3">
                         <Suspense fallback={<DashboardMetricsSkeleton />}>
                             <DashboardMetrics date={targetDate} empresaId={session.user.empresaId} />
                         </Suspense>

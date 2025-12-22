@@ -1,5 +1,7 @@
 import { LoginForm } from "@/components/forms/auth/login-form"
 import { Metadata } from "next"
+
+export const dynamic = "force-dynamic"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { redirect } from "next/navigation"

@@ -185,7 +185,7 @@ export function Sidebar({ isCollapsed, toggleCollapse, companyName, companyCnpj,
 
                         {!isCollapsed && (
                             <div className="pl-1 animate-in fade-in duration-300 selection:bg-none">
-                                {/* DEBUG: userCargo={String(userCargo)} */}
+                                <p className="text-[10px] text-red-500 font-mono">DEBUG: {userCargo}</p>
                                 {userCargo === "SUPER_ADMIN" ? (
                                     <DropdownMenu open={isSwitcherOpen} onOpenChange={setIsSwitcherOpen}>
                                         <DropdownMenuTrigger asChild>

@@ -11,17 +11,27 @@ export async function POST(req: Request) {
             return NextResponse.json({ success: false, error: "CNPJ e senha são obrigatórios" }, { status: 400 })
         }
 
-        // Clean CNPJ to match database (numbers only if that's how it's stored, or raw)
-        // Usually login sends raw input, let's assume valid CNPJ in DB has formatting or not.
-        // Looking at auth.ts, it uses credentials.cnpj directly.
-        // Let's rely on what's in the DB.
+        // Sanitize CNPJ input (remove non-digits) to ensure matching with DB
+        const cleanCnpj = cnpj.replace(/\D/g, "")
+
+        console.log("------------------------------------------")
+        console.log("MOBILE LOGIN REQUEST RECEIVED")
+        console.log("Raw CNPJ:", cnpj)
+        console.log("Clean CNPJ:", cleanCnpj)
+        console.log("Password provided:", !!password)
 
         const user = await db.usuario.findUnique({
-            where: { cnpj },
+            where: { cnpj: cleanCnpj },
             include: {
                 empresa: true
             }
         })
+
+        console.log("User found in DB:", !!user ? "YES" : "NO")
+        if (user) {
+            console.log("User Cargo:", user.cargo)
+            console.log("User Hash:", user.senha.substring(0, 10) + "...")
+        }
 
         if (!user) {
             return NextResponse.json({ success: false, error: "Credenciais inválidas" }, { status: 401 })

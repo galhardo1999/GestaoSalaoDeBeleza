@@ -344,7 +344,7 @@ export function ConfiguracoesForm({ initialData, userId, userEmail }: Configurac
                             name="mensagemWhatsapp"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Mensagem Padrão do WhatsApp</FormLabel>
+                                    <FormLabel>Mensagem de Confirmação de Agendamento</FormLabel>
                                     <FormControl>
                                         <Textarea
                                             placeholder="Digite a mensagem padrão que será preenchida ao enviar whatsapp para o cliente..."
@@ -361,6 +361,7 @@ export function ConfiguracoesForm({ initialData, userId, userEmail }: Configurac
                             )}
                         />
                     </div>
+
 
                     <div className="flex justify-end pt-4 border-t">
                         <Button type="submit" disabled={isPending}>

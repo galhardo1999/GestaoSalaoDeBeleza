@@ -124,7 +124,7 @@ export function UpcomingAppointments({ appointments, date }: UpcomingAppointment
 
                 <div className="pt-2">
                     <Button variant="outline" className="w-full h-12 text-gray-500 hover:text-gray-900 border-gray-200 rounded-xl text-base font-normal" asChild>
-                        <Link href="/dashboard/agendamentos">
+                        <Link href={`/dashboard/agendamentos?date=${format(displayDate, 'yyyy-MM-dd')}`}>
                             Ver todos os agendamentos
                         </Link>
                     </Button>

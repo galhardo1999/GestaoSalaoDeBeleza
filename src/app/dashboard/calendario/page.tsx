@@ -45,22 +45,42 @@ export default async function CalendarioPage() {
     ])
 
     const formattedServicos = servicos.map(s => ({
-        ...s,
-        preco: Number(s.preco)
+        id: s.id,
+        nome: s.nome,
+        preco: Number(s.preco),
+        duracaoMin: s.duracaoMin,
+        ativo: s.ativo,
+        criadoEm: s.criadoEm,
+        atualizadoEm: s.atualizadoEm,
+        empresaId: s.empresaId
     }))
 
-    // Transformar Decimal em Number se necessário, mas para View priorizamos corresponder à interface
-    // A interface espera servico { nome, duracaoMin }. Campos extras são ignorados ou aceitáveis.
-    // Nós apenas passamos diretamente se os tipos alinharem, ou mapeamos se necessário.
-    // Prisma Decimal não é compatível com number geralmente, mas não usamos preço na view ainda.
     // No entanto, para ser seguro e limpo:
     const formattedAgendamentos = agendamentos.map(apt => ({
-        ...apt,
+        id: apt.id,
+        data: apt.data,
         status: apt.status.toString(), // Garantir que enum seja string
+        valor: apt.valor ? Number(apt.valor) : null,
+        observacoes: apt.observacoes,
+        clienteId: apt.clienteId,
+        cliente: apt.cliente,
+        servicoId: apt.servicoId,
         servico: {
-            ...apt.servico,
-            preco: Number(apt.servico.preco)
-        }
+            id: apt.servico.id,
+            nome: apt.servico.nome,
+            preco: Number(apt.servico.preco),
+            duracaoMin: apt.servico.duracaoMin,
+            ativo: apt.servico.ativo,
+            criadoEm: apt.servico.criadoEm,
+            atualizadoEm: apt.servico.atualizadoEm,
+            empresaId: apt.servico.empresaId
+        },
+        colaboradorId: apt.colaboradorId,
+        colaborador: apt.colaborador,
+        empresaId: apt.empresaId,
+        usuarioId: apt.usuarioId,
+        criadoEm: apt.criadoEm,
+        atualizadoEm: apt.atualizadoEm
     }))
 
     return (

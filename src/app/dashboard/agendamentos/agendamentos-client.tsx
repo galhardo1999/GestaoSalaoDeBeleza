@@ -94,10 +94,15 @@ export function AgendamentosClient({
     const [currentPage, setCurrentPage] = useState(1)
 
     // --- Filtro de Data (Cliente) ---
+    // --- Filtro de Data (Cliente) ---
     // Padrão para Hoje se não houver filtros
-    const [dateFilter, setDateFilter] = useState<Date | undefined>(
-        new Date() // Padrão para hoje, já que buscamos TODO o histórico.
-    )
+    const [dateFilter, setDateFilter] = useState<Date | undefined>(() => {
+        if (filteredDate) {
+            const [year, month, day] = filteredDate.split('-').map(Number)
+            return new Date(year, month - 1, day)
+        }
+        return new Date() // Padrão para hoje
+    })
 
     // --- Estado Derivado (Filtragem Client-Side) ---
     const filteredAgendamentos = useMemo(() => {

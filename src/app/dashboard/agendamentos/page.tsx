@@ -7,11 +7,16 @@ import { redirect } from "next/navigation"
 import { expireAppointments } from "@/lib/agendamento-utils"
 import { SelectCompanyState } from "@/components/dashboard/select-company-state"
 
-export default async function AgendamentosPage() {
+export default async function AgendamentosPage({
+    searchParams,
+}: {
+    searchParams: Promise<{ date?: string }>
+}) {
     // Verificar agendamentos expirados ao carregar a página
     await expireAppointments()
 
-
+    const params = await searchParams
+    const dateParam = params.date
 
     // ... 
 
@@ -71,7 +76,13 @@ export default async function AgendamentosPage() {
     }))
 
     const formattedAgendamentos = agendamentos.map(a => ({
-        ...a,
+        id: a.id,
+        data: a.data,
+        status: a.status,
+        cliente: {
+            nome: a.cliente.nome,
+            telefone: a.cliente.telefone // Adicionando telefone que é usado na interface
+        },
         servico: {
             id: a.servico.id,
             nome: a.servico.nome,
@@ -80,7 +91,11 @@ export default async function AgendamentosPage() {
             ativo: a.servico.ativo,
             criadoEm: a.servico.criadoEm,
             atualizadoEm: a.servico.atualizadoEm
-        }
+        },
+        colaborador: a.colaborador ? {
+            id: a.colaborador.id,
+            nome: a.colaborador.nome
+        } : null
     }))
 
     const whatsappTemplate = user?.empresa?.mensagemWhatsapp
@@ -92,6 +107,7 @@ export default async function AgendamentosPage() {
             servicos={formattedServicos}
             colaboradores={colaboradores}
             whatsappTemplate={whatsappTemplate}
+            filteredDate={dateParam}
         />
     )
 }

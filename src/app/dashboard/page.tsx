@@ -6,6 +6,7 @@ import { authOptions } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { DashboardMetrics, DashboardMetricsSkeleton } from "@/components/dashboard/dashboard-metrics"
 import { DashboardUpcoming, DashboardUpcomingSkeleton } from "@/components/dashboard/dashboard-upcoming"
+import { DashboardTeam, DashboardTeamSkeleton } from "@/components/dashboard/dashboard-team"
 
 export const dynamic = 'force-dynamic'
 
@@ -70,18 +71,26 @@ export default async function DashboardPage({
                 </div>
             </div>
 
-            <Suspense fallback={<DashboardMetricsSkeleton />}>
-                <DashboardMetrics date={targetDate} empresaId={session.user.empresaId} />
-            </Suspense>
-
             <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-3">
-                <div className="lg:col-span-2">
+                {/* Left Column */}
+                <div className="space-y-4 lg:col-span-2">
+                    <div className="grid gap-4 md:grid-cols-2">
+                        <Suspense fallback={<DashboardMetricsSkeleton />}>
+                            <DashboardMetrics date={targetDate} empresaId={session.user.empresaId} />
+                        </Suspense>
+                    </div>
+
                     <Suspense fallback={<DashboardUpcomingSkeleton />}>
                         <DashboardUpcoming date={targetDate} empresaId={session.user.empresaId} />
                     </Suspense>
                 </div>
+
+                {/* Right Column */}
                 <div className="space-y-4">
                     <DashboardCalendar />
+                    <Suspense fallback={<DashboardTeamSkeleton />}>
+                        <DashboardTeam empresaId={session.user.empresaId} />
+                    </Suspense>
                 </div>
             </div>
         </div>

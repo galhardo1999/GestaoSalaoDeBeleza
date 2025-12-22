@@ -25,9 +25,14 @@ export async function criarServico(
         return { message: "Erro: Permissão negada." }
     }
 
+    let precoRaw = formData.get('preco') as string
+    if (precoRaw) {
+        precoRaw = precoRaw.replace(/\./g, '').replace(',', '.')
+    }
+
     const validatedFields = servicoSchema.safeParse({
         nome: formData.get('nome'),
-        preco: formData.get('preco'),
+        preco: precoRaw,
         duracaoMin: formData.get('duracaoMin'),
         ativo: true,
     })
@@ -93,9 +98,14 @@ export async function editarServico(
 
     const id = formData.get('id') as string
 
+    let precoRaw = formData.get('preco') as string
+    if (precoRaw) {
+        precoRaw = precoRaw.replace(/\./g, '').replace(',', '.')
+    }
+
     const validatedFields = servicoSchema.safeParse({
         nome: formData.get('nome'),
-        preco: formData.get('preco'),
+        preco: precoRaw,
         duracaoMin: formData.get('duracaoMin'),
         ativo: true,
     })

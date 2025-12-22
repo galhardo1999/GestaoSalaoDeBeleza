@@ -1,6 +1,6 @@
 'use client'
 
-import { useActionState, useState } from 'react' // React 19
+import { useActionState, useState, useEffect } from 'react' // React 19
 import { useFormStatus } from 'react-dom'
 import { criarAgendamento } from '@/actions/agendamentos'
 import { Button } from '@/components/ui/button'
@@ -20,6 +20,7 @@ interface FormNovoAgendamentoProps {
     clientes: { id: string; nome: string }[]
     servicos: { id: string; nome: string; preco: any }[] // preco é Decimal
     colaboradores: { id: string; nome: string }[]
+    onSuccess?: () => void
 }
 
 const initialState = {
@@ -33,12 +34,18 @@ const initialState = {
     }
 }
 
-export function FormNovoAgendamento({ clientes, servicos, colaboradores }: FormNovoAgendamentoProps) {
+export function FormNovoAgendamento({ clientes, servicos, colaboradores, onSuccess }: FormNovoAgendamentoProps) {
     const [state, dispatch] = useActionState(criarAgendamento, initialState)
     const [date, setDate] = useState('')
     const [time, setTime] = useState('')
     const [selectedServiceId, setSelectedServiceId] = useState('')
     const [price, setPrice] = useState('')
+
+    useEffect(() => {
+        if (state.success && onSuccess) {
+            onSuccess()
+        }
+    }, [state.success, onSuccess])
 
     // Update price when service changes
     const handleServiceChange = (serviceId: string) => {

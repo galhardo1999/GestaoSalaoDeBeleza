@@ -193,16 +193,6 @@ export function AgendamentosClient({
 
             {/* Filtros */}
             <div className="flex flex-col sm:flex-row gap-4">
-                <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                        placeholder="Buscar por cliente ou serviço..."
-                        value={searchTerm}
-                        onChange={(e) => handleSearch(e.target.value)}
-                        className="pl-10 bg-white"
-                    />
-                </div>
-
                 {/* Filtro de Data (Cliente) */}
                 <Popover>
                     <PopoverTrigger asChild>
@@ -245,6 +235,16 @@ export function AgendamentosClient({
                     </PopoverContent>
                 </Popover>
 
+                <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                        placeholder="Buscar por cliente ou serviço..."
+                        value={searchTerm}
+                        onChange={(e) => handleSearch(e.target.value)}
+                        className="pl-10 bg-white"
+                    />
+                </div>
+
                 {/* Filtro de Status (Cliente) */}
                 <Select
                     value={statusFilter}
@@ -268,7 +268,7 @@ export function AgendamentosClient({
                     value={collaboratorFilter}
                     onValueChange={(value) => setCollaboratorFilter(value)}
                 >
-                    <SelectTrigger className="w-full sm:w-[200px] bg-white">
+                    <SelectTrigger className="w-full sm:w-[240px] bg-white">
                         <SelectValue placeholder="Filtrar por colaborador" />
                     </SelectTrigger>
                     <SelectContent>

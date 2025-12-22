@@ -185,7 +185,7 @@ export function Sidebar({ isCollapsed, toggleCollapse, companyName, companyCnpj,
 
                         {!isCollapsed && (
                             <div className="pl-1 animate-in fade-in duration-300 selection:bg-none">
-                                <p className="text-[10px] text-red-500 font-mono">DEBUG: {userCargo}</p>
+
                                 {userCargo === "SUPER_ADMIN" ? (
                                     <DropdownMenu open={isSwitcherOpen} onOpenChange={setIsSwitcherOpen}>
                                         <DropdownMenuTrigger asChild>
@@ -436,7 +436,7 @@ export function Sidebar({ isCollapsed, toggleCollapse, companyName, companyCnpj,
                     <Tooltip>
                         <TooltipTrigger asChild>
                             <Button
-                                onClick={() => signOut({ callbackUrl: "/login" })}
+                                onClick={() => signOut({ redirect: false }).then(() => { window.location.href = "/login" })}
                                 variant="ghost"
                                 className={cn(
                                     "w-full group text-gray-500 hover:text-red-500 hover:bg-red-50 justify-start rounded-xl p-3 h-auto",

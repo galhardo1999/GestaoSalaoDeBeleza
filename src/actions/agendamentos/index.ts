@@ -16,6 +16,7 @@ type ActionState = {
         _form?: string[]
     }
     message?: string
+    success?: boolean
 }
 
 export async function criarAgendamento(
@@ -65,8 +66,9 @@ export async function criarAgendamento(
     }
 
     revalidatePath('/dashboard/agendamentos')
+    revalidatePath('/dashboard/calendario')
     revalidatePath('/dashboard')
-    redirect('/dashboard/agendamentos')
+    return { message: 'Agendamento criado com sucesso!', success: true }
 }
 
 export async function cancelarAgendamento(id: string) {

@@ -59,12 +59,12 @@ interface CalendarViewProps {
 }
 
 const WEEK_DAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"]
-const HOURS = Array.from({ length: 12 }, (_, i) => i + 8) // 8:00 - 19:00
+const HOURS = Array.from({ length: 16 }, (_, i) => i + 8) // 8:00 - 23:00
 
 export function CalendarView({ agendamentos, clientes, servicos, colaboradores }: CalendarViewProps) {
     const [currentDate, setCurrentDate] = useState(new Date())
     const [selectedDate, setSelectedDate] = useState(new Date())
-    const [viewMode, setViewMode] = useState<ViewMode>("month")
+    const [viewMode, setViewMode] = useState<ViewMode>("week")
 
     // Filtros
     const [selectedColaborador, setSelectedColaborador] = useState<string>("all")
@@ -334,7 +334,7 @@ export function CalendarView({ agendamentos, clientes, servicos, colaboradores }
                         <div className="overflow-auto h-full">
                             <div className="min-w-[800px]">
                                 {/* Week day headers */}
-                                <div className="sticky top-0 z-10 grid grid-cols-8 border-b border-border bg-card">
+                                <div className="sticky top-0 z-10 grid grid-cols-[60px_repeat(7,1fr)] border-b border-border bg-card">
                                     <div className="border-r border-border p-3"></div>
                                     {weekDaysArray.map((day) => {
                                         const isTodayVal = isSameDay(day, new Date())
@@ -365,7 +365,7 @@ export function CalendarView({ agendamentos, clientes, servicos, colaboradores }
                                 {/* Time slots */}
                                 <div className="relative">
                                     {HOURS.map((hour) => (
-                                        <div key={hour} className="grid grid-cols-8 border-b border-border h-20">
+                                        <div key={hour} className="grid grid-cols-[60px_repeat(7,1fr)] border-b border-border min-h-[5rem]">
                                             <div className="border-r border-border p-2 text-right text-sm text-muted-foreground sticky left-0 bg-card z-0">
                                                 {String(hour).padStart(2, "0")}:00
                                             </div>
@@ -383,14 +383,9 @@ export function CalendarView({ agendamentos, clientes, servicos, colaboradores }
                                                         {dayAppointments.map((apt) => (
                                                             <div
                                                                 key={apt.id}
-                                                                className={cn(
-                                                                    "mb-1 rounded-md p-1.5 text-xs text-white shadow-sm cursor-pointer hover:opacity-90",
-                                                                    getAppointmentColor(apt.status)
-                                                                )}
+                                                                className={cn("truncate rounded px-1.5 py-0.5 text-[10px] text-white w-full text-left cursor-pointer hover:opacity-90 mb-1", getAppointmentColor(apt.status))}
                                                             >
-                                                                <div className="font-medium">{format(new Date(apt.data), "HH:mm")}</div>
-                                                                <div className="truncate font-semibold">{apt.servico.nome}</div>
-                                                                <div className="truncate opacity-90">{apt.cliente.nome}</div>
+                                                                {format(new Date(apt.data), "HH:mm")} {apt.colaborador?.nome?.split(' ')[0] || '-'} - {apt.servico.nome}
                                                             </div>
                                                         ))}
                                                     </div>

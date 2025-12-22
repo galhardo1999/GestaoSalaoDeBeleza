@@ -131,7 +131,7 @@ export function AdminSidebar({ isCollapsed, toggleCollapse }: AdminSidebarProps)
                     <Tooltip>
                         <TooltipTrigger asChild>
                             <Button
-                                onClick={() => signOut({ callbackUrl: "/login" })}
+                                onClick={() => signOut({ redirect: false }).then(() => { window.location.href = "/login" })}
                                 variant="ghost"
                                 className={cn(
                                     "w-full group text-gray-500 hover:text-red-500 hover:bg-red-50 justify-start rounded-xl p-3 h-auto",

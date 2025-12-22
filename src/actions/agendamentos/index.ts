@@ -170,3 +170,60 @@ export async function reagendarAgendamento(
         return { error: "Erro ao reagendar. Tente novamente." }
     }
 }
+
+export async function editarAgendamento(
+    id: string,
+    prevState: ActionState,
+    formData: FormData
+): Promise<ActionState> {
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.empresaId) {
+        return { message: "Erro: Usuário sem empresa definida." }
+    }
+
+    const validatedFields = agendamentoSchema.safeParse({
+        clienteId: formData.get('clienteId'),
+        servicoId: formData.get('servicoId'),
+        data: formData.get('data'),
+        colaboradorId: formData.get('colaboradorId'),
+        observacoes: formData.get('observacoes'),
+    })
+
+    if (!validatedFields.success) {
+        return {
+            errors: validatedFields.error.flatten().fieldErrors,
+        }
+    }
+
+    const { clienteId, servicoId, data, colaboradorId, observacoes } = validatedFields.data
+
+    try {
+        // Verificação de propriedade
+        const count = await db.agendamento.count({
+            where: { id, empresaId: session.user.empresaId }
+        })
+        if (count === 0) return { message: "Erro: Agendamento não encontrado ou sem permissão." }
+
+        await db.agendamento.update({
+            where: { id },
+            data: {
+                clienteId,
+                servicoId,
+                data: new Date(`${data}:00-03:00`),
+                colaboradorId: colaboradorId || null,
+                observacoes,
+                valor: validatedFields.data.valor as any, // Cast temporário
+            },
+        })
+    } catch (error) {
+        console.error('Erro de Banco de Dados:', error)
+        return {
+            message: 'Erro ao atualizar agendamento.',
+        }
+    }
+
+    revalidatePath('/dashboard/agendamentos')
+    revalidatePath('/dashboard/calendario')
+    revalidatePath('/dashboard')
+    return { message: 'Agendamento atualizado com sucesso!', success: true }
+}

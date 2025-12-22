@@ -46,6 +46,7 @@ import { ReagendarDialog } from "@/components/forms/agendamentos/reagendar-dialo
 import { WhatsAppButton } from "@/components/dashboard/whatsapp-button"
 import { BotaoConfirmarAgendamento } from "@/components/forms/agendamentos/botao-confirmar-agendamento"
 import { BotaoConcluirAgendamento } from "@/components/forms/agendamentos/botao-concluir-agendamento"
+import { EditarAgendamentoDialog } from "@/components/forms/agendamentos/editar-agendamento-dialog"
 
 interface AgendamentoData {
     id: string
@@ -358,6 +359,13 @@ export function AgendamentosClient({
                                                             </Button>
                                                         </ReagendarDialog>
 
+                                                        <EditarAgendamentoDialog
+                                                            agendamento={appointment}
+                                                            clientes={clientes}
+                                                            servicos={servicos}
+                                                            colaboradores={colaboradores}
+                                                        />
+
                                                         <BotaoCancelarAgendamento id={appointment.id}>
                                                             <Button
                                                                 variant="ghost"
@@ -380,6 +388,14 @@ export function AgendamentosClient({
                                                                 <CalendarClock className="w-4 h-4" />
                                                             </Button>
                                                         </ReagendarDialog>
+
+                                                        <EditarAgendamentoDialog
+                                                            agendamento={appointment}
+                                                            clientes={clientes}
+                                                            servicos={servicos}
+                                                            colaboradores={colaboradores}
+                                                        />
+
                                                         <BotaoCancelarAgendamento id={appointment.id}>
                                                             <Button
                                                                 variant="ghost"

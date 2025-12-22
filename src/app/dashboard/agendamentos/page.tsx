@@ -79,9 +79,13 @@ export default async function AgendamentosPage({
         id: a.id,
         data: a.data,
         status: a.status,
+        clienteId: a.clienteId, // Raw ID for form
+        servicoId: a.servicoId, // Raw ID for form
+        colaboradorId: a.colaboradorId, // Raw ID for form
+        observacoes: a.observacoes,
         cliente: {
             nome: a.cliente.nome,
-            telefone: a.cliente.telefone // Adicionando telefone que é usado na interface
+            telefone: a.cliente.telefone
         },
         servico: {
             id: a.servico.id,

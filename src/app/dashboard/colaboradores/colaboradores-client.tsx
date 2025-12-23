@@ -28,9 +28,15 @@ import {
     PaginationNext,
     PaginationPrevious,
 } from "@/components/ui/pagination"
-import { Search, Plus, Pencil, Trash2, CalendarDays } from "lucide-react"
+import {
+    Dialog,
+    DialogContent,
+    DialogTitle,
+} from "@/components/ui/dialog"
+import { Search, Plus, Pencil, Trash2, CalendarDays, X } from "lucide-react"
 import { cn, formatCPF } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
 
 import { NovoColaboradorDialog } from "@/components/forms/colaboradores/novo-colaborador-dialog"
 import { EditarColaboradorDialog } from "@/components/forms/colaboradores/editar-colaborador-dialog"
@@ -72,6 +78,7 @@ export function ColaboradoresClient({ colaboradores, servicos }: ColaboradoresCl
     const [searchTerm, setSearchTerm] = useState("")
     const [itemsPerPage, setItemsPerPage] = useState(25)
     const [currentPage, setCurrentPage] = useState(1)
+    const [selectedPhoto, setSelectedPhoto] = useState<{ url: string; nome: string } | null>(null)
 
     // --- Filtragem ---
     const filteredColaboradores = useMemo(() => {
@@ -182,7 +189,17 @@ export function ColaboradoresClient({ colaboradores, servicos }: ColaboradoresCl
                                         {colaborador.codigo}
                                     </TableCell>
                                     <TableCell>
-                                        <Avatar className="h-10 w-10">
+                                        <Avatar
+                                            className={cn(
+                                                "h-10 w-10",
+                                                colaborador.foto && "cursor-pointer hover:ring-2 hover:ring-primary hover:ring-offset-2 transition-all"
+                                            )}
+                                            onClick={() => {
+                                                if (colaborador.foto) {
+                                                    setSelectedPhoto({ url: colaborador.foto, nome: colaborador.nome })
+                                                }
+                                            }}
+                                        >
                                             <AvatarImage src={colaborador.foto || undefined} />
                                             <AvatarFallback>
                                                 {colaborador.nome.substring(0, 2).toUpperCase()}
@@ -307,6 +324,30 @@ export function ColaboradoresClient({ colaboradores, servicos }: ColaboradoresCl
             <div className="text-sm text-muted-foreground">
                 Exibindo {currentColaboradores.length} de {totalItems} colaboradores  (Total Filtrado)
             </div>
+
+            {/* Photo Lightbox Modal */}
+            <Dialog open={!!selectedPhoto} onOpenChange={(open) => !open && setSelectedPhoto(null)}>
+                <DialogContent className="max-w-2xl p-0 bg-black/95 border-0 rounded-none shadow-none overflow-hidden" showCloseButton={false}>
+                    <VisuallyHidden>
+                        <DialogTitle>Foto de {selectedPhoto?.nome}</DialogTitle>
+                    </VisuallyHidden>
+                    <button
+                        onClick={() => setSelectedPhoto(null)}
+                        className="absolute top-4 right-4 z-50 p-2 rounded-full bg-black/50 hover:bg-black/70 text-white transition-colors"
+                    >
+                        <X className="h-5 w-5" />
+                    </button>
+                    {selectedPhoto && (
+                        <div className="flex items-center justify-center p-4">
+                            <img
+                                src={selectedPhoto.url}
+                                alt={`Foto de ${selectedPhoto.nome}`}
+                                className="max-h-[80vh] max-w-full object-contain"
+                            />
+                        </div>
+                    )}
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }

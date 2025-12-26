@@ -35,6 +35,8 @@ export async function criarColaborador(
         senha: formData.get('senha'),
         foto: formData.get('foto'),
         servicos: servicosRaw,
+        comissaoTipo: formData.get('comissaoTipo') || 'PORCENTAGEM',
+        comissaoValor: formData.get('comissaoValor') || undefined,
     })
 
     if (!validatedFields.success) {
@@ -43,7 +45,7 @@ export async function criarColaborador(
         }
     }
 
-    const { nome, email, cpf: cpfRaw, senha, foto, servicos } = validatedFields.data
+    const { nome, email, cpf: cpfRaw, senha, foto, servicos, comissaoTipo, comissaoValor } = validatedFields.data
 
     // Remove formatação do CPF
     const cpf = cpfRaw ? cpfRaw.replace(/\D/g, '') : null;
@@ -106,6 +108,8 @@ export async function criarColaborador(
                     cpf: cpf || null,
                     senha: hashedPassword,
                     foto: foto || null,
+                    comissaoTipo: comissaoTipo as any,
+                    comissaoValor: comissaoValor ?? null,
                     empresaId: session.user.empresaId,
                     servicos: servicos && servicos.length > 0 ? {
                         connect: servicos.map(id => ({ id }))
@@ -179,7 +183,9 @@ export async function editarColaborador(
         cpf: formData.get('cpf'),
         senha: formData.get('senha') || undefined,
         foto: formData.get('foto'),
-        servicos: servicosRaw
+        servicos: servicosRaw,
+        comissaoTipo: formData.get('comissaoTipo') || undefined,
+        comissaoValor: formData.get('comissaoValor') || undefined,
     }
 
     // @ts-ignore - Validando com senha opcional
@@ -191,7 +197,7 @@ export async function editarColaborador(
         }
     }
 
-    const { nome, email, cpf, senha, foto, servicos } = validatedFields.data
+    const { nome, email, cpf, senha, foto, servicos, comissaoTipo, comissaoValor } = validatedFields.data
 
     try {
         // Propriedade
@@ -215,6 +221,8 @@ export async function editarColaborador(
             email,
             cpf: cpf || null,
             foto,
+            comissaoTipo: comissaoTipo as any,
+            comissaoValor: comissaoValor ?? null,
             servicos: {
                 set: servicos ? servicos.map(id => ({ id })) : []
             }

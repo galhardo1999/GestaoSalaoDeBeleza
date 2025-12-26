@@ -60,6 +60,8 @@ interface ColaboradorData {
     email: string | null
     cpf: string | null
     foto: string | null
+    comissaoTipo: string
+    comissaoValor: number | null
     servicosPrestados: string[]
     servicosRaw: Servico[]
 }
@@ -168,6 +170,7 @@ export function ColaboradoresClient({ colaboradores, servicos }: ColaboradoresCl
                             <TableHead className="w-[80px]">Foto</TableHead>
                             <TableHead>Nome</TableHead>
                             <TableHead>CPF</TableHead>
+                            <TableHead>Comissão</TableHead>
                             <TableHead>Serviços</TableHead>
                             <TableHead className="text-right">Ações</TableHead>
                         </TableRow>
@@ -176,7 +179,7 @@ export function ColaboradoresClient({ colaboradores, servicos }: ColaboradoresCl
                         {currentColaboradores.length === 0 ? (
                             <TableRow>
                                 <TableCell
-                                    colSpan={6}
+                                    colSpan={7}
                                     className="h-24 text-center text-muted-foreground"
                                 >
                                     Nenhum colaborador encontrado.
@@ -210,6 +213,18 @@ export function ColaboradoresClient({ colaboradores, servicos }: ColaboradoresCl
                                         {colaborador.nome}
                                     </TableCell>
                                     <TableCell>{formatCPF(colaborador.cpf) || '-'}</TableCell>
+                                    <TableCell>
+                                        {colaborador.comissaoValor ? (
+                                            <Badge variant="outline" className="font-mono">
+                                                {colaborador.comissaoTipo === 'PORCENTAGEM'
+                                                    ? `${colaborador.comissaoValor}%`
+                                                    : `R$ ${colaborador.comissaoValor.toFixed(2)}`
+                                                }
+                                            </Badge>
+                                        ) : (
+                                            <span className="text-muted-foreground text-sm">-</span>
+                                        )}
+                                    </TableCell>
                                     <TableCell>
                                         <div className="flex flex-wrap gap-1">
                                             {colaborador.servicosPrestados.length > 0 ? (

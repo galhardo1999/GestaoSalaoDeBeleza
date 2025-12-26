@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useEffect, useState } from 'react'
+import { formatCPF } from '@/lib/utils'
 
 const initialState = {
     message: '',
@@ -31,6 +32,12 @@ export function FormEditarColaborador({ collaborator, onSuccess, servicos = [] }
     const [state, dispatch] = useActionState(editarColaborador, initialState)
     const [isSuccess, setIsSuccess] = useState(false)
     const [fotoBase64, setFotoBase64] = useState(collaborator.foto || '')
+    const [cpfValue, setCpfValue] = useState(formatCPF(collaborator.cpf) || '')
+
+    const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value.replace(/\D/g, '').slice(0, 11)
+        setCpfValue(formatCPF(value))
+    }
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
@@ -79,7 +86,13 @@ export function FormEditarColaborador({ collaborator, onSuccess, servicos = [] }
 
             <div className="space-y-2">
                 <Label htmlFor="cpf">CPF</Label>
-                <Input name="cpf" id="cpf" defaultValue={collaborator.cpf || ''} placeholder="000.000.000-00" />
+                <Input
+                    name="cpf"
+                    id="cpf"
+                    value={cpfValue}
+                    onChange={handleCpfChange}
+                    placeholder="000.000.000-00"
+                />
                 {/* Error handling for CPF */}
             </div>
 
@@ -102,6 +115,33 @@ export function FormEditarColaborador({ collaborator, onSuccess, servicos = [] }
                     />
                 </div>
                 <input type="hidden" name="foto" value={fotoBase64} />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                    <Label htmlFor="comissaoTipo">Tipo de Comissão</Label>
+                    <select
+                        name="comissaoTipo"
+                        id="comissaoTipo"
+                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        defaultValue={collaborator.comissaoTipo || 'PORCENTAGEM'}
+                    >
+                        <option value="PORCENTAGEM">Porcentagem (%)</option>
+                        <option value="VALOR_FIXO">Valor Fixo (R$)</option>
+                    </select>
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="comissaoValor">Valor da Comissão</Label>
+                    <Input
+                        name="comissaoValor"
+                        id="comissaoValor"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        defaultValue={collaborator.comissaoValor || ''}
+                        placeholder="Ex: 10"
+                    />
+                </div>
             </div>
 
             <div className="space-y-2">

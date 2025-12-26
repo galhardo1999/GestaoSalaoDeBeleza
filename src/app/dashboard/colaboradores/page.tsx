@@ -52,6 +52,8 @@ export default async function ColaboradoresPage() {
         email: c.email,
         cpf: c.cpf,
         foto: c.foto,
+        comissaoTipo: c.comissaoTipo,
+        comissaoValor: c.comissaoValor ? Number(c.comissaoValor) : null,
         servicosPrestados: c.servicos ? c.servicos.map((s: any) => s.nome) : [],
         servicosRaw: c.servicos ? c.servicos.map((s: any) => ({
             id: s.id,

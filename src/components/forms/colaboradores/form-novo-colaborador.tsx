@@ -96,6 +96,32 @@ export function FormNovoColaborador({ onSuccess, servicos = [] }: { onSuccess?: 
                 )}
             </div>
 
+            <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                    <Label htmlFor="comissaoTipo">Tipo de Comissão</Label>
+                    <select
+                        name="comissaoTipo"
+                        id="comissaoTipo"
+                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        defaultValue="PORCENTAGEM"
+                    >
+                        <option value="PORCENTAGEM">Porcentagem (%)</option>
+                        <option value="VALOR_FIXO">Valor Fixo (R$)</option>
+                    </select>
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="comissaoValor">Valor da Comissão</Label>
+                    <Input
+                        name="comissaoValor"
+                        id="comissaoValor"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        placeholder="Ex: 10"
+                    />
+                </div>
+            </div>
+
             <div className="space-y-2">
                 <Label>Serviços Realizados *</Label>
                 <div className="border rounded-md p-3 space-y-2 max-h-40 overflow-y-auto">

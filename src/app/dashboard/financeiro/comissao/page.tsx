@@ -24,7 +24,7 @@ export default async function ComissaoPage() {
             },
             include: {
                 cliente: { select: { nome: true } },
-                servico: { select: { nome: true } },
+                servico: { select: { nome: true, preco: true } },
                 colaborador: true
             },
             orderBy: { data: 'desc' }
@@ -38,7 +38,7 @@ export default async function ComissaoPage() {
     const formattedAgendamentos = agendamentosRaw.map((ag: any) => ({
         id: ag.id,
         data: ag.data.toISOString(),
-        valor: Number(ag.valor || 0),
+        valor: Number(ag.valor || ag.servico?.preco || 0),
         clienteNome: ag.cliente?.nome || "",
         servicoNome: ag.servico?.nome || "",
         colaboradorId: ag.colaboradorId || "",

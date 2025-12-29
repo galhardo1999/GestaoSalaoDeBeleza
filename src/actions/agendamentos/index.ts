@@ -34,6 +34,7 @@ export async function criarAgendamento(
         data: formData.get('data'),
         colaboradorId: formData.get('colaboradorId'),
         observacoes: formData.get('observacoes'),
+        valor: formData.get('valor'), // Added valor
     })
 
     if (!validatedFields.success) {
@@ -42,7 +43,7 @@ export async function criarAgendamento(
         }
     }
 
-    const { clienteId, servicoId, data, colaboradorId, observacoes } = validatedFields.data
+    const { clienteId, servicoId, data, colaboradorId, observacoes, valor } = validatedFields.data
 
     try {
         await db.agendamento.create({
@@ -53,7 +54,7 @@ export async function criarAgendamento(
                 colaboradorId: colaboradorId || null,
                 observacoes,
                 status: 'PENDENTE' as any,
-                valor: validatedFields.data.valor as any, // Cast temporário para evitar erro de tipo enquanto o Prisma gera o client atualizado
+                valor: valor as any,
                 empresaId: session.user.empresaId,
                 usuarioId: session.user.id
             },
@@ -187,6 +188,7 @@ export async function editarAgendamento(
         data: formData.get('data'),
         colaboradorId: formData.get('colaboradorId'),
         observacoes: formData.get('observacoes'),
+        valor: formData.get('valor'), // Added valor
     })
 
     if (!validatedFields.success) {
@@ -195,7 +197,7 @@ export async function editarAgendamento(
         }
     }
 
-    const { clienteId, servicoId, data, colaboradorId, observacoes } = validatedFields.data
+    const { clienteId, servicoId, data, colaboradorId, observacoes, valor } = validatedFields.data
 
     try {
         // Verificação de propriedade
@@ -212,7 +214,7 @@ export async function editarAgendamento(
                 data: new Date(`${data}:00-03:00`),
                 colaboradorId: colaboradorId || null,
                 observacoes,
-                valor: validatedFields.data.valor as any, // Cast temporário
+                valor: valor as any, // Updated value
             },
         })
     } catch (error) {

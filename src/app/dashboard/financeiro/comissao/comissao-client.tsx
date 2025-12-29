@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Search, Calendar, DollarSign, Percent, Users } from "lucide-react"
 
 interface Agendamento {
@@ -40,10 +41,23 @@ interface ComissaoClientProps {
 }
 
 export function ComissaoClient({ agendamentos, colaboradores }: ComissaoClientProps) {
-    const [dataInicial, setDataInicial] = useState("")
-    const [dataFinal, setDataFinal] = useState("")
+    // Inicializar datas com o mês atual
+    const [dataInicial, setDataInicial] = useState(() => {
+        const now = new Date()
+        const firstDay = new Date(now.getFullYear(), now.getMonth(), 1)
+        return firstDay.toISOString().split('T')[0]
+    })
+    const [dataFinal, setDataFinal] = useState(() => {
+        const now = new Date()
+        const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+        return lastDay.toISOString().split('T')[0]
+    })
     const [searchTerm, setSearchTerm] = useState("")
     const [colaboradorId, setColaboradorId] = useState("")
+
+    // Paginação
+    const [currentPage, setCurrentPage] = useState(1)
+    const [itemsPerPage, setItemsPerPage] = useState(25)
 
     // Filtrar agendamentos
     const agendamentosFiltrados = useMemo(() => {
@@ -68,50 +82,52 @@ export function ComissaoClient({ agendamentos, colaboradores }: ComissaoClientPr
         })
     }, [agendamentos, dataInicial, dataFinal, colaboradorId, searchTerm])
 
-    // Agrupar por colaborador e calcular comissões
-    const comissoesPorColaborador = useMemo(() => {
-        const grupos: Record<string, {
-            colaborador: Colaborador
-            agendamentos: Agendamento[]
-            totalServicos: number
-            totalComissao: number
-        }> = {}
+    const totalItems = agendamentosFiltrados.length
+    const totalPages = Math.ceil(totalItems / itemsPerPage)
 
-        // Inicializar com todos os colaboradores
-        colaboradores.forEach(col => {
-            grupos[col.id] = {
-                colaborador: col,
-                agendamentos: [],
-                totalServicos: 0,
-                totalComissao: 0
-            }
-        })
+    const paginatedAgendamentos = useMemo(() => {
+        const start = (currentPage - 1) * itemsPerPage
+        return agendamentosFiltrados.slice(start, start + itemsPerPage)
+    }, [agendamentosFiltrados, currentPage, itemsPerPage])
 
-        // Agrupar agendamentos
-        agendamentosFiltrados.forEach(ag => {
-            if (ag.colaboradorId && grupos[ag.colaboradorId]) {
-                grupos[ag.colaboradorId].agendamentos.push(ag)
-                grupos[ag.colaboradorId].totalServicos += ag.valor
+    // Resetar página quando filtros mudarem
+    useMemo(() => {
+        setCurrentPage(1)
+    }, [agendamentosFiltrados.length])
 
-                // Calcular comissão
-                const col = grupos[ag.colaboradorId].colaborador
-                if (col.comissaoValor) {
-                    if (col.comissaoTipo === "PORCENTAGEM") {
-                        grupos[ag.colaboradorId].totalComissao += (ag.valor * col.comissaoValor) / 100
-                    } else {
-                        grupos[ag.colaboradorId].totalComissao += col.comissaoValor
-                    }
+    // Calcular totais
+    const totalGeral = useMemo(() => {
+        return agendamentosFiltrados.reduce((acc, ag) => {
+            // Encontrar colaborador para pegar taxa
+            const col = colaboradores.find(c => c.id === ag.colaboradorId)
+            let comissao = 0
+            if (col && col.comissaoValor) {
+                if (col.comissaoTipo === "PORCENTAGEM") {
+                    comissao = (ag.valor * col.comissaoValor) / 100
+                } else {
+                    comissao = col.comissaoValor
                 }
             }
-        })
 
-        return Object.values(grupos).filter(g => g.agendamentos.length > 0)
+            return {
+                servicos: acc.servicos + ag.valor,
+                comissao: acc.comissao + comissao
+            }
+        }, { servicos: 0, comissao: 0 })
     }, [agendamentosFiltrados, colaboradores])
-
-    const totalGeralComissoes = comissoesPorColaborador.reduce((sum, g) => sum + g.totalComissao, 0)
 
     const formatCurrency = (value: number) => {
         return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)
+    }
+
+    // Helper para calcular comissão de uma linha
+    const getComissao = (ag: Agendamento) => {
+        const col = colaboradores.find(c => c.id === ag.colaboradorId)
+        if (!col || !col.comissaoValor) return 0
+        if (col.comissaoTipo === "PORCENTAGEM") {
+            return (ag.valor * col.comissaoValor) / 100
+        }
+        return col.comissaoValor
     }
 
     return (
@@ -203,64 +219,37 @@ export function ComissaoClient({ agendamentos, colaboradores }: ComissaoClientPr
                             <span className="font-medium">Total de Comissões</span>
                         </div>
                         <span className="text-2xl font-bold text-primary">
-                            {formatCurrency(totalGeralComissoes)}
+                            {formatCurrency(totalGeral.comissao)}
                         </span>
                     </div>
                 </CardContent>
             </Card>
 
-            {/* Lista por Colaborador */}
-            {comissoesPorColaborador.length === 0 ? (
-                <Card>
-                    <CardContent className="py-12 text-center text-muted-foreground">
-                        Nenhum agendamento concluído encontrado para os filtros selecionados.
-                    </CardContent>
-                </Card>
-            ) : (
-                comissoesPorColaborador.map(grupo => (
-                    <Card key={grupo.colaborador.id}>
-                        <CardHeader className="pb-2">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <CardTitle className="text-lg">{grupo.colaborador.nome}</CardTitle>
-                                    <Badge variant="outline" className="flex items-center gap-1">
-                                        {grupo.colaborador.comissaoTipo === "PORCENTAGEM" ? (
-                                            <>
-                                                <Percent className="h-3 w-3" />
-                                                {grupo.colaborador.comissaoValor}%
-                                            </>
-                                        ) : (
-                                            <>
-                                                <DollarSign className="h-3 w-3" />
-                                                {formatCurrency(grupo.colaborador.comissaoValor || 0)}
-                                            </>
-                                        )}
-                                    </Badge>
-                                </div>
-                                <div className="text-right">
-                                    <p className="text-sm text-muted-foreground">Total Comissão</p>
-                                    <p className="text-xl font-bold text-green-600">
-                                        {formatCurrency(grupo.totalComissao)}
-                                    </p>
-                                </div>
-                            </div>
-                        </CardHeader>
-                        <CardContent>
+            {/* Tabela Unificada */}
+            <Card>
+                <CardContent className="pt-6">
+                    {agendamentosFiltrados.length === 0 ? (
+                        <div className="py-12 text-center text-muted-foreground">
+                            Nenhum agendamento concluído encontrado para os filtros selecionados.
+                        </div>
+                    ) : (
+                        <>
                             <Table>
                                 <TableHeader>
                                     <TableRow>
                                         <TableHead>Data</TableHead>
                                         <TableHead>Cliente</TableHead>
                                         <TableHead>Serviço</TableHead>
+                                        <TableHead>Colaborador</TableHead>
+                                        <TableHead className="text-right">Comissão</TableHead>
                                         <TableHead className="text-right">Valor</TableHead>
                                         <TableHead className="text-right">Comissão</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {grupo.agendamentos.map(ag => {
-                                        const comissao = grupo.colaborador.comissaoTipo === "PORCENTAGEM"
-                                            ? (ag.valor * (grupo.colaborador.comissaoValor || 0)) / 100
-                                            : (grupo.colaborador.comissaoValor || 0)
+                                    {paginatedAgendamentos.map(ag => {
+                                        const comissao = getComissao(ag)
+                                        const col = colaboradores.find(c => c.id === ag.colaboradorId)
 
                                         return (
                                             <TableRow key={ag.id}>
@@ -269,6 +258,16 @@ export function ComissaoClient({ agendamentos, colaboradores }: ComissaoClientPr
                                                 </TableCell>
                                                 <TableCell>{ag.clienteNome}</TableCell>
                                                 <TableCell>{ag.servicoNome}</TableCell>
+                                                <TableCell className="font-medium">
+                                                    {ag.colaboradorNome}
+                                                </TableCell>
+                                                <TableCell className="text-right">
+                                                    {col?.comissaoTipo === "PORCENTAGEM" ? (
+                                                        <Badge variant="outline">{col.comissaoValor}%</Badge>
+                                                    ) : (
+                                                        <Badge variant="outline">{formatCurrency(col?.comissaoValor || 0)}</Badge>
+                                                    )}
+                                                </TableCell>
                                                 <TableCell className="text-right">
                                                     {formatCurrency(ag.valor)}
                                                 </TableCell>
@@ -280,18 +279,49 @@ export function ComissaoClient({ agendamentos, colaboradores }: ComissaoClientPr
                                     })}
                                 </TableBody>
                             </Table>
-                            <div className="mt-4 pt-4 border-t flex justify-between text-sm">
-                                <span className="text-muted-foreground">
-                                    {grupo.agendamentos.length} agendamento(s) concluído(s)
-                                </span>
-                                <span className="font-medium">
-                                    Total Serviços: {formatCurrency(grupo.totalServicos)}
-                                </span>
+                            <div className="mt-4 pt-4 border-t flex flex-col sm:flex-row items-center justify-between gap-4">
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <span>Itens por página:</span>
+                                    <select
+                                        value={itemsPerPage}
+                                        onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                                        className="h-8 w-16 rounded-md border border-input bg-transparent px-2 py-1 text-xs shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                                    >
+                                        <option value={25}>25</option>
+                                        <option value={50}>50</option>
+                                        <option value={100}>100</option>
+                                    </select>
+                                    <span>
+                                        Mostrando {paginatedAgendamentos.length} de {totalItems} resultados
+                                    </span>
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                        disabled={currentPage === 1}
+                                    >
+                                        Anterior
+                                    </Button>
+                                    <span className="text-sm font-medium">
+                                        Página {currentPage} de {totalPages}
+                                    </span>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                        disabled={currentPage === totalPages}
+                                    >
+                                        Próxima
+                                    </Button>
+                                </div>
                             </div>
-                        </CardContent>
-                    </Card>
-                ))
-            )}
+                        </>
+                    )}
+                </CardContent>
+            </Card>
         </div>
     )
 }

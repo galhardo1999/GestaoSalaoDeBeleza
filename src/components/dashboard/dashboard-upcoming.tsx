@@ -19,6 +19,9 @@ export async function DashboardUpcoming({ date, empresaId }: DashboardUpcomingPr
     const upcomingAppointments = await db.agendamento.findMany({
         where: {
             empresaId,
+            status: {
+                not: 'CANCELADO' as any
+            },
             data: {
                 gte: startOfDay,
                 lt: endOfDay

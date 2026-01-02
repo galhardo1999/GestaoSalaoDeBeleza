@@ -64,10 +64,10 @@ export function TeamList({ colaboradores }: TeamListProps) {
                 {teamStatus.map((member: any) => (
                     <div
                         key={member.id}
-                        className="flex items-center justify-between rounded-xl border p-4 bg-gray-50/50"
+                        className="flex items-center justify-between rounded-xl border p-4 bg-gray-50/50 gap-4"
                     >
-                        <div className="flex items-center gap-4">
-                            <div className="relative">
+                        <div className="flex items-center gap-4 min-w-0">
+                            <div className="relative flex-shrink-0">
                                 <Avatar className="h-10 w-10 border-2 border-white shadow-sm">
                                     <AvatarImage src={member.foto || undefined} />
                                     <AvatarFallback className="bg-orange-100 text-orange-600 font-medium">
@@ -79,9 +79,9 @@ export function TeamList({ colaboradores }: TeamListProps) {
                                     member.status === 'ATENDENDO' ? "bg-amber-400" : "bg-emerald-400"
                                 )} />
                             </div>
-                            <div>
-                                <p className="font-semibold text-gray-900">{member.nome}</p>
-                                <p className="text-sm text-gray-500 truncate max-w-[150px]">
+                            <div className="min-w-0 flex-1">
+                                <p className="font-semibold text-gray-900 truncate">{member.nome}</p>
+                                <p className="text-sm text-gray-500 truncate">
                                     {member.servicos && member.servicos.length > 0
                                         ? member.servicos.map((s: any) => s.nome).join(', ')
                                         : 'Sem serviços'}
@@ -90,7 +90,7 @@ export function TeamList({ colaboradores }: TeamListProps) {
                         </div>
 
                         {member.status === 'ATENDENDO' ? (
-                            <div className="text-right">
+                            <div className="text-right flex-shrink-0">
                                 <div className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800">
                                     <span className="mr-1.5 h-1.5 w-1.5 rounded-full bg-amber-500" />
                                     Atendendo
@@ -100,7 +100,7 @@ export function TeamList({ colaboradores }: TeamListProps) {
                                 </p>
                             </div>
                         ) : (
-                            <div className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-800">
+                            <div className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-800 flex-shrink-0">
                                 <span className="mr-1.5 h-1.5 w-1.5 rounded-full bg-emerald-500" />
                                 Disponível
                             </div>

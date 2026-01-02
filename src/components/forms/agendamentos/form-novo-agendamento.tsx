@@ -1,9 +1,7 @@
 'use client'
 
 import { useActionState, useState, useEffect } from 'react' // React 19
-import { useFormStatus } from 'react-dom'
 import { criarAgendamento } from '@/actions/agendamentos'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -15,6 +13,7 @@ import {
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { ComboboxCliente } from './combobox-cliente'
+import { SubmitButton } from '@/components/common/submit-button'
 
 interface FormNovoAgendamentoProps {
     clientes: { id: string; nome: string }[]
@@ -163,20 +162,11 @@ export function FormNovoAgendamento({ clientes, servicos, colaboradores, onSucce
             </div>
 
             {/* Botão de Envio */}
-            <SubmitButton />
+            <SubmitButton submitText="Confirmar Agendamento" loadingText="Agendando..." />
 
             {state.message && (
                 <p className="text-sm font-medium text-red-500 mt-2">{state.message}</p>
             )}
         </form>
-    )
-}
-
-function SubmitButton() {
-    const { pending } = useFormStatus()
-    return (
-        <Button type="submit" className="w-full" disabled={pending}>
-            {pending ? 'Agendando...' : 'Confirmar Agendamento'}
-        </Button>
     )
 }

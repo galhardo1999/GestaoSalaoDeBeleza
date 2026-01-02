@@ -1,13 +1,12 @@
 'use client'
 
 import { useActionState } from 'react'
-import { useFormStatus } from 'react-dom'
 import { editarServico } from '@/actions/servicos'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useEffect, useState } from 'react'
 import { NumericFormat } from 'react-number-format'
+import { SubmitButton } from '@/components/common/submit-button'
 
 const initialState = {
     message: '',
@@ -91,7 +90,7 @@ export function FormEditarServico({ servico, onSuccess }: FormEditarServicoProps
                 </div>
             </div>
 
-            <SubmitButton />
+            <SubmitButton submitText="Salvar Alterações" />
 
             {state.message && (
                 <p className={`text-sm font-medium mt-2 ${isSuccess ? 'text-green-600' : 'text-red-500'}`}>
@@ -99,14 +98,5 @@ export function FormEditarServico({ servico, onSuccess }: FormEditarServicoProps
                 </p>
             )}
         </form>
-    )
-}
-
-function SubmitButton() {
-    const { pending } = useFormStatus()
-    return (
-        <Button type="submit" className="w-full" disabled={pending}>
-            {pending ? 'Salvando...' : 'Salvar Alterações'}
-        </Button>
     )
 }

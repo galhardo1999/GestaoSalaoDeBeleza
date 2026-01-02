@@ -32,6 +32,7 @@ export async function DashboardTeam({ empresaId }: DashboardTeamProps) {
     // Serialize data to convert Prisma Decimal to plain numbers
     const serializedColaboradores = colaboradores.map(c => ({
         ...c,
+        comissaoValor: c.comissaoValor ? Number(c.comissaoValor) : null,
         servicos: c.servicos.map(s => ({
             ...s,
             preco: Number(s.preco)

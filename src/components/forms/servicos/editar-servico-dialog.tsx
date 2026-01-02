@@ -1,17 +1,9 @@
 'use client'
 
 import { Button } from "@/components/ui/button"
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/ui/dialog"
+import { FormDialog } from "@/components/common"
 import { FormEditarServico } from "./form-editar-servico"
 import { Pencil } from "lucide-react"
-import { useState } from "react"
 
 interface EditarServicoDialogProps {
     servico: {
@@ -22,25 +14,22 @@ interface EditarServicoDialogProps {
     }
 }
 
+/**
+ * Dialog para editar um serviço existente.
+ * Usa o FormDialog unificado para gerenciamento de estado.
+ */
 export function EditarServicoDialog({ servico }: EditarServicoDialogProps) {
-    const [open, setOpen] = useState(false)
-
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
+        <FormDialog
+            title="Editar Serviço"
+            description="Faça alterações nos dados do serviço abaixo."
+            trigger={
                 <Button variant="ghost" size="icon" className="hover:bg-muted" title="Editar Serviço">
                     <Pencil className="h-4 w-4" />
                 </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                    <DialogTitle>Editar Serviço</DialogTitle>
-                    <DialogDescription>
-                        Faça alterações nos dados do serviço abaixo.
-                    </DialogDescription>
-                </DialogHeader>
-                <FormEditarServico servico={servico} onSuccess={() => setOpen(false)} />
-            </DialogContent>
-        </Dialog>
+            }
+        >
+            {({ onSuccess }) => <FormEditarServico servico={servico} onSuccess={onSuccess} />}
+        </FormDialog>
     )
 }

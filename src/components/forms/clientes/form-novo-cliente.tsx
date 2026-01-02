@@ -1,14 +1,13 @@
 'use client'
 
 import { useActionState } from 'react'
-import { useFormStatus } from 'react-dom'
 import { criarCliente } from '@/actions/clientes'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useEffect, useState } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { SubmitButton } from '@/components/common/submit-button'
 
 const initialState = {
     message: '',
@@ -113,7 +112,7 @@ export function FormNovoCliente({ onSuccess }: { onSuccess?: () => void }) {
                 </TabsContent>
             </Tabs>
 
-            <SubmitButton />
+            <SubmitButton submitText="Salvar Cliente" />
 
             {state.message && (
                 <p className={`text-sm font-medium mt-2 ${isSuccess ? 'text-green-600' : 'text-red-500'}`}>
@@ -121,14 +120,5 @@ export function FormNovoCliente({ onSuccess }: { onSuccess?: () => void }) {
                 </p>
             )}
         </form>
-    )
-}
-
-function SubmitButton() {
-    const { pending } = useFormStatus()
-    return (
-        <Button type="submit" className="w-full" disabled={pending}>
-            {pending ? 'Salvando...' : 'Salvar Cliente'}
-        </Button>
     )
 }

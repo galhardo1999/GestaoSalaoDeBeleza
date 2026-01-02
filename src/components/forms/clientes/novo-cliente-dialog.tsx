@@ -1,39 +1,26 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/ui/dialog"
+import { FormDialog } from "@/components/common"
 import { FormNovoCliente } from "./form-novo-cliente"
-import { Plus } from "lucide-react"
-import { useState } from "react"
 
-export function NovoClienteDialog({ children }: { children?: React.ReactNode }) {
-    const [open, setOpen] = useState(false)
+interface NovoClienteDialogProps {
+    /** Elemento trigger customizado */
+    children?: React.ReactNode
+}
 
+/**
+ * Dialog para criar um novo cliente.
+ * Usa o FormDialog unificado para gerenciamento de estado.
+ */
+export function NovoClienteDialog({ children }: NovoClienteDialogProps) {
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-                {children ? children : (
-                    <Button>
-                        <Plus className="mr-2 h-4 w-4" /> Novo Cliente
-                    </Button>
-                )}
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                    <DialogTitle>Novo Cliente</DialogTitle>
-                    <DialogDescription>
-                        Cadastre um novo cliente no sistema.
-                    </DialogDescription>
-                </DialogHeader>
-                <FormNovoCliente onSuccess={() => setOpen(false)} />
-            </DialogContent>
-        </Dialog>
+        <FormDialog
+            title="Novo Cliente"
+            description="Cadastre um novo cliente no sistema."
+            trigger={children}
+            triggerText="Novo Cliente"
+        >
+            {({ onSuccess }) => <FormNovoCliente onSuccess={onSuccess} />}
+        </FormDialog>
     )
 }

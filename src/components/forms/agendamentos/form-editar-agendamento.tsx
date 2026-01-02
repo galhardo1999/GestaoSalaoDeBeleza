@@ -1,9 +1,7 @@
 'use client'
 
 import { useActionState, useState, useEffect } from 'react'
-import { useFormStatus } from 'react-dom'
 import { editarAgendamento } from '@/actions/agendamentos'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -16,6 +14,7 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import { ComboboxCliente } from './combobox-cliente' // Assuming this exists shared
 import { format } from 'date-fns'
+import { SubmitButton } from '@/components/common/submit-button'
 
 interface FormEditarAgendamentoProps {
     agendamento: {
@@ -167,19 +166,10 @@ export function FormEditarAgendamento({ agendamento, clientes, servicos, colabor
                 />
             </div>
 
-            <SubmitButton />
+            <SubmitButton submitText="Salvar Alterações" />
             {state.message && (
                 <p className="text-sm font-medium text-red-500 mt-2">{state.message}</p>
             )}
         </form>
-    )
-}
-
-function SubmitButton() {
-    const { pending } = useFormStatus()
-    return (
-        <Button type="submit" className="w-full" disabled={pending}>
-            {pending ? 'Salvando...' : 'Salvar Alterações'}
-        </Button>
     )
 }

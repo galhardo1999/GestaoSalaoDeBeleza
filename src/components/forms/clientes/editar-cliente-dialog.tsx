@@ -1,17 +1,9 @@
 'use client'
 
 import { Button } from "@/components/ui/button"
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/ui/dialog"
+import { FormDialog } from "@/components/common"
 import { FormEditarCliente } from "./form-editar-cliente"
 import { Pencil } from "lucide-react"
-import { useState } from "react"
 
 interface EditarClienteDialogProps {
     cliente: {
@@ -25,27 +17,24 @@ interface EditarClienteDialogProps {
     children?: React.ReactNode
 }
 
+/**
+ * Dialog para editar um cliente existente.
+ * Usa o FormDialog unificado para gerenciamento de estado.
+ */
 export function EditarClienteDialog({ cliente, children }: EditarClienteDialogProps) {
-    const [open, setOpen] = useState(false)
+    const defaultTrigger = (
+        <Button variant="ghost" size="icon" className="hover:bg-muted" title="Editar Cliente">
+            <Pencil className="h-4 w-4" />
+        </Button>
+    )
 
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-                {children ? children : (
-                    <Button variant="ghost" size="icon" className="hover:bg-muted" title="Editar Cliente">
-                        <Pencil className="h-4 w-4" />
-                    </Button>
-                )}
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                    <DialogTitle>Editar Cliente</DialogTitle>
-                    <DialogDescription>
-                        Faça alterações nos dados do cliente abaixo.
-                    </DialogDescription>
-                </DialogHeader>
-                <FormEditarCliente cliente={cliente} onSuccess={() => setOpen(false)} />
-            </DialogContent>
-        </Dialog>
+        <FormDialog
+            title="Editar Cliente"
+            description="Faça alterações nos dados do cliente abaixo."
+            trigger={children ?? defaultTrigger}
+        >
+            {({ onSuccess }) => <FormEditarCliente cliente={cliente} onSuccess={onSuccess} />}
+        </FormDialog>
     )
 }

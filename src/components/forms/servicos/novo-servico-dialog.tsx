@@ -1,37 +1,20 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/ui/dialog"
+import { FormDialog } from "@/components/common"
 import { FormNovoServico } from "./form-novo-servico"
-import { Plus } from "lucide-react"
-import { useState } from "react"
 
+/**
+ * Dialog para criar um novo serviço.
+ * Usa o FormDialog unificado para gerenciamento de estado.
+ */
 export function NovoServicoDialog() {
-    const [open, setOpen] = useState(false)
-
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-                <Button>
-                    <Plus className="mr-2 h-4 w-4" /> Novo Serviço
-                </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                    <DialogTitle>Novo Serviço</DialogTitle>
-                    <DialogDescription>
-                        Cadastre um novo serviço no sistema.
-                    </DialogDescription>
-                </DialogHeader>
-                <FormNovoServico onSuccess={() => setOpen(false)} />
-            </DialogContent>
-        </Dialog>
+        <FormDialog
+            title="Novo Serviço"
+            description="Cadastre um novo serviço no sistema."
+            triggerText="Novo Serviço"
+        >
+            {({ onSuccess }) => <FormNovoServico onSuccess={onSuccess} />}
+        </FormDialog>
     )
 }

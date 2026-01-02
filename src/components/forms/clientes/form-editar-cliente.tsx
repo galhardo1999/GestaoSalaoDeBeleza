@@ -1,17 +1,17 @@
 'use client'
 
 import { useActionState } from 'react'
-import { useFormStatus } from 'react-dom'
-import { ActionState, editarCliente } from '@/actions/clientes'
-import { Button } from '@/components/ui/button'
+import { editarCliente } from '@/actions/clientes'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useEffect, useState } from 'react'
 import { IMaskInput } from "react-imask"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { SubmitButton } from '@/components/common/submit-button'
+import type { ClienteActionState } from '@/types/actions'
 
-const initialState: ActionState = {
+const initialState: ClienteActionState = {
     message: '',
     errors: {}
 }
@@ -114,7 +114,7 @@ export function FormEditarCliente({ cliente, onSuccess }: FormEditarClienteProps
                 </TabsContent>
             </Tabs>
 
-            <SubmitButton />
+            <SubmitButton submitText="Salvar Alterações" />
 
             {state.message && (
                 <p className={`text-sm font-medium mt-2 ${isSuccess ? 'text-green-600' : 'text-red-500'}`}>
@@ -122,14 +122,5 @@ export function FormEditarCliente({ cliente, onSuccess }: FormEditarClienteProps
                 </p>
             )}
         </form>
-    )
-}
-
-function SubmitButton() {
-    const { pending } = useFormStatus()
-    return (
-        <Button type="submit" className="w-full" disabled={pending}>
-            {pending ? 'Salvando...' : 'Salvar Alterações'}
-        </Button>
     )
 }

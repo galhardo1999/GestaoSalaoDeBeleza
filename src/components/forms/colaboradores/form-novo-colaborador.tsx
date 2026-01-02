@@ -1,12 +1,11 @@
 'use client'
 
 import { useActionState } from 'react'
-import { useFormStatus } from 'react-dom'
 import { criarColaborador } from '@/actions/colaboradores'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useEffect, useState } from 'react'
+import { SubmitButton } from '@/components/common/submit-button'
 
 const initialState = {
     message: '',
@@ -145,7 +144,7 @@ export function FormNovoColaborador({ onSuccess, servicos = [] }: { onSuccess?: 
                 </div>
             </div>
 
-            <SubmitButton />
+            <SubmitButton submitText="Salvar Colaborador" />
 
             {state.message && (
                 <p className={`text-sm font-medium mt-2 ${isSuccess ? 'text-green-600' : 'text-red-500'}`}>
@@ -153,14 +152,5 @@ export function FormNovoColaborador({ onSuccess, servicos = [] }: { onSuccess?: 
                 </p>
             )}
         </form>
-    )
-}
-
-function SubmitButton() {
-    const { pending } = useFormStatus()
-    return (
-        <Button type="submit" className="w-full" disabled={pending}>
-            {pending ? 'Salvando...' : 'Salvar Colaborador'}
-        </Button>
     )
 }

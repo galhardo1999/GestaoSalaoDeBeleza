@@ -1,12 +1,11 @@
 'use client'
 
 import { useActionState } from 'react'
-import { useFormStatus } from 'react-dom'
 import { criarServico } from '@/actions/servicos'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useEffect, useState } from 'react'
+import { SubmitButton } from '@/components/common/submit-button'
 
 const initialState = {
     message: '',
@@ -59,7 +58,7 @@ export function FormNovoServico({ onSuccess }: { onSuccess?: () => void }) {
                 </div>
             </div>
 
-            <SubmitButton />
+            <SubmitButton submitText="Salvar Serviço" />
 
             {state.message && (
                 <p className={`text-sm font-medium mt-2 ${isSuccess ? 'text-green-600' : 'text-red-500'}`}>
@@ -67,14 +66,5 @@ export function FormNovoServico({ onSuccess }: { onSuccess?: () => void }) {
                 </p>
             )}
         </form>
-    )
-}
-
-function SubmitButton() {
-    const { pending } = useFormStatus()
-    return (
-        <Button type="submit" className="w-full" disabled={pending}>
-            {pending ? 'Salvando...' : 'Salvar Serviço'}
-        </Button>
     )
 }

@@ -47,6 +47,7 @@ model Cliente {
   nome      String
   email     String?
   cpf       String?  @unique
+  dataNascimento DateTime? @map("data_nascimento")
   telefone  String
   observacoes String?
   codigo    Int      @unique @default(autoincrement())

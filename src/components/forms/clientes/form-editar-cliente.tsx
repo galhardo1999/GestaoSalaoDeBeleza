@@ -24,6 +24,7 @@ interface FormEditarClienteProps {
         cpf: string | null
         telefone: string
         observacoes: string | null
+        dataNascimento: Date | null
     }
     onSuccess?: () => void
 }
@@ -95,6 +96,16 @@ export function FormEditarCliente({ cliente, onSuccess }: FormEditarClienteProps
                         {state.errors?.email && (
                             <p className="text-sm text-red-500 font-medium">{state.errors.email}</p>
                         )}
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="dataNascimento">Data de Nascimento</Label>
+                        <Input
+                            name="dataNascimento"
+                            id="dataNascimento"
+                            type="date"
+                            defaultValue={cliente.dataNascimento ? new Date(cliente.dataNascimento).toISOString().split('T')[0] : ''}
+                        />
                     </div>
                 </TabsContent>
 

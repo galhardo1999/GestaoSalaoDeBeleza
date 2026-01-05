@@ -96,6 +96,11 @@ export function FormNovoCliente({ onSuccess }: { onSuccess?: () => void }) {
                             <p className="text-sm text-red-500 font-medium">{state.errors.email}</p>
                         )}
                     </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="dataNascimento">Data de Nascimento</Label>
+                        <Input name="dataNascimento" id="dataNascimento" type="date" />
+                    </div>
                 </TabsContent>
 
                 <TabsContent value="observacoes" className="space-y-4 mt-4" forceMount={true}>

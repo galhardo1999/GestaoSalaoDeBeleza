@@ -34,6 +34,7 @@ export async function criarCliente(
         cpf: formData.get('cpf'),
         telefone: formData.get('telefone'),
         observacoes: formData.get('observacoes'),
+        dataNascimento: formData.get('dataNascimento'),
     })
 
     if (!validatedFields.success) {
@@ -42,7 +43,7 @@ export async function criarCliente(
         }
     }
 
-    const { nome, email, cpf, telefone, observacoes } = validatedFields.data
+    const { nome, email, cpf, telefone, observacoes, dataNascimento } = validatedFields.data
 
     try {
         await db.cliente.create({
@@ -52,6 +53,7 @@ export async function criarCliente(
                 cpf: cpf || null,
                 telefone,
                 observacoes,
+                dataNascimento: dataNascimento ? new Date(dataNascimento) : null,
                 empresaId: session.user.empresaId
             },
         })
@@ -157,6 +159,7 @@ export async function editarCliente(
         cpf: formData.get('cpf'),
         telefone: formData.get('telefone'),
         observacoes: formData.get('observacoes'),
+        dataNascimento: formData.get('dataNascimento'),
     })
 
     if (!validatedFields.success) {
@@ -165,7 +168,7 @@ export async function editarCliente(
         }
     }
 
-    const { nome, email, cpf, telefone, observacoes } = validatedFields.data
+    const { nome, email, cpf, telefone, observacoes, dataNascimento } = validatedFields.data
 
     try {
         // Verificar propriedade antes da atualização
@@ -182,6 +185,7 @@ export async function editarCliente(
                 cpf: cpf || null,
                 telefone,
                 observacoes,
+                dataNascimento: dataNascimento ? new Date(dataNascimento) : null,
             },
         })
     } catch (error) {

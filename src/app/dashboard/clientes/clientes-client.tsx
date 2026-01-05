@@ -46,6 +46,7 @@ interface ClienteData {
     ultimoAgendamento: string
     email: string | null
     observacoes: string | null
+    dataNascimento: Date | null
 }
 
 interface ClientesClientProps {

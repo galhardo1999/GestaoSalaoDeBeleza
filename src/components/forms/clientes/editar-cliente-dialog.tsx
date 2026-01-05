@@ -13,6 +13,7 @@ interface EditarClienteDialogProps {
         cpf: string | null
         telefone: string
         observacoes: string | null
+        dataNascimento: Date | null
     }
     children?: React.ReactNode
 }

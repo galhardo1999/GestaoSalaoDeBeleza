@@ -76,7 +76,8 @@ export default async function ClientesPage({
             ? format(cliente.agendamentos[0].data, "dd/MM/yyyy")
             : '-',
         email: cliente.email,
-        observacoes: cliente.observacoes
+        observacoes: cliente.observacoes,
+        dataNascimento: cliente.dataNascimento
     }))
 
     return (

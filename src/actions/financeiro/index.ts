@@ -10,6 +10,7 @@ interface FinancialMetrics {
     totalRevenue: number
     totalSales: number
     averageTicket: number
+    totalCommissions: number
     dailyRevenue: {
         name: string;
         receita: number;
@@ -18,31 +19,44 @@ interface FinancialMetrics {
     topServices: { name: string; count: number; revenue: number }[]
 }
 
-export async function getFinancialMetrics(startDate: Date, endDate: Date, empresaId: string): Promise<FinancialMetrics> {
+export async function getFinancialMetrics(startDate: Date, endDate: Date, empresaId: string, colaboradorId?: string): Promise<FinancialMetrics> {
     const session = await getServerSession(authOptions)
     if (!session || !session.user.empresaId || session.user.empresaId !== empresaId) {
         throw new Error("Unauthorized")
     }
 
+    const where: any = {
+        empresaId,
+        data: {
+            gte: startOfDay(startDate),
+            lte: endOfDay(endDate)
+        },
+        status: {
+            in: ['CONCLUIDO']
+        }
+    }
+
+    if (colaboradorId && colaboradorId !== 'all') {
+        where.colaboradorId = colaboradorId
+    }
+
     // 1. Fetch completed appointments in the date range
     const appointments = await db.agendamento.findMany({
-        where: {
-            empresaId,
-            data: {
-                gte: startOfDay(startDate),
-                lte: endOfDay(endDate)
-            },
-            status: {
-                in: ['CONCLUIDO']
-            }
-        },
+        where,
         include: {
-            servico: true
+            servico: true,
+            colaborador: {
+                select: {
+                    comissaoTipo: true,
+                    comissaoValor: true
+                }
+            }
         }
     })
 
     // 2. Calculate aggregations
     let totalRevenue = 0
+    let totalCommissions = 0
     let totalSales = appointments.length
 
     // Group by day for chart with details
@@ -56,6 +70,15 @@ export async function getFinancialMetrics(startDate: Date, endDate: Date, empres
         const value = app.valor ? Number(app.valor) : Number(app.servico.preco)
         const serviceName = app.servico.nome
         totalRevenue += value
+
+        // Calculate commission
+        if (app.colaborador) {
+            if (app.colaborador.comissaoTipo === 'PORCENTAGEM' && app.colaborador.comissaoValor) {
+                totalCommissions += (value * Number(app.colaborador.comissaoValor)) / 100
+            } else if (app.colaborador.comissaoTipo === 'VALOR_FIXO' && app.colaborador.comissaoValor) {
+                totalCommissions += Number(app.colaborador.comissaoValor)
+            }
+        }
 
         // Daily aggregation
         const dayKey = format(app.data, 'dd/MM')
@@ -110,28 +133,35 @@ export async function getFinancialMetrics(startDate: Date, endDate: Date, empres
         totalRevenue,
         totalSales,
         averageTicket: totalSales > 0 ? totalRevenue / totalSales : 0,
+        totalCommissions,
         dailyRevenue,
         topServices
     }
 }
 
-export async function getFinancialMovements(startDate: Date, endDate: Date, empresaId: string) {
+export async function getFinancialMovements(startDate: Date, endDate: Date, empresaId: string, colaboradorId?: string) {
     const session = await getServerSession(authOptions)
     if (!session || !session.user.empresaId || session.user.empresaId !== empresaId) {
         throw new Error("Unauthorized")
     }
 
-    const movements = await db.agendamento.findMany({
-        where: {
-            empresaId,
-            data: {
-                gte: startOfDay(startDate),
-                lte: endOfDay(endDate)
-            },
-            status: {
-                in: ['CONCLUIDO', 'PENDENTE']
-            }
+    const where: any = {
+        empresaId,
+        data: {
+            gte: startOfDay(startDate),
+            lte: endOfDay(endDate)
         },
+        status: {
+            in: ['CONCLUIDO', 'PENDENTE']
+        }
+    }
+
+    if (colaboradorId && colaboradorId !== 'all') {
+        where.colaboradorId = colaboradorId
+    }
+
+    const movements = await db.agendamento.findMany({
+        where,
         include: {
             cliente: {
                 select: {
@@ -178,6 +208,26 @@ export async function getFinancialMovements(startDate: Date, endDate: Date, empr
             comissao,
             valor,
             status: movement.status
+        }
+    })
+}
+
+export async function getCollaborators(empresaId: string) {
+    const session = await getServerSession(authOptions)
+    if (!session || !session.user.empresaId || session.user.empresaId !== empresaId) {
+        throw new Error("Unauthorized")
+    }
+
+    return await db.colaborador.findMany({
+        where: {
+            empresaId
+        },
+        select: {
+            id: true,
+            nome: true
+        },
+        orderBy: {
+            nome: 'asc'
         }
     })
 }

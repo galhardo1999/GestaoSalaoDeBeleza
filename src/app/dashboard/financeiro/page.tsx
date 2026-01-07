@@ -7,9 +7,10 @@ import { OverviewCards } from "@/components/financeiro/overview-cards"
 import { SalesChart } from "@/components/financeiro/sales-chart"
 import { TopServices } from "@/components/financeiro/top-services"
 import { startOfMonth, endOfMonth } from "date-fns"
-import { getFinancialMetrics, getFinancialMovements } from "@/actions/financeiro"
+import { getFinancialMetrics, getFinancialMovements, getCollaborators } from "@/actions/financeiro"
 import { FinancialMovementsTable } from "@/components/financeiro/financial-movements-table"
 import { MonthPicker } from "@/components/financeiro/month-picker"
+import { CollaboratorPicker } from "@/components/financeiro/collaborator-picker"
 
 
 export const dynamic = 'force-dynamic'
@@ -17,7 +18,7 @@ export const dynamic = 'force-dynamic'
 export default async function FinanceiroPage({
     searchParams,
 }: {
-    searchParams: Promise<{ month?: string, year?: string }>
+    searchParams: Promise<{ month?: string, year?: string, colaboradorId?: string }>
 }) {
     const session = await getServerSession(authOptions)
     if (!session || !session.user.empresaId) {
@@ -31,6 +32,7 @@ export default async function FinanceiroPage({
 
     const selectedYear = params.year ? parseInt(params.year) : currentYear
     const selectedMonth = params.month ? parseInt(params.month) - 1 : currentMonth
+    const colaboradorId = params.colaboradorId
 
     const startDate = startOfMonth(new Date(selectedYear, selectedMonth))
     const endDate = endOfMonth(new Date(selectedYear, selectedMonth))
@@ -39,14 +41,16 @@ export default async function FinanceiroPage({
     const periodString = startDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
 
 
-    const metrics = await getFinancialMetrics(startDate, endDate, session.user.empresaId)
-    const movements = await getFinancialMovements(startDate, endDate, session.user.empresaId)
+    const metrics = await getFinancialMetrics(startDate, endDate, session.user.empresaId, colaboradorId)
+    const movements = await getFinancialMovements(startDate, endDate, session.user.empresaId, colaboradorId)
+    const collaborators = await getCollaborators(session.user.empresaId)
 
     return (
         <div className="flex-1 space-y-4 p-8 pt-6">
             <div className="flex items-center justify-between space-y-2">
                 <h2 className="text-3xl font-bold tracking-tight">Financeiro</h2>
                 <div className="flex items-center space-x-2">
+                    <CollaboratorPicker collaborators={collaborators} />
                     <MonthPicker currentDate={startDate} />
                 </div>
             </div>
@@ -55,6 +59,7 @@ export default async function FinanceiroPage({
                 totalRevenue={metrics.totalRevenue}
                 totalSales={metrics.totalSales}
                 averageTicket={metrics.averageTicket}
+                totalCommissions={metrics.totalCommissions}
             />
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">

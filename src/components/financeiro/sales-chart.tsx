@@ -4,7 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts"
 
 interface SalesChartProps {
-    data: { name: string; receita: number }[]
+    data: {
+        name: string;
+        receita: number;
+        details: { name: string; value: number }[]
+    }[]
 }
 
 export function SalesChart({ data }: SalesChartProps) {
@@ -30,22 +34,48 @@ export function SalesChart({ data }: SalesChartProps) {
                             axisLine={false}
                             tickFormatter={(value) => `R$${value}`}
                         />
-                        <Tooltip
-                            formatter={(value: any) => {
-                                if (value === undefined || value === null) return ["R$0,00", "Receita"];
-                                return [new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(value)), "Receita"]
-                            }}
-                            labelStyle={{ color: '#333' }}
-                        />
+                        <Tooltip content={<CustomTooltip />} />
                         <Bar
                             dataKey="receita"
-                            fill="#adfa1d" // Keep existing style or change to match theme
+                            fill="#16a34a"
                             radius={[4, 4, 0, 0]}
-                            className="fill-primary"
                         />
                     </BarChart>
                 </ResponsiveContainer>
             </CardContent>
         </Card>
     )
+}
+
+const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+        const data = payload[0].payload
+        return (
+            <div className="bg-white p-3 border rounded-lg shadow-lg text-sm">
+                <p className="font-bold mb-2 text-gray-900 border-b pb-1">{label}</p>
+                {data.details && data.details.length > 0 ? (
+                    <div className="space-y-1 mb-2">
+                        {data.details.map((detail: any, index: number) => (
+                            <div key={index} className="flex justify-between gap-4 text-xs">
+                                <span className="text-gray-600">{detail.name}:</span>
+                                <span className="font-medium text-gray-900">
+                                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(detail.value)}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <p className="text-xs text-gray-500 mb-2">Sem serviços registrados</p>
+                )}
+                <div className="border-t pt-1 flex justify-between gap-4 font-bold text-green-600">
+                    <span>Total:</span>
+                    <span>
+                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(payload[0].value)}
+                    </span>
+                </div>
+            </div>
+        )
+    }
+
+    return null
 }

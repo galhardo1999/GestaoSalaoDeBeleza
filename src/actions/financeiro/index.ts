@@ -10,7 +10,11 @@ interface FinancialMetrics {
     totalRevenue: number
     totalSales: number
     averageTicket: number
-    dailyRevenue: { name: string; receita: number }[]
+    dailyRevenue: {
+        name: string;
+        receita: number;
+        details: { name: string; value: number }[]
+    }[]
     topServices: { name: string; count: number; revenue: number }[]
 }
 
@@ -40,25 +44,34 @@ export async function getFinancialMetrics(startDate: Date, endDate: Date, empres
     // 2. Calculate aggregations
     let totalRevenue = 0
     let totalSales = appointments.length
-    
-    // Group by day for chart
-    const dailyMap = new Map<string, number>()
-    
+
+    // Group by day for chart with details
+    const dailyMap = new Map<string, { total: number; details: Map<string, number> }>()
+
     // Group by service for top list
     const serviceMap = new Map<string, { count: number; revenue: number }>()
 
     appointments.forEach(app => {
         // Use value from appointment if available, otherwise service price
         const value = app.valor ? Number(app.valor) : Number(app.servico.preco)
+        const serviceName = app.servico.nome
         totalRevenue += value
 
         // Daily aggregation
-        // Make sure to format current date properly
         const dayKey = format(app.data, 'dd/MM')
-        dailyMap.set(dayKey, (dailyMap.get(dayKey) || 0) + value)
+
+        if (!dailyMap.has(dayKey)) {
+            dailyMap.set(dayKey, { total: 0, details: new Map() })
+        }
+
+        const dayStats = dailyMap.get(dayKey)!
+        dayStats.total += value
+
+        const currentServiceTotal = dayStats.details.get(serviceName) || 0
+        dayStats.details.set(serviceName, currentServiceTotal + value)
+
 
         // Service aggregation
-        const serviceName = app.servico.nome
         const currentService = serviceMap.get(serviceName) || { count: 0, revenue: 0 }
         serviceMap.set(serviceName, {
             count: currentService.count + 1,
@@ -70,9 +83,16 @@ export async function getFinancialMetrics(startDate: Date, endDate: Date, empres
     const daysInterval = eachDayOfInterval({ start: startDate, end: endDate })
     const dailyRevenue = daysInterval.map(day => {
         const dayKey = format(day, 'dd/MM')
+        const dayStats = dailyMap.get(dayKey)
+
+        const details = dayStats
+            ? Array.from(dayStats.details.entries()).map(([name, value]) => ({ name, value }))
+            : []
+
         return {
             name: dayKey,
-            receita: dailyMap.get(dayKey) || 0
+            receita: dayStats?.total || 0,
+            details: details.sort((a, b) => b.value - a.value)
         }
     })
 
@@ -93,4 +113,71 @@ export async function getFinancialMetrics(startDate: Date, endDate: Date, empres
         dailyRevenue,
         topServices
     }
+}
+
+export async function getFinancialMovements(startDate: Date, endDate: Date, empresaId: string) {
+    const session = await getServerSession(authOptions)
+    if (!session || !session.user.empresaId || session.user.empresaId !== empresaId) {
+        throw new Error("Unauthorized")
+    }
+
+    const movements = await db.agendamento.findMany({
+        where: {
+            empresaId,
+            data: {
+                gte: startOfDay(startDate),
+                lte: endOfDay(endDate)
+            },
+            status: {
+                in: ['CONCLUIDO', 'PENDENTE']
+            }
+        },
+        include: {
+            cliente: {
+                select: {
+                    nome: true
+                }
+            },
+            servico: {
+                select: {
+                    nome: true,
+                    preco: true
+                }
+            },
+            colaborador: {
+                select: {
+                    nome: true,
+                    comissaoTipo: true,
+                    comissaoValor: true
+                }
+            }
+        },
+        orderBy: {
+            data: 'desc'
+        }
+    })
+
+    return movements.map(movement => {
+        const valor = movement.valor ? Number(movement.valor) : Number(movement.servico.preco)
+        let comissao = 0
+
+        if (movement.colaborador) {
+            if (movement.colaborador.comissaoTipo === 'PORCENTAGEM' && movement.colaborador.comissaoValor) {
+                comissao = (valor * Number(movement.colaborador.comissaoValor)) / 100
+            } else if (movement.colaborador.comissaoTipo === 'VALOR_FIXO' && movement.colaborador.comissaoValor) {
+                comissao = Number(movement.colaborador.comissaoValor)
+            }
+        }
+
+        return {
+            id: movement.id,
+            data: movement.data,
+            cliente: movement.cliente.nome,
+            servico: movement.servico.nome,
+            colaborador: movement.colaborador?.nome || 'N/A',
+            comissao,
+            valor,
+            status: movement.status
+        }
+    })
 }

@@ -95,11 +95,7 @@ const routes: RouteItem[] = [
         icon: FileText,
         href: "/dashboard/relatorios",
     },
-    {
-        label: "Estatísticas",
-        icon: BarChart3,
-        href: "/dashboard/estatisticas",
-    },
+
 ]
 
 

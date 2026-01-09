@@ -11,9 +11,12 @@ export const db = globalForPrisma.prisma ?? (() => {
     const pool = new Pool({ connectionString })
     const adapter = new PrismaPg(pool)
 
+    // P1: Conditional logging - only log queries in development
     return new PrismaClient({
         adapter,
-        log: ['query', 'error', 'warn'],
+        log: process.env.NODE_ENV === 'development'
+            ? ['query', 'error', 'warn']
+            : ['error'],
     })
 })()
 

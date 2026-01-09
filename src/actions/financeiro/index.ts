@@ -1,10 +1,23 @@
 "use server"
 
 import { db } from "@/lib/db"
+import { Prisma } from "@prisma/client"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { startOfDay, endOfDay, eachDayOfInterval, format } from "date-fns"
 import { ptBR } from "date-fns/locale"
+
+// P2: Extracted commission calculation - DRY/SRP principle
+interface CommissionParams {
+    type: 'PORCENTAGEM' | 'VALOR_FIXO' | null
+    rate: number | null
+    value: number
+}
+
+function calculateCommission({ type, rate, value }: CommissionParams): number {
+    if (!type || !rate) return 0
+    return type === 'PORCENTAGEM' ? (value * rate) / 100 : rate
+}
 
 interface FinancialMetrics {
     totalRevenue: number
@@ -25,7 +38,8 @@ export async function getFinancialMetrics(startDate: Date, endDate: Date, empres
         throw new Error("Unauthorized")
     }
 
-    const where: any = {
+    // P1: Proper Prisma typing instead of 'any'
+    const where: Prisma.AgendamentoWhereInput = {
         empresaId,
         data: {
             gte: startOfDay(startDate),
@@ -71,13 +85,13 @@ export async function getFinancialMetrics(startDate: Date, endDate: Date, empres
         const serviceName = app.servico.nome
         totalRevenue += value
 
-        // Calculate commission
+        // P2: Using extracted commission calculation helper
         if (app.colaborador) {
-            if (app.colaborador.comissaoTipo === 'PORCENTAGEM' && app.colaborador.comissaoValor) {
-                totalCommissions += (value * Number(app.colaborador.comissaoValor)) / 100
-            } else if (app.colaborador.comissaoTipo === 'VALOR_FIXO' && app.colaborador.comissaoValor) {
-                totalCommissions += Number(app.colaborador.comissaoValor)
-            }
+            totalCommissions += calculateCommission({
+                type: app.colaborador.comissaoTipo as 'PORCENTAGEM' | 'VALOR_FIXO' | null,
+                rate: app.colaborador.comissaoValor ? Number(app.colaborador.comissaoValor) : null,
+                value
+            })
         }
 
         // Daily aggregation
@@ -145,7 +159,8 @@ export async function getFinancialMovements(startDate: Date, endDate: Date, empr
         throw new Error("Unauthorized")
     }
 
-    const where: any = {
+    // P1: Proper Prisma typing instead of 'any'
+    const where: Prisma.AgendamentoWhereInput = {
         empresaId,
         data: {
             gte: startOfDay(startDate),
@@ -189,15 +204,14 @@ export async function getFinancialMovements(startDate: Date, endDate: Date, empr
 
     return movements.map(movement => {
         const valor = movement.valor ? Number(movement.valor) : Number(movement.servico.preco)
-        let comissao = 0
-
-        if (movement.colaborador) {
-            if (movement.colaborador.comissaoTipo === 'PORCENTAGEM' && movement.colaborador.comissaoValor) {
-                comissao = (valor * Number(movement.colaborador.comissaoValor)) / 100
-            } else if (movement.colaborador.comissaoTipo === 'VALOR_FIXO' && movement.colaborador.comissaoValor) {
-                comissao = Number(movement.colaborador.comissaoValor)
-            }
-        }
+        // P2: Using extracted commission calculation helper
+        const comissao = movement.colaborador
+            ? calculateCommission({
+                type: movement.colaborador.comissaoTipo as 'PORCENTAGEM' | 'VALOR_FIXO' | null,
+                rate: movement.colaborador.comissaoValor ? Number(movement.colaborador.comissaoValor) : null,
+                value: valor
+            })
+            : 0
 
         return {
             id: movement.id,

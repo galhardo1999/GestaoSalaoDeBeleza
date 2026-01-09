@@ -38,7 +38,7 @@ export function CollaboratorPicker({ collaborators }: CollaboratorPickerProps) {
 
     return (
         <Select value={currentCollaboratorId} onValueChange={handleSelect}>
-            <SelectTrigger className="w-[200px]">
+            <SelectTrigger className="w-[200px] bg-white">
                 <SelectValue placeholder="Todos colaboradores" />
             </SelectTrigger>
             <SelectContent>

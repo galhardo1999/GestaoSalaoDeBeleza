@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo, useDeferredValue } from "react"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { Search, MoreHorizontal, Filter } from "lucide-react"
@@ -49,22 +49,33 @@ const statusMap: Record<string, { label: string, color: string, bg: string }> = 
     'NAO_COMPARECEU': { label: 'Não Compareceu', color: 'text-gray-700', bg: 'bg-gray-100' },
 }
 
+// P1: Memoized currency formatter
+const currencyFormatter = new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
+})
+
 export function FinancialMovementsTable({ data }: FinancialMovementsTableProps) {
     const [search, setSearch] = useState("")
     const [statusFilter, setStatusFilter] = useState<string | null>(null)
 
-    const filteredData = data.filter(item => {
-        const matchesSearch = item.cliente.toLowerCase().includes(search.toLowerCase())
-        const matchesStatus = statusFilter ? item.status === statusFilter : true
-        return matchesSearch && matchesStatus
-    })
+    // P1: Deferred value for smoother search UX on large datasets
+    const deferredSearch = useDeferredValue(search)
 
-    const formatCurrency = (value: number) => {
-        return new Intl.NumberFormat('pt-BR', {
-            style: 'currency',
-            currency: 'BRL'
-        }).format(value)
-    }
+    // P1: Memoized filtering to avoid recalculation on every render
+    const filteredData = useMemo(() => {
+        if (!deferredSearch && !statusFilter) return data
+
+        const searchLower = deferredSearch.toLowerCase()
+
+        return data.filter(item => {
+            if (statusFilter && item.status !== statusFilter) return false
+            if (searchLower && !item.cliente.toLowerCase().includes(searchLower)) return false
+            return true
+        })
+    }, [data, deferredSearch, statusFilter])
+
+    const formatCurrency = (value: number) => currencyFormatter.format(value)
 
     return (
         <div className="space-y-4">
@@ -76,12 +87,12 @@ export function FinancialMovementsTable({ data }: FinancialMovementsTableProps) 
                             placeholder="Buscar cliente..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            className="pl-8"
+                            className="pl-8 bg-white"
                         />
                     </div>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="sm" className="h-10 gap-2">
+                            <Button variant="outline" size="sm" className="h-10 gap-2 bg-white">
                                 <Filter className="h-4 w-4" />
                                 Status
                                 {statusFilter && <Badge variant="secondary" className="ml-1 h-5 px-1">{statusMap[statusFilter]?.label}</Badge>}

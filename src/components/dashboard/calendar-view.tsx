@@ -35,11 +35,11 @@ type ViewMode = "month" | "week"
 
 export interface CalendarAppointment {
     id: string
-    data: Date
+    data: string | Date
     status: string
     cliente: {
         nome: string
-    }
+    } | null
     colaborador?: {
         id: string
         nome: string
@@ -317,7 +317,7 @@ export function CalendarView({ agendamentos, clientes, servicos, colaboradores }
                                                         key={apt.id}
                                                         className={cn("truncate rounded px-1.5 py-0.5 text-[10px] text-white w-full text-left", getAppointmentColor(apt.status))}
                                                     >
-                                                        {format(new Date(apt.data), "HH:mm")} {apt.cliente.nome.split(' ')[0]}
+                                                        {format(new Date(apt.data), "HH:mm")} {apt.cliente?.nome.split(' ')[0]}
                                                     </div>
                                                 ))}
                                                 {dayAppointments.length > 3 && (
@@ -422,7 +422,7 @@ export function CalendarView({ agendamentos, clientes, servicos, colaboradores }
                                             <span className="text-sm text-muted-foreground">• {apt.servico.duracaoMin} min</span>
                                         </div>
                                         <div className="text-sm text-muted-foreground mt-0.5">
-                                            {apt.cliente.nome} • com {apt.colaborador?.nome || "Sem colaborador"}
+                                            {apt.cliente?.nome || 'Cliente não informado'} • com {apt.colaborador?.nome || "Sem colaborador"}
                                         </div>
                                     </div>
                                     <div className="text-right">

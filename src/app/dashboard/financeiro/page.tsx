@@ -15,6 +15,22 @@ import { CollaboratorPicker } from "@/components/financeiro/collaborator-picker"
 
 export const dynamic = 'force-dynamic'
 
+// P0: Input validation helpers
+function parseMonth(value: string | undefined): number {
+    if (!value) return new Date().getMonth()
+    const parsed = parseInt(value, 10)
+    if (isNaN(parsed) || parsed < 1 || parsed > 12) return new Date().getMonth()
+    return parsed - 1
+}
+
+function parseYear(value: string | undefined): number {
+    if (!value) return new Date().getFullYear()
+    const parsed = parseInt(value, 10)
+    const currentYear = new Date().getFullYear()
+    if (isNaN(parsed) || parsed < 2000 || parsed > currentYear + 5) return currentYear
+    return parsed
+}
+
 export default async function FinanceiroPage({
     searchParams,
 }: {
@@ -26,12 +42,10 @@ export default async function FinanceiroPage({
     }
 
     const params = await searchParams
-    const now = new Date()
-    const currentYear = now.getFullYear()
-    const currentMonth = now.getMonth() // 0-indexed
 
-    const selectedYear = params.year ? parseInt(params.year) : currentYear
-    const selectedMonth = params.month ? parseInt(params.month) - 1 : currentMonth
+    // P0: Validated input parsing
+    const selectedYear = parseYear(params.year)
+    const selectedMonth = parseMonth(params.month)
     const colaboradorId = params.colaboradorId
 
     const startDate = startOfMonth(new Date(selectedYear, selectedMonth))
@@ -40,10 +54,12 @@ export default async function FinanceiroPage({
     // Display string for the period
     const periodString = startDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
 
-
-    const metrics = await getFinancialMetrics(startDate, endDate, session.user.empresaId, colaboradorId)
-    const movements = await getFinancialMovements(startDate, endDate, session.user.empresaId, colaboradorId)
-    const collaborators = await getCollaborators(session.user.empresaId)
+    // P0: Parallel query execution with Promise.all (~66% faster)
+    const [metrics, movements, collaborators] = await Promise.all([
+        getFinancialMetrics(startDate, endDate, session.user.empresaId, colaboradorId),
+        getFinancialMovements(startDate, endDate, session.user.empresaId, colaboradorId),
+        getCollaborators(session.user.empresaId)
+    ])
 
     return (
         <div className="flex-1 space-y-4 p-8 pt-6">

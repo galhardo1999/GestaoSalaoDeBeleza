@@ -64,7 +64,17 @@ export default async function RelatorioColaboradoresPage({
 
     const sortedColaboradores = colaboradores
         .map(c => ({
-            ...c,
+            id: c.id,
+            codigo: c.codigo,
+            nome: c.nome,
+            email: c.email,
+            cpf: c.cpf,
+            foto: c.foto,
+            comissaoTipo: c.comissaoTipo,
+            comissaoValor: c.comissaoValor ? Number(c.comissaoValor) : null,
+            criadoEm: c.criadoEm.toISOString(),
+            atualizadoEm: c.atualizadoEm.toISOString(),
+            empresaId: c.empresaId,
             appointmentsCount: c._count.agendamentos
         }))
         .sort((a, b) => b.appointmentsCount - a.appointmentsCount)

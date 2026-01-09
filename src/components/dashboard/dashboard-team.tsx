@@ -29,21 +29,51 @@ export async function DashboardTeam({ empresaId }: DashboardTeamProps) {
         }
     })
 
-    // Serialize data to convert Prisma Decimal to plain numbers
+    // Serialize data to convert Prisma Decimal and Date to plain JavaScript types
     const serializedColaboradores = colaboradores.map(c => ({
-        ...c,
+        id: c.id,
+        codigo: c.codigo,
+        nome: c.nome,
+        email: c.email,
+        cpf: c.cpf,
+        senha: c.senha,
+        foto: c.foto,
+        comissaoTipo: c.comissaoTipo,
         comissaoValor: c.comissaoValor ? Number(c.comissaoValor) : null,
+        criadoEm: c.criadoEm.toISOString(),
+        atualizadoEm: c.atualizadoEm.toISOString(),
+        empresaId: c.empresaId,
         servicos: c.servicos.map(s => ({
-            ...s,
-            preco: Number(s.preco)
+            id: s.id,
+            nome: s.nome,
+            preco: Number(s.preco),
+            duracaoMin: s.duracaoMin,
+            ativo: s.ativo,
+            criadoEm: s.criadoEm.toISOString(),
+            atualizadoEm: s.atualizadoEm.toISOString(),
+            empresaId: s.empresaId
         })),
         agendamentos: c.agendamentos.map(a => ({
-            ...a,
+            id: a.id,
+            data: a.data.toISOString(),
+            status: a.status,
             valor: a.valor ? Number(a.valor) : null,
+            observacoes: a.observacoes,
+            criadoEm: a.criadoEm.toISOString(),
+            atualizadoEm: a.atualizadoEm.toISOString(),
             servico: {
-                ...a.servico,
-                preco: Number(a.servico.preco)
-            }
+                id: a.servico.id,
+                nome: a.servico.nome,
+                preco: Number(a.servico.preco),
+                duracaoMin: a.servico.duracaoMin,
+                ativo: a.servico.ativo
+            },
+            cliente: a.cliente ? {
+                id: a.cliente.id,
+                nome: a.cliente.nome,
+                email: a.cliente.email,
+                telefone: a.cliente.telefone
+            } : null
         }))
     }))
 

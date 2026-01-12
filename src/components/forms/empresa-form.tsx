@@ -8,11 +8,13 @@ import { createEmpresa, consultarCNPJ } from "@/actions/admin"
 import { useState, useRef } from "react"
 import { Loader2, Search } from "lucide-react"
 
-export function EmpresaForm() {
+export function EmpresaForm({ planos }: { planos?: any[] }) {
     const [isLoading, setIsLoading] = useState(false)
     const [isConsulting, setIsConsulting] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const formRef = useRef<HTMLFormElement>(null)
+
+    const [activeTab, setActiveTab] = useState<'geral' | 'plano'>('geral')
 
     async function handleConsultarCNPJ(cnpj: string) {
         const cleanCNPJ = cnpj.replace(/\D/g, "")
@@ -31,14 +33,9 @@ export function EmpresaForm() {
 
         if (result.data) {
             const d = result.data
-            // Populate fields via DOM manipulation or State management if we had controlled inputs.
-            // Since this is using native form submission (uncontrolled), we can set values directly on inputs if refs or names match.
-            // Using formRef to access elements.
-
             const form = formRef.current
             if (!form) return
 
-            // Auxiliar para definir valor com segurança
             const setVal = (name: string, val: string) => {
                 const input = form.elements.namedItem(name) as HTMLInputElement
                 if (input) input.value = val
@@ -46,7 +43,6 @@ export function EmpresaForm() {
 
             if (d.company?.name) setVal("nomeEmpresa", d.company.name)
 
-            // Endereço
             if (d.address?.zip) {
                 const cep = d.address.zip.replace(/\D/g, "")
                 setVal("cep", cep.replace(/^(\d{5})(\d{1,3})/, "$1-$2"))
@@ -57,7 +53,6 @@ export function EmpresaForm() {
             if (d.address?.city) setVal("cidade", d.address.city)
             if (d.address?.state) setVal("estado", d.address.state)
 
-            // Auxiliar para formatar telefone
             const formatPhone = (area: string, number: string) => {
                 const combined = `${area}${number}`.replace(/\D/g, "")
                 if (combined.length > 10) {
@@ -69,7 +64,6 @@ export function EmpresaForm() {
                 return combined
             }
 
-            // Telefones
             if (d.phones && d.phones.length > 0) {
                 const p1 = d.phones[0]
                 setVal("telefone1", formatPhone(p1.area, p1.number))
@@ -94,7 +88,6 @@ export function EmpresaForm() {
             setError(result.error)
             setIsLoading(false)
         }
-        // Se sucesso, redirecionamento acontece na server action
     }
 
     return (
@@ -107,7 +100,33 @@ export function EmpresaForm() {
             </CardHeader>
             <CardContent>
                 <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
-                    <div className="space-y-4">
+
+                    {/* Tabs Navigation */}
+                    <div className="flex space-x-2 border-b pb-2 mb-6">
+                        <button
+                            type="button"
+                            onClick={() => setActiveTab('geral')}
+                            className={`px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 text-left hover:bg-gray-50 ${activeTab === 'geral'
+                                ? 'border-black text-black'
+                                : 'border-transparent text-gray-500 hover:text-gray-700'
+                                }`}
+                        >
+                            Dados Gerais
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setActiveTab('plano')}
+                            className={`px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 text-left hover:bg-gray-50 ${activeTab === 'plano'
+                                ? 'border-black text-black'
+                                : 'border-transparent text-gray-500 hover:text-gray-700'
+                                }`}
+                        >
+                            Plano e Contrato
+                        </button>
+                    </div>
+
+                    {/* Tab: Dados Gerais */}
+                    <div className={activeTab === 'geral' ? 'space-y-4' : 'hidden'}>
                         <h3 className="text-lg font-medium">Dados da Empresa</h3>
 
                         {/* CNPJ 50% */}
@@ -125,8 +144,6 @@ export function EmpresaForm() {
                                         onChange={(e) => {
                                             let value = e.target.value.replace(/\D/g, "")
                                             if (value.length > 14) value = value.slice(0, 14)
-
-                                            // Máscara: XX.XXX.XXX/XXXX-XX
                                             if (value.length > 12) {
                                                 value = value.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2}).*/, "$1.$2.$3/$4-$5")
                                             } else if (value.length > 8) {
@@ -136,7 +153,6 @@ export function EmpresaForm() {
                                             } else if (value.length > 2) {
                                                 value = value.replace(/^(\d{2})(\d{0,3}).*/, "$1.$2")
                                             }
-
                                             e.target.value = value
                                         }}
                                     />
@@ -167,7 +183,6 @@ export function EmpresaForm() {
                                     onChange={(e) => {
                                         let v = e.target.value.replace(/\D/g, "")
                                         if (v.length > 11) v = v.slice(0, 11)
-
                                         if (v.length > 10) {
                                             v = v.replace(/^(\d{2})(\d{5})(\d{4})/, "($1) $2-$3")
                                         } else if (v.length > 6) {
@@ -177,7 +192,6 @@ export function EmpresaForm() {
                                         } else if (v.length > 0) {
                                             v = v.replace(/^(\d{1,2})/, "($1")
                                         }
-
                                         e.target.value = v
                                     }}
                                 />
@@ -191,7 +205,6 @@ export function EmpresaForm() {
                                     onChange={(e) => {
                                         let v = e.target.value.replace(/\D/g, "")
                                         if (v.length > 11) v = v.slice(0, 11)
-
                                         if (v.length > 10) {
                                             v = v.replace(/^(\d{2})(\d{5})(\d{4})/, "($1) $2-$3")
                                         } else if (v.length > 6) {
@@ -201,7 +214,6 @@ export function EmpresaForm() {
                                         } else if (v.length > 0) {
                                             v = v.replace(/^(\d{1,2})/, "($1")
                                         }
-
                                         e.target.value = v
                                     }}
                                 />
@@ -222,11 +234,9 @@ export function EmpresaForm() {
                                         onChange={(e) => {
                                             let v = e.target.value.replace(/\D/g, "")
                                             if (v.length > 8) v = v.slice(0, 8)
-
                                             if (v.length > 5) {
                                                 v = v.replace(/^(\d{5})(\d{1,3})/, "$1-$2")
                                             }
-
                                             e.target.value = v
                                         }}
                                     />
@@ -259,6 +269,34 @@ export function EmpresaForm() {
                                     <Label htmlFor="estado">UF</Label>
                                     <Input id="estado" name="estado" placeholder="SP" maxLength={2} className="uppercase" />
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Tab: Plano e Contrato */}
+                    <div className={activeTab === 'plano' ? 'space-y-4' : 'hidden'}>
+                        <h3 className="text-lg font-medium">Plano Initial e Contrato</h3>
+                        <p className="text-sm text-gray-500">
+                            Configure o plano inicial para a empresa. Um contrato será gerado automaticamente.
+                        </p>
+                        <div className="space-y-4 pt-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="planoId">Plano (Opcional)</Label>
+                                <select
+                                    id="planoId"
+                                    name="planoId"
+                                    className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                >
+                                    <option value="">Selecione um plano...</option>
+                                    {planos?.map(plan => (
+                                        <option key={plan.id} value={plan.id}>
+                                            {plan.nome} ({plan.meses} meses) - {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(plan.valor))}
+                                        </option>
+                                    ))}
+                                </select>
+                                <p className="text-sm text-muted-foreground">
+                                    Caso um plano seja selecionado, o contrato iniciará hoje ({new Date().toLocaleDateString('pt-BR')}).
+                                </p>
                             </div>
                         </div>
                     </div>

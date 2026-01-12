@@ -20,9 +20,26 @@ export default async function AdminEmpresasPage() {
         include: {
             _count: {
                 select: { usuarios: true }
+            },
+            contratos: {
+                where: { ativo: true },
+                take: 1,
+                include: { plano: true }
             }
         }
     })
+
+    const formattedEmpresas = empresas.map(empresa => ({
+        ...empresa,
+        contratos: empresa.contratos.map(contrato => ({
+            ...contrato,
+            valorAcordado: Number(contrato.valorAcordado),
+            plano: {
+                ...contrato.plano,
+                valor: Number(contrato.plano.valor)
+            }
+        }))
+    }))
 
     return (
         <div className="space-y-8">
@@ -39,7 +56,7 @@ export default async function AdminEmpresasPage() {
                 </Link>
             </div>
 
-            <EmpresasTable data={empresas} />
+            <EmpresasTable data={formattedEmpresas} />
         </div>
     )
 }

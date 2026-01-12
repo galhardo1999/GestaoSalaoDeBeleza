@@ -75,8 +75,8 @@ export default async function AniversariantesPage({
                 <h1 className="text-xl font-semibold">Aniversariantes do Mês</h1>
             </div>
 
-            <div className="flex flex-col items-center justify-center space-y-6 rounded-xl border bg-white p-8 text-center min-h-[400px]">
-                <div className="space-y-2">
+            <div className="flex flex-col space-y-6 rounded-xl border bg-white p-8 min-h-[400px]">
+                <div className="space-y-2 text-center">
                     <h2 className="text-2xl font-semibold text-gray-900">Aniversariantes de {capitalizedMonthName}</h2>
                     <div className="flex items-center justify-center gap-2 text-muted-foreground">
                         <CalendarIcon className="h-4 w-4" />
@@ -85,7 +85,7 @@ export default async function AniversariantesPage({
                     </div>
                 </div>
 
-                <div className="w-full max-w-5xl space-y-4">
+                <div className="w-full space-y-4">
                     <div className="grid grid-cols-12 gap-4 text-sm font-medium text-muted-foreground border-b pb-2 px-4">
                         <div className="col-span-2 text-left">Data Nascimento</div>
                         <div className="col-span-3 text-left">Cliente</div>

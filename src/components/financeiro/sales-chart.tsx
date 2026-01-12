@@ -3,17 +3,20 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts"
 
+import { cn } from "@/lib/utils"
+
 interface SalesChartProps {
     data: {
         name: string;
         receita: number;
         details: { name: string; value: number }[]
     }[]
+    className?: string
 }
 
-export function SalesChart({ data }: SalesChartProps) {
+export function SalesChart({ data, className }: SalesChartProps) {
     return (
-        <Card className="col-span-4">
+        <Card className={cn("col-span-4", className)}>
             <CardHeader>
                 <CardTitle>Visão Geral de Receita</CardTitle>
             </CardHeader>

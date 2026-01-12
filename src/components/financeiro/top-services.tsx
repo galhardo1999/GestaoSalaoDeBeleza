@@ -1,13 +1,16 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 
+import { cn } from "@/lib/utils"
+
 interface TopServicesProps {
     services: { name: string; count: number; revenue: number }[]
+    className?: string
 }
 
-export function TopServices({ services }: TopServicesProps) {
+export function TopServices({ services, className }: TopServicesProps) {
     return (
-        <Card className="col-span-3">
+        <Card className={cn("col-span-3", className)}>
             <CardHeader>
                 <CardTitle>Top Serviços</CardTitle>
                 <CardDescription>

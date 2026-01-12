@@ -87,8 +87,8 @@ export default async function RelatorioServicosPage({
                 <h1 className="text-xl font-semibold">Relatório de Serviços</h1>
             </div>
 
-            <div className="flex flex-col items-center justify-center space-y-6 rounded-xl border bg-white p-8 text-center min-h-[400px]">
-                <div className="space-y-2">
+            <div className="flex flex-col space-y-6 rounded-xl border bg-white p-8 min-h-[400px]">
+                <div className="space-y-2 text-center">
                     <h2 className="text-2xl font-semibold text-gray-900">Top Serviços - {capitalizedMonth} de {currentYear}</h2>
                     <div className="flex items-center justify-center gap-4 text-muted-foreground">
                         <div className="flex items-center gap-2">
@@ -103,7 +103,7 @@ export default async function RelatorioServicosPage({
                     </div>
                 </div>
 
-                <div className="w-full max-w-4xl space-y-4">
+                <div className="w-full space-y-4">
                     <div className="grid grid-cols-12 gap-4 text-sm font-medium text-muted-foreground border-b pb-2 px-4">
                         <div className="col-span-1 text-center">Posição</div>
                         <div className="col-span-5 text-left">Serviço</div>

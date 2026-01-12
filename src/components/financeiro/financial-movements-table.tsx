@@ -25,13 +25,17 @@ import {
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 interface FinancialMovement {
     id: string
     data: Date
     cliente: string
     servico: string
-    colaborador: string
+    colaborador: {
+        name: string
+        image: string | null
+    }
     comissao: number
     valor: number
     status: string
@@ -157,7 +161,13 @@ export function FinancialMovementsTable({ data }: FinancialMovementsTableProps) 
                                         {movement.servico}
                                     </TableCell>
                                     <TableCell className="text-gray-600">
-                                        {movement.colaborador}
+                                        <div className="flex items-center gap-2">
+                                            <Avatar className="h-6 w-6">
+                                                <AvatarImage src={movement.colaborador.image || undefined} />
+                                                <AvatarFallback>{movement.colaborador.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                                            </Avatar>
+                                            <span className="line-clamp-1">{movement.colaborador.name}</span>
+                                        </div>
                                     </TableCell>
                                     <TableCell className="text-gray-600">
                                         {formatCurrency(movement.comissao)}

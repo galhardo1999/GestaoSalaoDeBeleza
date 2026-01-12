@@ -38,21 +38,43 @@ export async function createEmpresa(formData: FormData) {
         return { error: "Todos os campos são obrigatórios." }
     }
 
+    const planoId = formData.get("planoId") as string
+
     try {
-        await db.empresa.create({
-            data: {
-                nome: nomeEmpresa,
-                cnpj: cnpjEmpresa.replace(/\D/g, ""), // Armazenar apenas números
-                telefone1: telefone1.replace(/\D/g, ""),
-                telefone2: telefone2.replace(/\D/g, ""),
-                cep,
-                endereco,
-                numero,
-                bairro,
-                cidade,
-                estado
+        const data: any = {
+            nome: nomeEmpresa,
+            cnpj: cnpjEmpresa.replace(/\D/g, ""), // Armazenar apenas números
+            telefone1: telefone1.replace(/\D/g, ""),
+            telefone2: telefone2.replace(/\D/g, ""),
+            cep,
+            endereco,
+            numero,
+            bairro,
+            cidade,
+            estado
+        }
+
+        if (planoId) {
+            const plano = await db.plano.findUnique({ where: { id: planoId } })
+            if (plano) {
+                const inicio = new Date()
+                const fim = new Date()
+                fim.setMonth(fim.getMonth() + plano.meses)
+
+                data.contratos = {
+                    create: {
+                        planoId: plano.id,
+                        inicio,
+                        fim,
+                        valorAcordado: plano.valor,
+                        ativo: true
+                    }
+                }
             }
-        })
+        }
+
+        await db.empresa.create({ data })
+
     } catch (error: any) {
         console.error("Error creating empresa:", error)
         if (error.code === 'P2002') {

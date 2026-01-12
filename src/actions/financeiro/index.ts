@@ -30,6 +30,7 @@ interface FinancialMetrics {
         details: { name: string; value: number }[]
     }[]
     topServices: { name: string; count: number; revenue: number }[]
+    topCollaborators: { name: string; image: string | null; count: number }[]
 }
 
 export async function getFinancialMetrics(startDate: Date, endDate: Date, empresaId: string, colaboradorId?: string): Promise<FinancialMetrics> {
@@ -61,6 +62,8 @@ export async function getFinancialMetrics(startDate: Date, endDate: Date, empres
             servico: true,
             colaborador: {
                 select: {
+                    nome: true,
+                    foto: true,
                     comissaoTipo: true,
                     comissaoValor: true
                 }
@@ -78,6 +81,9 @@ export async function getFinancialMetrics(startDate: Date, endDate: Date, empres
 
     // Group by service for top list
     const serviceMap = new Map<string, { count: number; revenue: number }>()
+
+    // Group by collaborator for top list
+    const collaboratorMap = new Map<string, { name: string; image: string | null; count: number }>()
 
     appointments.forEach(app => {
         // Use value from appointment if available, otherwise service price
@@ -109,11 +115,22 @@ export async function getFinancialMetrics(startDate: Date, endDate: Date, empres
 
 
         // Service aggregation
+        // Service aggregation
         const currentService = serviceMap.get(serviceName) || { count: 0, revenue: 0 }
         serviceMap.set(serviceName, {
             count: currentService.count + 1,
             revenue: currentService.revenue + value
         })
+
+        // Collaborator aggregation
+        if (app.colaborador) {
+            const colName = app.colaborador.nome
+            const currentCol = collaboratorMap.get(colName) || { name: colName, image: app.colaborador.foto, count: 0 }
+            collaboratorMap.set(colName, {
+                ...currentCol,
+                count: currentCol.count + 1
+            })
+        }
     })
 
     // 3. Fill missing days with 0 for the chart
@@ -143,13 +160,19 @@ export async function getFinancialMetrics(startDate: Date, endDate: Date, empres
         .sort((a, b) => b.revenue - a.revenue)
         .slice(0, 5) // Top 5
 
+    // 5. Format top collaborators
+    const topCollaborators = Array.from(collaboratorMap.values())
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5)
+
     return {
         totalRevenue,
         totalSales,
         averageTicket: totalSales > 0 ? totalRevenue / totalSales : 0,
         totalCommissions,
         dailyRevenue,
-        topServices
+        topServices,
+        topCollaborators
     }
 }
 
@@ -192,6 +215,7 @@ export async function getFinancialMovements(startDate: Date, endDate: Date, empr
             colaborador: {
                 select: {
                     nome: true,
+                    foto: true,
                     comissaoTipo: true,
                     comissaoValor: true
                 }
@@ -218,7 +242,10 @@ export async function getFinancialMovements(startDate: Date, endDate: Date, empr
             data: movement.data,
             cliente: movement.cliente.nome,
             servico: movement.servico.nome,
-            colaborador: movement.colaborador?.nome || 'N/A',
+            colaborador: {
+                name: movement.colaborador?.nome || 'N/A',
+                image: movement.colaborador?.foto || null
+            },
             comissao,
             valor,
             status: movement.status

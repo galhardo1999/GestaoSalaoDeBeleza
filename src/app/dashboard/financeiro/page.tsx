@@ -6,6 +6,7 @@ import { redirect } from "next/navigation"
 import { OverviewCards } from "@/components/financeiro/overview-cards"
 import { SalesChart } from "@/components/financeiro/sales-chart"
 import { TopServices } from "@/components/financeiro/top-services"
+import { TopCollaborators } from "@/components/financeiro/top-collaborators"
 import { startOfMonth, endOfMonth } from "date-fns"
 import { getFinancialMetrics, getFinancialMovements, getCollaborators } from "@/actions/financeiro"
 import { FinancialMovementsTable } from "@/components/financeiro/financial-movements-table"
@@ -78,9 +79,10 @@ export default async function FinanceiroPage({
                 totalCommissions={metrics.totalCommissions}
             />
 
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-                <SalesChart data={metrics.dailyRevenue} />
-                <TopServices services={metrics.topServices} />
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-12">
+                <SalesChart data={metrics.dailyRevenue} className="col-span-6" />
+                <TopServices services={metrics.topServices} className="col-span-3" />
+                <TopCollaborators collaborators={metrics.topCollaborators} className="col-span-3" />
             </div>
 
             <div className="pt-4">

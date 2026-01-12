@@ -7,15 +7,9 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table"
 import { CompanyUsersManager } from "@/components/admin/company-users-manager"
+import { ContractManager } from "./components/contract-manager"
+import { getActivePlanos } from "@/actions/admin/planos"
 
 export default async function EmpresaDetalhesPage({
     params
@@ -26,13 +20,22 @@ export default async function EmpresaDetalhesPage({
     const empresa = await db.empresa.findUnique({
         where: { id },
         include: {
-            usuarios: true
+            usuarios: true,
+            contratos: {
+                where: { ativo: true },
+                orderBy: { fim: 'desc' },
+                take: 1,
+                include: { plano: true }
+            }
         }
     })
 
     if (!empresa) {
         notFound()
     }
+
+    const activePlans = await getActivePlanos()
+    const currentContract = empresa.contratos[0]
 
     return (
         <div className="space-y-6">
@@ -49,6 +52,7 @@ export default async function EmpresaDetalhesPage({
                 <TabsList>
                     <TabsTrigger value="info">Informações da Empresa</TabsTrigger>
                     <TabsTrigger value="usuarios">Usuários ({empresa.usuarios.length})</TabsTrigger>
+                    <TabsTrigger value="contrato">Contrato</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="info" className="mt-6">
@@ -97,6 +101,21 @@ export default async function EmpresaDetalhesPage({
                             />
                         </CardContent>
                     </Card>
+                </TabsContent>
+
+                <TabsContent value="contrato" className="mt-6">
+                    <ContractManager
+                        empresaId={empresa.id}
+                        contratoAtual={currentContract ? {
+                            ...currentContract,
+                            valorAcordado: Number(currentContract.valorAcordado),
+                            plano: {
+                                ...currentContract.plano,
+                                valor: Number(currentContract.plano.valor)
+                            }
+                        } : undefined}
+                        planos={activePlans.map(p => ({ ...p, valor: Number(p.valor) }))}
+                    />
                 </TabsContent>
             </Tabs>
         </div>

@@ -1,15 +1,26 @@
-import { Ticket } from "lucide-react"
+import { getPlanos } from "@/actions/admin/planos"
+import { NewPlanDialog } from "./components/new-plan-dialog"
+import { PlansTable } from "./components/plans-table"
 
-export default function AdminPlanosPage() {
+export default async function AdminPlanosPage() {
+    const planos = await getPlanos()
+
+    const formattedPlanos = planos.map(plano => ({
+        ...plano,
+        valor: Number(plano.valor)
+    }))
+
     return (
-        <div className="flex flex-col items-center justify-center min-h-[400px] text-center space-y-4">
-            <div className="bg-gray-100 p-4 rounded-full">
-                <Ticket className="h-10 w-10 text-gray-400" />
+        <div className="space-y-8">
+            <div className="flex items-center justify-between">
+                <div>
+                    <h2 className="text-3xl font-bold tracking-tight text-gray-900">Planos</h2>
+                    <p className="text-gray-500 mt-2">Gerencie os planos de assinatura disponíveis.</p>
+                </div>
+                <NewPlanDialog />
             </div>
-            <h2 className="text-2xl font-bold tracking-tight text-gray-900">Planos</h2>
-            <p className="text-gray-500 max-w-sm">
-                Gerenciamento de planos em breve.
-            </p>
+
+            <PlansTable data={formattedPlanos} />
         </div>
     )
 }

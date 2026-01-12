@@ -21,7 +21,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                 />
             </aside>
             <main className="flex-1 overflow-auto w-full relative z-0">
-                <div className="container mx-auto p-8 max-w-7xl animate-in fade-in duration-500">
+                <div className="w-full p-8 animate-in fade-in duration-500">
                     {children}
                 </div>
             </main>

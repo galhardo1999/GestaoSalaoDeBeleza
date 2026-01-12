@@ -74,8 +74,8 @@ export default async function ClientesSumidosPage({
                 <h1 className="text-xl font-semibold">Clientes Sumidos</h1>
             </div>
 
-            <div className="flex flex-col items-center justify-center space-y-6 rounded-xl border bg-white p-12 text-center min-h-[400px]">
-                <div className="space-y-2">
+            <div className="flex flex-col space-y-6 rounded-xl border bg-white p-12 min-h-[400px]">
+                <div className="space-y-2 text-center">
                     <h2 className="text-2xl font-semibold text-gray-900">Clientes Sumidos</h2>
                     <div className="flex items-center justify-center gap-2 text-muted-foreground">
                         <CalendarIcon className="h-4 w-4" />
@@ -89,7 +89,7 @@ export default async function ClientesSumidosPage({
                         Não existem clientes sumidos neste período ({daysParam} dias).
                     </p>
                 ) : (
-                    <div className="w-full max-w-3xl space-y-4">
+                    <div className="w-full space-y-4">
                         <div className="grid grid-cols-2 gap-4 text-sm font-medium text-muted-foreground border-b pb-2">
                             <div className="text-left">Cliente</div>
                             <div className="text-right">Última Visita</div>

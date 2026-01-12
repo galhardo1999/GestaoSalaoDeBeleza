@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth"
 import { redirect } from "next/navigation"
 import { authOptions } from "@/lib/auth"
 import { db } from "@/lib/db"
+import { checkPlanStatus } from "@/lib/plan-validation"
 
 export default async function AdminLayout({
     children,
@@ -19,6 +20,13 @@ export default async function AdminLayout({
         where: { id: session.user.id },
         include: { empresa: true }
     })
+
+    if (user?.empresaId) {
+        const isPlanActive = await checkPlanStatus(user.empresaId)
+        if (!isPlanActive) {
+            redirect("/plano-vencido")
+        }
+    }
 
     return (
         <DashboardShell

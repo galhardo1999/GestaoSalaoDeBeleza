@@ -65,9 +65,16 @@ export async function assignContract(data: { empresaId: string; planoId: string;
         const fim = new Date(data.inicio)
         fim.setMonth(fim.getMonth() + plano.meses)
 
-        // Desativar contratos anteriores? 
-        // Por enquanto vamos apenas criar o novo. 
-        // Opcional: Atualizar contratos antigos para inativos se necessário.
+        // Deactivate previous active contracts
+        await db.contrato.updateMany({
+            where: {
+                empresaId: data.empresaId,
+                ativo: true
+            },
+            data: {
+                ativo: false
+            }
+        })
 
         await db.contrato.create({
             data: {

@@ -41,6 +41,8 @@ export const authOptions: NextAuthOptions = {
                     return null
                 }
 
+
+
                 return {
                     id: user.id,
                     cnpj: user.cnpj,

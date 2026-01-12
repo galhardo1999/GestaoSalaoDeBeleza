@@ -108,9 +108,9 @@ export function ContractManager({
                             <div className={`text-2xl font-bold text-${isExpired ? 'red' : 'green'}-900`}>{contratoAtual.plano.nome}</div>
                         </div>
                         <div>
-                            <div className={`text-sm font-medium text-${isExpired ? 'red' : 'green'}-800`}>Vencimento</div>
+                            <div className={`text-sm font-medium text-${isExpired ? 'red' : 'green'}-800`}>Valor Acordado</div>
                             <div className={`text-2xl font-bold text-${isExpired ? 'red' : 'green'}-900`}>
-                                {format(new Date(contratoAtual.fim), "dd/MM/yyyy")}
+                                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(contratoAtual.valorAcordado))}
                             </div>
                         </div>
                         <div>
@@ -120,9 +120,9 @@ export function ContractManager({
                             </div>
                         </div>
                         <div>
-                            <div className={`text-sm font-medium text-${isExpired ? 'red' : 'green'}-800`}>Valor Acordado</div>
+                            <div className={`text-sm font-medium text-${isExpired ? 'red' : 'green'}-800`}>Vencimento</div>
                             <div className={`text-${isExpired ? 'red' : 'green'}-900 font-medium`}>
-                                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(contratoAtual.valorAcordado))}
+                                {format(new Date(contratoAtual.fim), "dd/MM/yyyy")}
                             </div>
                         </div>
                     </CardContent>
@@ -138,8 +138,8 @@ export function ContractManager({
                 </Card>
             )}
 
-            {/* New Contract Form - Só aparece se não tiver contrato ou se estiver vencido */}
-            {(!contratoAtual || isExpired) && (
+            {/* New Contract Form */}
+            {(true) && (
                 <Card>
                     <CardHeader>
                         <CardTitle>{contratoAtual ? "Renovar / Novo Contrato" : "Atribuir Novo Contrato"}</CardTitle>

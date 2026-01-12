@@ -110,8 +110,7 @@ export default async function EmpresaDetalhesPage({
                             ...currentContract,
                             valorAcordado: Number(currentContract.valorAcordado),
                             plano: {
-                                ...currentContract.plano,
-                                valor: Number(currentContract.plano.valor)
+                                nome: currentContract.plano.nome
                             }
                         } : undefined}
                         planos={activePlans.map(p => ({ ...p, valor: Number(p.valor) }))}

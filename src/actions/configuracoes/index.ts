@@ -32,6 +32,7 @@ export async function updateCompanySettings(userId: string, data: {
     cidade?: string
     estado?: string
     logo?: string
+    banner?: string
     mensagemWhatsapp?: string
     googleAvaliacaoUrl?: string
     instagramUrl?: string
@@ -64,6 +65,7 @@ export async function updateCompanySettings(userId: string, data: {
                     cidade: data.cidade,
                     estado: data.estado,
                     logo: data.logo,
+                    banner: data.banner,
                     mensagemWhatsapp: data.mensagemWhatsapp,
                     googleAvaliacaoUrl: data.googleAvaliacaoUrl,
                     instagramUrl: data.instagramUrl,

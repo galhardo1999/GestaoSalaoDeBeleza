@@ -105,7 +105,7 @@ export default async function BookingPage({ params }: BookingPageProps) {
                         <Button variant="outline" size="icon" className="rounded-full h-9 w-9">
                             <Heart className="h-4 w-4 text-gray-500" />
                         </Button>
-                        <Button className="bg-[#FF8C00] hover:bg-[#E67E00] text-white rounded-full px-6 h-9 font-medium">
+                        <Button className="bg-[#0070BA] hover:bg-[#005ea6] text-white rounded-full px-6 h-9 font-medium">
                             Agendar agora
                         </Button>
                     </div>
@@ -233,8 +233,14 @@ export default async function BookingPage({ params }: BookingPageProps) {
                                     <p className="text-sm text-gray-600 leading-relaxed pr-4">
                                         {address || "Endereço não cadastrado"}
                                     </p>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-900 -mt-1">
-                                        <MapPin className="h-5 w-5" />
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-900 -mt-1" asChild>
+                                        <a
+                                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                        >
+                                            <MapPin className="h-5 w-5" />
+                                        </a>
                                     </Button>
                                 </div>
                                 {address && (
@@ -256,7 +262,7 @@ export default async function BookingPage({ params }: BookingPageProps) {
 
                             <div>
                                 <h3 className="font-bold text-gray-900 mb-3">Comodidades</h3>
-                                <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
+                                <div className="grid grid-cols-4 gap-2">
                                     {(() => {
                                         const amenitiesMap: Record<string, { label: string, icon: any }> = {
                                             "WIFI": { label: "Wi-Fi Gratuito", icon: Wifi },
@@ -290,7 +296,7 @@ export default async function BookingPage({ params }: BookingPageProps) {
                                             if (!item) return null
                                             const Icon = item.icon
                                             return (
-                                                <div key={id} className="flex flex-col items-center justify-center min-w-[80px] h-[70px] bg-gray-50 rounded-xl border gap-2">
+                                                <div key={id} className="flex flex-col items-center justify-center w-full h-[70px] bg-gray-50 rounded-xl border gap-2">
                                                     <div className="h-5 w-5 text-gray-600">
                                                         <Icon className="h-5 w-5" />
                                                     </div>

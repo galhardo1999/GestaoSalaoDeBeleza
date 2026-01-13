@@ -7,6 +7,8 @@ import { redirect } from "next/navigation"
 import { DashboardMetrics, DashboardMetricsSkeleton } from "@/components/dashboard/dashboard-metrics"
 import { DashboardUpcoming, DashboardUpcomingSkeleton } from "@/components/dashboard/dashboard-upcoming"
 import { DashboardTeam, DashboardTeamSkeleton } from "@/components/dashboard/dashboard-team"
+import { BookingLinkCard } from "@/components/dashboard/booking-link-card"
+import { db } from "@/lib/db"
 
 export const dynamic = 'force-dynamic'
 
@@ -62,6 +64,13 @@ export default async function DashboardPage({
     // Checking strictly that empresaId exists here to satisfy TS for components below
     if (!session.user.empresaId) return null
 
+    // Fetch company name for booking link
+    const empresa = await db.empresa.findUnique({
+        where: { id: session.user.empresaId }
+    })
+    const empresaSlug = empresa?.slug || ''
+    const empresaNome = empresa?.nome || 'empresa'
+
     return (
         <div className="flex-1 space-y-4 p-8 pt-6">
             <div className="flex items-center justify-between space-y-2">
@@ -80,17 +89,20 @@ export default async function DashboardPage({
                         </Suspense>
                     </div>
 
-                    <Suspense fallback={<DashboardUpcomingSkeleton />}>
-                        <DashboardUpcoming date={targetDate} empresaId={session.user.empresaId} />
-                    </Suspense>
+                    <div className="grid gap-4 md:grid-cols-2">
+                        <Suspense fallback={<DashboardUpcomingSkeleton />}>
+                            <DashboardUpcoming date={targetDate} empresaId={session.user.empresaId} />
+                        </Suspense>
+                        <Suspense fallback={<DashboardTeamSkeleton />}>
+                            <DashboardTeam empresaId={session.user.empresaId} />
+                        </Suspense>
+                    </div>
                 </div>
 
                 {/* Right Column */}
                 <div className="space-y-4">
                     <DashboardCalendar />
-                    <Suspense fallback={<DashboardTeamSkeleton />}>
-                        <DashboardTeam empresaId={session.user.empresaId} />
-                    </Suspense>
+                    <BookingLinkCard empresaSlug={empresaSlug} />
                 </div>
             </div>
         </div>

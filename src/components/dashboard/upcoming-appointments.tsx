@@ -7,10 +7,13 @@ import { User, Clock } from "lucide-react"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 
+import { DateScrollPicker } from "@/components/dashboard/date-scroll-picker"
+
 interface UpcomingAppointment {
     id: string
     data: Date
     status: string
+    // ... keeps existing interfaces ...
     cliente: {
         nome: string
     }
@@ -21,8 +24,6 @@ interface UpcomingAppointment {
         nome: string
     } | null
 }
-
-// ... imports
 
 interface UpcomingAppointmentsProps {
     appointments: UpcomingAppointment[]
@@ -56,22 +57,18 @@ export function UpcomingAppointments({ appointments, date }: UpcomingAppointment
     }
 
     return (
-        <Card className="col-span-3 bg-white shadow-sm border-border">
-            <div className="p-6 flex items-start justify-between">
+        <Card className="bg-white shadow-sm border-border">
+            <div className="p-6 pb-0 flex items-start justify-between">
                 <div>
                     <h2 className="text-2xl font-medium text-gray-900">Agenda do dia</h2>
-                    <p className="text-gray-500 capitalize mt-1" suppressHydrationWarning>
-                        {new Intl.DateTimeFormat('pt-BR', {
-                            weekday: 'long',
-                            day: 'numeric',
-                            month: 'long',
-                            timeZone: 'America/Sao_Paulo'
-                        }).format(displayDate)}
-                    </p>
                 </div>
                 <div className="h-10 w-10 rounded-xl bg-gray-100 flex items-center justify-center text-gray-500">
                     <Clock className="h-5 w-5" />
                 </div>
+            </div>
+
+            <div className="px-6 mt-4">
+                <DateScrollPicker selectedDate={displayDate} />
             </div>
 
             <CardContent className="px-6 pb-6 space-y-4">

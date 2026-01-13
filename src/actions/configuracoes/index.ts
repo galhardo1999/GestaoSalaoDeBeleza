@@ -25,11 +25,19 @@ export async function updateCompanySettings(userId: string, data: {
     nome: string
     telefone1?: string
     telefone2?: string
+    cep?: string
     endereco?: string
+    numero?: string
+    bairro?: string
+    cidade?: string
+    estado?: string
     logo?: string
     mensagemWhatsapp?: string
     googleAvaliacaoUrl?: string
     instagramUrl?: string
+    facebookUrl?: string
+    formasPagamento?: string
+    comodidades?: string
 }) {
     try {
         const user = await db.usuario.findUnique({
@@ -49,11 +57,19 @@ export async function updateCompanySettings(userId: string, data: {
                     nome: data.nome,
                     telefone1: data.telefone1,
                     telefone2: data.telefone2,
+                    cep: data.cep,
                     endereco: data.endereco,
+                    numero: data.numero,
+                    bairro: data.bairro,
+                    cidade: data.cidade,
+                    estado: data.estado,
                     logo: data.logo,
                     mensagemWhatsapp: data.mensagemWhatsapp,
                     googleAvaliacaoUrl: data.googleAvaliacaoUrl,
                     instagramUrl: data.instagramUrl,
+                    facebookUrl: data.facebookUrl,
+                    formasPagamento: data.formasPagamento,
+                    comodidades: data.comodidades,
                 },
             })
         } else {

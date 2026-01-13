@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, startTransition } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Card, CardContent } from "@/components/ui/card"
@@ -37,6 +37,18 @@ export function DashboardCalendar() {
 
     const firstDayOfMonth = new Date(year, month, 1).getDay()
     const daysInMonth = new Date(year, month + 1, 0).getDate()
+
+    // Sync state with URL date param
+    useEffect(() => {
+        if (dateParam) {
+            const [y, m, d] = dateParam.split('-').map(Number)
+            const newDate = new Date(y, m - 1, d)
+            setSelectedDate(newDate)
+            // Optional: only change view if the month is different? 
+            // Better to change view to ensure the selected date is visible.
+            setCurrentDate(newDate)
+        }
+    }, [dateParam])
 
     useEffect(() => {
         const fetchCounts = async () => {
@@ -103,7 +115,9 @@ export function DashboardCalendar() {
                     // Format YYYY-MM-DD manually to avoid timezone issues
                     const dateStr = `${newDate.getFullYear()}-${String(newDate.getMonth() + 1).padStart(2, '0')}-${String(newDate.getDate()).padStart(2, '0')}`
                     params.set("date", dateStr)
-                    router.push(`${pathname}?${params.toString()}`)
+                    startTransition(() => {
+                        router.push(`${pathname}?${params.toString()}`)
+                    })
                 }}
                 className={cn(
                     "relative flex h-10 w-10 items-center justify-center rounded-xl text-sm font-medium transition-all duration-200",

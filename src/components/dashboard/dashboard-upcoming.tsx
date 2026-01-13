@@ -42,7 +42,7 @@ export async function DashboardUpcoming({ date, empresaId }: DashboardUpcomingPr
 
 export function DashboardUpcomingSkeleton() {
     return (
-        <Card className="col-span-3 bg-white shadow-sm border-border h-[400px] p-6">
+        <Card className="bg-white shadow-sm border-border h-[400px] p-6">
             <div className="flex justify-between items-center mb-6">
                 <div className="space-y-2">
                     <div className="h-8 w-48 bg-gray-100 rounded animate-pulse" />

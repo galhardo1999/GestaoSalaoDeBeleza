@@ -15,12 +15,35 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { Checkbox } from "@/components/ui/checkbox"
 import { useEffect, useState, useRef } from "react"
 
 import { updateCompanySettings } from "@/actions/configuracoes"
 import { uploadLogo } from "@/actions/upload"
 import Image from "next/image"
-import { Upload } from "lucide-react"
+import { Upload, Wifi, Car, Accessibility, Snowflake, Tv, Coffee, Sofa, Dog, Baby, Armchair, Utensils } from "lucide-react"
+import { HorariosFuncionamentoForm } from "@/components/forms/horarios-funcionamento-form"
+
+const PAYMENT_METHODS = [
+    { id: "DINHEIRO", label: "Dinheiro" },
+    { id: "CREDITO", label: "Cartão de Crédito" },
+    { id: "DEBITO", label: "Cartão de Débito" },
+    { id: "PIX", label: "PIX" },
+]
+
+const AMENITIES = [
+    { id: "WIFI", label: "Wi-Fi Gratuito", icon: Wifi },
+    { id: "ESTACIONAMENTO", label: "Estacionamento", icon: Car },
+    { id: "ACESSIBILIDADE", label: "Acessibilidade", icon: Accessibility },
+    { id: "AR_CONDICIONADO", label: "Ar Condicionado", icon: Snowflake },
+    { id: "TV", label: "TV", icon: Tv },
+    { id: "CAFE", label: "Café/Bebidas", icon: Coffee },
+    { id: "ESPERA", label: "Sala de Espera", icon: Sofa },
+    { id: "PET", label: "Pet Friendly", icon: Dog },
+    { id: "KIDS", label: "Espaço Kids", icon: Baby },
+    { id: "TROCADOR", label: "Trocador", icon: Armchair }, // Usando Armchair como proxy visivel
+    { id: "LANCHE", label: "Lanches", icon: Utensils },
+]
 
 const formSchema = z.object({
     nome: z.string().min(2, {
@@ -30,24 +53,52 @@ const formSchema = z.object({
     telefone2: z.string().optional(),
     cnpj: z.string().optional(),
     email: z.string().optional(),
+    cep: z.string().optional(),
+    endereco: z.string().optional(),
+    numero: z.string().optional(),
+    bairro: z.string().optional(),
+    cidade: z.string().optional(),
+    estado: z.string().optional(),
     mensagemWhatsapp: z.string().optional(),
     googleAvaliacaoUrl: z.string().optional(),
     instagramUrl: z.string().optional(),
+    facebookUrl: z.string().optional(),
+    formasPagamento: z.array(z.string()).default([]),
+    comodidades: z.array(z.string()).default([]),
 })
 
 interface ConfiguracoesFormProps {
     initialData: any
     userId: string
     userEmail?: string | null
+    horariosData?: any[]
 }
 
-export function ConfiguracoesForm({ initialData, userId, userEmail }: ConfiguracoesFormProps) {
+export function ConfiguracoesForm({ initialData, userId, userEmail, horariosData }: ConfiguracoesFormProps) {
     const [isPending, setIsPending] = useState(false)
     const [logoPreview, setLogoPreview] = useState<string | null>(initialData?.logo || null)
-    const [activeTab, setActiveTab] = useState<'details' | 'messages'>('details')
+    const [activeTab, setActiveTab] = useState<'details' | 'messages' | 'horarios' | 'redes' | 'pagamento' | 'comodidades'>('details')
     const fileInputRef = useRef<HTMLInputElement>(null)
 
-    const form = useForm<z.infer<typeof formSchema>>({
+    // Helper to parse initial payment methods
+    const getInitialPaymentMethods = (): string[] => {
+        if (!initialData?.formasPagamento) return []
+        try {
+            return JSON.parse(initialData.formasPagamento) as string[]
+        } catch {
+            return []
+        }
+    }
+    const getInitialAmenities = (): string[] => {
+        if (!initialData?.comodidades) return []
+        try {
+            return JSON.parse(initialData.comodidades) as string[]
+        } catch {
+            return []
+        }
+    }
+
+    const form = useForm({
         resolver: zodResolver(formSchema),
         defaultValues: {
             nome: initialData?.nome || "",
@@ -55,9 +106,18 @@ export function ConfiguracoesForm({ initialData, userId, userEmail }: Configurac
             telefone2: initialData?.telefone2 || "",
             cnpj: initialData?.cnpj || "",
             email: userEmail || "",
+            cep: initialData?.cep || "",
+            endereco: initialData?.endereco || "",
+            numero: initialData?.numero || "",
+            bairro: initialData?.bairro || "",
+            cidade: initialData?.cidade || "",
+            estado: initialData?.estado || "",
             mensagemWhatsapp: initialData?.mensagemWhatsapp || "",
             googleAvaliacaoUrl: initialData?.googleAvaliacaoUrl || "",
             instagramUrl: initialData?.instagramUrl || "",
+            facebookUrl: initialData?.facebookUrl || "",
+            formasPagamento: getInitialPaymentMethods(),
+            comodidades: getInitialAmenities(),
         },
     })
 
@@ -68,11 +128,19 @@ export function ConfiguracoesForm({ initialData, userId, userEmail }: Configurac
                 nome: values.nome,
                 telefone1: values.telefone1,
                 telefone2: values.telefone2,
-                endereco: initialData?.endereco,
+                cep: values.cep,
+                endereco: values.endereco,
+                numero: values.numero,
+                bairro: values.bairro,
+                cidade: values.cidade,
+                estado: values.estado,
                 logo: logoPreview || undefined,
                 mensagemWhatsapp: values.mensagemWhatsapp,
                 googleAvaliacaoUrl: values.googleAvaliacaoUrl,
                 instagramUrl: values.instagramUrl,
+                facebookUrl: values.facebookUrl,
+                formasPagamento: JSON.stringify(values.formasPagamento),
+                comodidades: JSON.stringify(values.comodidades),
             })
 
             if (result.success) {
@@ -128,10 +196,38 @@ export function ConfiguracoesForm({ initialData, userId, userEmail }: Configurac
                 </button>
                 <button
                     type="button"
+                    onClick={() => setActiveTab('horarios')}
+                    className={`pb-2 border-b-2 px-4 transition-colors ${activeTab === 'horarios' ? 'border-primary font-medium text-primary' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                >
+                    Horários de Funcionamento
+                </button>
+                <button
+                    type="button"
+                    onClick={() => setActiveTab('pagamento')}
+                    className={`pb-2 border-b-2 px-4 transition-colors ${activeTab === 'pagamento' ? 'border-primary font-medium text-primary' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                >
+                    Formas de Pagamento
+                </button>
+                <button
+                    type="button"
                     onClick={() => setActiveTab('messages')}
                     className={`pb-2 border-b-2 px-4 transition-colors ${activeTab === 'messages' ? 'border-primary font-medium text-primary' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
                 >
                     Mensagens
+                </button>
+                <button
+                    type="button"
+                    onClick={() => setActiveTab('redes')}
+                    className={`pb-2 border-b-2 px-4 transition-colors ${activeTab === 'redes' ? 'border-primary font-medium text-primary' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                >
+                    Redes Sociais
+                </button>
+                <button
+                    type="button"
+                    onClick={() => setActiveTab('comodidades')}
+                    className={`pb-2 border-b-2 px-4 transition-colors ${activeTab === 'comodidades' ? 'border-primary font-medium text-primary' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                >
+                    Comodidades
                 </button>
             </div>
 
@@ -254,33 +350,105 @@ export function ConfiguracoesForm({ initialData, userId, userEmail }: Configurac
                                 )}
                             />
 
-                            <FormField
-                                control={form.control}
-                                name="googleAvaliacaoUrl"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Link para Avaliação no Google</FormLabel>
-                                        <FormControl>
-                                            <Input placeholder="https://g.page/..." {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
+                            {/* Endereço */}
+                            <div className="pt-4 border-t mt-6">
+                                <h3 className="text-sm font-medium mb-4">Endereço</h3>
 
-                            <FormField
-                                control={form.control}
-                                name="instagramUrl"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Instagram</FormLabel>
-                                        <FormControl>
-                                            <Input placeholder="https://instagram.com/..." {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                    <FormField
+                                        control={form.control}
+                                        name="cep"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>CEP</FormLabel>
+                                                <FormControl>
+                                                    <Input
+                                                        placeholder="00000-000"
+                                                        {...field}
+                                                        onChange={(e) => {
+                                                            let v = e.target.value.replace(/\D/g, "")
+                                                            if (v.length > 8) v = v.slice(0, 8)
+                                                            if (v.length > 5) {
+                                                                v = v.replace(/^(\d{5})(\d{0,3})/, "$1-$2")
+                                                            }
+                                                            field.onChange(v)
+                                                        }}
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="endereco"
+                                        render={({ field }) => (
+                                            <FormItem className="md:col-span-2">
+                                                <FormLabel>Rua/Avenida</FormLabel>
+                                                <FormControl>
+                                                    <Input placeholder="Nome da rua" {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                                    <FormField
+                                        control={form.control}
+                                        name="numero"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Número</FormLabel>
+                                                <FormControl>
+                                                    <Input placeholder="123" {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="bairro"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Bairro</FormLabel>
+                                                <FormControl>
+                                                    <Input placeholder="Bairro" {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="cidade"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Cidade</FormLabel>
+                                                <FormControl>
+                                                    <Input placeholder="Cidade" {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="estado"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>UF</FormLabel>
+                                                <FormControl>
+                                                    <Input placeholder="SP" maxLength={2} {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
+                            </div>
                         </div>
 
                         <div className="w-full lg:w-80">
@@ -338,6 +506,125 @@ export function ConfiguracoesForm({ initialData, userId, userEmail }: Configurac
                         </div>
                     </div>
 
+                    {activeTab === 'horarios' && horariosData && (
+                        <HorariosFuncionamentoForm initialData={horariosData} />
+                    )}
+
+                    <div className={activeTab === 'pagamento' ? 'space-y-6 max-w-2xl' : 'hidden'}>
+                        <FormField
+                            control={form.control}
+                            name="formasPagamento"
+                            render={() => (
+                                <FormItem>
+                                    <div className="mb-4">
+                                        <FormLabel className="text-base">Formas de Pagamento Aceitas</FormLabel>
+                                        <FormDescription>
+                                            Selecione as formas de pagamento que seu estabelecimento aceita.
+                                        </FormDescription>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        {PAYMENT_METHODS.map((method) => (
+                                            <FormField
+                                                key={method.id}
+                                                control={form.control}
+                                                name="formasPagamento"
+                                                render={({ field }) => {
+                                                    return (
+                                                        <FormItem
+                                                            key={method.id}
+                                                            className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 shadow-sm"
+                                                        >
+                                                            <FormControl>
+                                                                <Checkbox
+                                                                    checked={field.value?.includes(method.id)}
+                                                                    onCheckedChange={(checked: boolean) => {
+                                                                        return checked
+                                                                            ? field.onChange([...(field.value || []), method.id])
+                                                                            : field.onChange(
+                                                                                (field.value || []).filter(
+                                                                                    (value: string) => value !== method.id
+                                                                                )
+                                                                            )
+                                                                    }}
+                                                                />
+                                                            </FormControl>
+                                                            <div className="space-y-1 leading-none">
+                                                                <FormLabel>
+                                                                    {method.label}
+                                                                </FormLabel>
+                                                            </div>
+                                                        </FormItem>
+                                                    )
+                                                }}
+                                            />
+                                        ))}
+                                    </div>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
+
+                    <div className={activeTab === 'comodidades' ? 'space-y-6' : 'hidden'}>
+                        <FormField
+                            control={form.control}
+                            name="comodidades"
+                            render={() => (
+                                <FormItem>
+                                    <div className="mb-4">
+                                        <FormLabel className="text-base">Comodidades e Serviços Adicionais</FormLabel>
+                                        <FormDescription>
+                                            Selecione as comodidades que seu estabelecimento oferece para os clientes.
+                                        </FormDescription>
+                                    </div>
+                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                        {AMENITIES.map((item) => (
+                                            <FormField
+                                                key={item.id}
+                                                control={form.control}
+                                                name="comodidades"
+                                                render={({ field }) => {
+                                                    const Icon = item.icon
+                                                    const isChecked = field.value?.includes(item.id)
+                                                    return (
+                                                        <FormItem
+                                                            key={item.id}
+                                                            className={`flex flex-row items-center space-x-3 space-y-0 rounded-xl border p-4 shadow-sm cursor-pointer transition-all ${isChecked ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'hover:border-gray-300'}`}
+                                                        >
+                                                            <FormControl>
+                                                                <Checkbox
+                                                                    checked={isChecked}
+                                                                    onCheckedChange={(checked: boolean) => {
+                                                                        return checked
+                                                                            ? field.onChange([...(field.value || []), item.id])
+                                                                            : field.onChange(
+                                                                                (field.value || []).filter(
+                                                                                    (value: string) => value !== item.id
+                                                                                )
+                                                                            )
+                                                                    }}
+                                                                />
+                                                            </FormControl>
+                                                            <div className="flex items-center gap-3 font-normal">
+                                                                <div className={`p-2 rounded-full ${isChecked ? 'bg-primary text-white' : 'bg-gray-100 text-gray-500'}`}>
+                                                                    <Icon className="h-4 w-4" />
+                                                                </div>
+                                                                <span className="text-sm font-medium">
+                                                                    {item.label}
+                                                                </span>
+                                                            </div>
+                                                        </FormItem>
+                                                    )
+                                                }}
+                                            />
+                                        ))}
+                                    </div>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
+
                     <div className={activeTab === 'messages' ? 'space-y-6 max-w-2xl' : 'hidden'}>
                         <FormField
                             control={form.control}
@@ -362,12 +649,59 @@ export function ConfiguracoesForm({ initialData, userId, userEmail }: Configurac
                         />
                     </div>
 
+                    <div className={activeTab === 'redes' ? 'space-y-6 max-w-2xl' : 'hidden'}>
+                        <FormField
+                            control={form.control}
+                            name="instagramUrl"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Instagram</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="https://instagram.com/..." {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
 
-                    <div className="flex justify-end pt-4 border-t">
-                        <Button type="submit" disabled={isPending}>
-                            {isPending ? "Salvando..." : "Salvar Alterações"}
-                        </Button>
+                        <FormField
+                            control={form.control}
+                            name="facebookUrl"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Facebook</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="https://facebook.com/..." {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="googleAvaliacaoUrl"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Avaliação no Google</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="https://g.page/..." {...field} />
+                                    </FormControl>
+                                    <FormDescription>
+                                        Link direto para os clientes avaliarem seu estabelecimento no Google.
+                                    </FormDescription>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
                     </div>
+
+                    {activeTab !== 'horarios' && (
+                        <div className="flex justify-end pt-4 border-t">
+                            <Button type="submit" disabled={isPending}>
+                                {isPending ? "Salvando..." : "Salvar Alterações"}
+                            </Button>
+                        </div>
+                    )}
                 </form>
             </Form>
         </div>

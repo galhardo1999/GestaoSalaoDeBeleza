@@ -32,12 +32,26 @@ export async function DashboardUpcoming({ date, empresaId }: DashboardUpcomingPr
         },
         include: {
             cliente: { select: { nome: true } },
-            servico: { select: { nome: true } },
+            agendamento_itens: {
+                include: {
+                    servicos: { select: { nome: true } }
+                }
+            },
             colaborador: { select: { nome: true } }
         }
     })
 
-    return <UpcomingAppointments appointments={upcomingAppointments} date={date} />
+    // Format for the client component
+    const formattedAppointments = upcomingAppointments.map(apt => ({
+        id: apt.id,
+        data: apt.data,
+        status: apt.status,
+        cliente: apt.cliente,
+        servico: apt.agendamento_itens[0]?.servicos || { nome: 'Serviço' },
+        colaborador: apt.colaborador
+    }))
+
+    return <UpcomingAppointments appointments={formattedAppointments} date={date} />
 }
 
 export function DashboardUpcomingSkeleton() {

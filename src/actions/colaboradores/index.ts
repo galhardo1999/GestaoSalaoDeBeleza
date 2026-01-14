@@ -100,8 +100,16 @@ export async function criarColaborador(
             }
         }
 
+        const horariosRaw = formData.get('horarios') as string
+        let horarios = []
+        if (horariosRaw) {
+            try {
+                horarios = JSON.parse(horariosRaw)
+            } catch (e) { }
+        }
+
         await db.$transaction(async (tx) => {
-            await tx.colaborador.create({
+            const novoColaborador = await tx.colaborador.create({
                 data: {
                     nome,
                     email,
@@ -116,6 +124,22 @@ export async function criarColaborador(
                     } : undefined
                 } as any,
             })
+
+            // Criar horários
+            if (horarios && horarios.length > 0) {
+                await Promise.all(horarios.map((h: any) =>
+                    tx.horarioColaborador.create({
+                        data: {
+                            colaboradorId: novoColaborador.id,
+                            empresaId: session.user.empresaId,
+                            diaSemana: h.diaSemana,
+                            aberto: h.aberto,
+                            horaAbertura: h.horaAbertura,
+                            horaFechamento: h.horaFechamento
+                        }
+                    })
+                ))
+            }
 
             // Criar usuário de sistema se tiver CPF (login) e senha
             if (cpf && senha) {
@@ -232,9 +256,57 @@ export async function editarColaborador(
             dataToUpdate.senha = await hash(senha, 10)
         }
 
-        await db.colaborador.update({
-            where: { id },
-            data: dataToUpdate,
+        await db.$transaction(async (tx) => {
+            await tx.colaborador.update({
+                where: { id },
+                data: dataToUpdate,
+            })
+
+            // Sync with Usuario if applicable
+            // Attempt to find linked user by OLD CPF
+            if (existing.cpf) {
+                const existingUser = await tx.usuario.findFirst({
+                    where: { cnpj: existing.cpf }
+                })
+
+                if (existingUser) {
+                    const userUpdate: any = {
+                        nome: nome,
+                        cnpj: cpf || existingUser.cnpj // Update CPF if changed, otherwise keep old
+                    }
+                    if (senha) {
+                        userUpdate.senha = await hash(senha, 10)
+                    }
+
+                    await tx.usuario.update({
+                        where: { id: existingUser.id },
+                        data: userUpdate
+                    })
+                } else if (cpf && senha) {
+                    // Scenario: Collaborator exists but had no login user. Create one now?
+                    // Only if both CPF and Password provided (meaning they want to enable login)
+                    await tx.usuario.create({
+                        data: {
+                            nome,
+                            cnpj: cpf,
+                            senha: await hash(senha, 10),
+                            cargo: 'FUNCIONARIO',
+                            empresaId: session.user.empresaId
+                        }
+                    })
+                }
+            } else if (cpf && senha) {
+                // Scenario: Colaborador had no CPF, now has CPF + Password -> Create User
+                await tx.usuario.create({
+                    data: {
+                        nome,
+                        cnpj: cpf,
+                        senha: await hash(senha, 10),
+                        cargo: 'FUNCIONARIO',
+                        empresaId: session.user.empresaId
+                    }
+                })
+            }
         })
     } catch (error) {
         console.error('Erro ao editar colaborador:', error)
@@ -245,4 +317,64 @@ export async function editarColaborador(
 
     revalidatePath('/dashboard/colaboradores')
     return { message: 'Colaborador atualizado com sucesso!' }
+}
+
+export async function getHorariosColaborador(colaboradorId: string) {
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.empresaId) return []
+
+    const horarios = await db.horarioColaborador.findMany({
+        where: { colaboradorId, empresaId: session.user.empresaId },
+        orderBy: { diaSemana: 'asc' }
+    })
+
+    return horarios
+}
+
+export async function updateHorariosColaborador(colaboradorId: string, horarios: any[]) {
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.empresaId) {
+        return { success: false, error: "Não autorizado" }
+    }
+
+    try {
+        // Verify ownership
+        const count = await db.colaborador.count({
+            where: { id: colaboradorId, empresaId: session.user.empresaId }
+        })
+
+        if (count === 0) return { success: false, error: "Colaborador não encontrado" }
+
+        await db.$transaction(
+            horarios.map(h =>
+                db.horarioColaborador.upsert({
+                    where: {
+                        colaboradorId_diaSemana: {
+                            colaboradorId,
+                            diaSemana: h.diaSemana
+                        }
+                    },
+                    create: {
+                        colaboradorId,
+                        empresaId: session.user.empresaId,
+                        diaSemana: h.diaSemana,
+                        aberto: h.aberto,
+                        horaAbertura: h.horaAbertura,
+                        horaFechamento: h.horaFechamento
+                    },
+                    update: {
+                        aberto: h.aberto,
+                        horaAbertura: h.horaAbertura,
+                        horaFechamento: h.horaFechamento
+                    }
+                })
+            )
+        )
+
+        revalidatePath('/dashboard/colaboradores')
+        return { success: true }
+    } catch (error) {
+        console.error("Erro ao atualizar horários:", error)
+        return { success: false, error: "Erro ao atualizar horários" }
+    }
 }

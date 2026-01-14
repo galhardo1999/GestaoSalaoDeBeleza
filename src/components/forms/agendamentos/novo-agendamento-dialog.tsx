@@ -29,7 +29,7 @@ export function NovoAgendamentoDialog({ clientes, servicos, colaboradores }: Nov
                     <Plus className="mr-2 h-4 w-4" /> Novo Agendamento
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent className="sm:max-w-[600px]">
                 <DialogHeader>
                     <DialogTitle>Novo Agendamento</DialogTitle>
                     <DialogDescription>

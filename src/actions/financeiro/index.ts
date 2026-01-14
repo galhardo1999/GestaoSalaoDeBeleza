@@ -52,16 +52,38 @@ export async function getFinancialMetrics(startDate: Date, endDate: Date, empres
     }
 
     if (colaboradorId && colaboradorId !== 'all') {
-        where.colaboradorId = colaboradorId
+        where.OR = [
+            { colaboradorId: colaboradorId },
+            { agendamento_itens: { some: { colaborador_id: colaboradorId } } }
+        ]
     }
 
     // 1. Fetch completed appointments in the date range
     const appointments = await db.agendamento.findMany({
         where,
         include: {
-            servico: true,
+            agendamento_itens: {
+                include: {
+                    servicos: {
+                        select: {
+                            nome: true,
+                            preco: true
+                        }
+                    },
+                    colaboradores: {
+                        select: {
+                            id: true,
+                            nome: true,
+                            foto: true,
+                            comissaoTipo: true,
+                            comissaoValor: true
+                        }
+                    }
+                }
+            },
             colaborador: {
                 select: {
+                    id: true,
                     nome: true,
                     foto: true,
                     comissaoTipo: true,
@@ -74,7 +96,7 @@ export async function getFinancialMetrics(startDate: Date, endDate: Date, empres
     // 2. Calculate aggregations
     let totalRevenue = 0
     let totalCommissions = 0
-    let totalSales = appointments.length
+    let totalSales = 0 // Count of matched appointments (visits)
 
     // Group by day for chart with details
     const dailyMap = new Map<string, { total: number; details: Map<string, number> }>()
@@ -86,50 +108,85 @@ export async function getFinancialMetrics(startDate: Date, endDate: Date, empres
     const collaboratorMap = new Map<string, { name: string; image: string | null; count: number }>()
 
     appointments.forEach(app => {
-        // Use value from appointment if available, otherwise service price
-        const value = app.valor ? Number(app.valor) : Number(app.servico.preco)
-        const serviceName = app.servico.nome
-        totalRevenue += value
-
-        // P2: Using extracted commission calculation helper
-        if (app.colaborador) {
-            totalCommissions += calculateCommission({
-                type: app.colaborador.comissaoTipo as 'PORCENTAGEM' | 'VALOR_FIXO' | null,
-                rate: app.colaborador.comissaoValor ? Number(app.colaborador.comissaoValor) : null,
-                value
-            })
-        }
-
-        // Daily aggregation
+        let hasMatch = false
         const dayKey = format(app.data, 'dd/MM')
 
-        if (!dailyMap.has(dayKey)) {
-            dailyMap.set(dayKey, { total: 0, details: new Map() })
+        // Helper to update daily stats
+        const addToDaily = (name: string, value: number) => {
+            if (!dailyMap.has(dayKey)) dailyMap.set(dayKey, { total: 0, details: new Map() })
+            const stats = dailyMap.get(dayKey)!
+            stats.total += value
+            const current = stats.details.get(name) || 0
+            stats.details.set(name, current + value)
         }
 
-        const dayStats = dailyMap.get(dayKey)!
-        dayStats.total += value
+        // Helper to update service stats
+        const addToService = (name: string, value: number) => {
+            const current = serviceMap.get(name) || { count: 0, revenue: 0 }
+            serviceMap.set(name, { count: current.count + 1, revenue: current.revenue + value })
+        }
 
-        const currentServiceTotal = dayStats.details.get(serviceName) || 0
-        dayStats.details.set(serviceName, currentServiceTotal + value)
+        // Helper to update collaborator stats
+        const addToCollab = (id: string, name: string, image: string | null) => {
+            const current = collaboratorMap.get(name) || { name, image, count: 0 }
+            collaboratorMap.set(name, { ...current, count: current.count + 1 })
+        }
 
+        // Logic split: Multi-item vs Legacy
+        if (app.agendamento_itens.length > 0) {
+            app.agendamento_itens.forEach(item => {
+                const colab = item.colaboradores
 
-        // Service aggregation
-        // Service aggregation
-        const currentService = serviceMap.get(serviceName) || { count: 0, revenue: 0 }
-        serviceMap.set(serviceName, {
-            count: currentService.count + 1,
-            revenue: currentService.revenue + value
-        })
+                // Filter check
+                if (colaboradorId && colaboradorId !== 'all' && colab?.id !== colaboradorId) {
+                    return // Skip this item
+                }
 
-        // Collaborator aggregation
-        if (app.colaborador) {
-            const colName = app.colaborador.nome
-            const currentCol = collaboratorMap.get(colName) || { name: colName, image: app.colaborador.foto, count: 0 }
-            collaboratorMap.set(colName, {
-                ...currentCol,
-                count: currentCol.count + 1
+                hasMatch = true
+                const itemValor = Number(item.preco)
+
+                totalRevenue += itemValor
+
+                if (colab) {
+                    totalCommissions += calculateCommission({
+                        type: colab.comissaoTipo as 'PORCENTAGEM' | 'VALOR_FIXO' | null,
+                        rate: colab.comissaoValor ? Number(colab.comissaoValor) : null,
+                        value: itemValor
+                    })
+                    if (colab.nome) addToCollab(colab.id, colab.nome, colab.foto)
+                }
+
+                if (item.servicos?.nome) {
+                    addToService(item.servicos.nome, itemValor)
+                    addToDaily(item.servicos.nome, itemValor)
+                }
             })
+        } else {
+            // Legacy Fallback
+            if (colaboradorId && colaboradorId !== 'all' && app.colaborador?.id !== colaboradorId) {
+                return // Skip appointment
+            }
+
+            hasMatch = true
+            const valor = app.valor ? Number(app.valor) : 0
+            totalRevenue += valor
+            const serviceName = 'Serviço (Legado)'
+
+            if (app.colaborador) {
+                totalCommissions += calculateCommission({
+                    type: app.colaborador.comissaoTipo as 'PORCENTAGEM' | 'VALOR_FIXO' | null,
+                    rate: app.colaborador.comissaoValor ? Number(app.colaborador.comissaoValor) : null,
+                    value: valor
+                })
+                addToCollab(app.colaborador.id, app.colaborador.nome, app.colaborador.foto)
+            }
+
+            addToService(serviceName, valor)
+            addToDaily(serviceName, valor)
+        }
+
+        if (hasMatch) {
+            totalSales++
         }
     })
 
@@ -182,7 +239,6 @@ export async function getFinancialMovements(startDate: Date, endDate: Date, empr
         throw new Error("Unauthorized")
     }
 
-    // P1: Proper Prisma typing instead of 'any'
     const where: Prisma.AgendamentoWhereInput = {
         empresaId,
         data: {
@@ -195,7 +251,10 @@ export async function getFinancialMovements(startDate: Date, endDate: Date, empr
     }
 
     if (colaboradorId && colaboradorId !== 'all') {
-        where.colaboradorId = colaboradorId
+        where.OR = [
+            { colaboradorId: colaboradorId },
+            { agendamento_itens: { some: { colaborador_id: colaboradorId } } }
+        ]
     }
 
     const movements = await db.agendamento.findMany({
@@ -206,14 +265,28 @@ export async function getFinancialMovements(startDate: Date, endDate: Date, empr
                     nome: true
                 }
             },
-            servico: {
-                select: {
-                    nome: true,
-                    preco: true
+            agendamento_itens: {
+                include: {
+                    servicos: {
+                        select: {
+                            nome: true,
+                            preco: true
+                        }
+                    },
+                    colaboradores: {
+                        select: {
+                            id: true,
+                            nome: true,
+                            foto: true,
+                            comissaoTipo: true,
+                            comissaoValor: true
+                        }
+                    }
                 }
             },
             colaborador: {
                 select: {
+                    id: true,
                     nome: true,
                     foto: true,
                     comissaoTipo: true,
@@ -226,9 +299,49 @@ export async function getFinancialMovements(startDate: Date, endDate: Date, empr
         }
     })
 
-    return movements.map(movement => {
-        const valor = movement.valor ? Number(movement.valor) : Number(movement.servico.preco)
-        // P2: Using extracted commission calculation helper
+    // Flatten: 1 Appointment -> N Movements (one per item)
+    return movements.flatMap(movement => {
+        // If we have items (multi conduct), split them
+        if (movement.agendamento_itens.length > 0) {
+            return movement.agendamento_itens.map(item => {
+                const colab = item.colaboradores
+
+                // Filter logic
+                if (colaboradorId && colaboradorId !== 'all' && colab?.id !== colaboradorId) {
+                    return null
+                }
+
+                const itemValor = Number(item.preco)
+                const comissao = colab
+                    ? calculateCommission({
+                        type: colab.comissaoTipo as 'PORCENTAGEM' | 'VALOR_FIXO' | null,
+                        rate: colab.comissaoValor ? Number(colab.comissaoValor) : null,
+                        value: itemValor
+                    })
+                    : 0
+
+                return {
+                    id: `${movement.id}-${item.id}`,
+                    data: movement.data,
+                    cliente: movement.cliente.nome,
+                    servico: item.servicos.nome,
+                    colaborador: {
+                        name: colab?.nome || 'N/A',
+                        image: colab?.foto || null
+                    },
+                    comissao,
+                    valor: itemValor,
+                    status: movement.status
+                }
+            }).filter(Boolean) as any[]
+        }
+
+        // Fallback for legacy data (no items)
+        if (colaboradorId && colaboradorId !== 'all' && movement.colaborador?.id !== colaboradorId) {
+            return []
+        }
+
+        const valor = movement.valor ? Number(movement.valor) : 0
         const comissao = movement.colaborador
             ? calculateCommission({
                 type: movement.colaborador.comissaoTipo as 'PORCENTAGEM' | 'VALOR_FIXO' | null,
@@ -237,11 +350,11 @@ export async function getFinancialMovements(startDate: Date, endDate: Date, empr
             })
             : 0
 
-        return {
+        return [{
             id: movement.id,
             data: movement.data,
             cliente: movement.cliente.nome,
-            servico: movement.servico.nome,
+            servico: 'Serviço (Legado)',
             colaborador: {
                 name: movement.colaborador?.nome || 'N/A',
                 image: movement.colaborador?.foto || null
@@ -249,7 +362,7 @@ export async function getFinancialMovements(startDate: Date, endDate: Date, empr
             comissao,
             valor,
             status: movement.status
-        }
+        }]
     })
 }
 

@@ -48,7 +48,7 @@ export interface CalendarAppointment {
         id: string
         nome: string
         duracaoMin: number
-    }
+    } | null
 }
 
 interface CalendarViewProps {
@@ -385,7 +385,7 @@ export function CalendarView({ agendamentos, clientes, servicos, colaboradores }
                                                                 key={apt.id}
                                                                 className={cn("truncate rounded px-1.5 py-0.5 text-[10px] text-white w-full text-left cursor-pointer hover:opacity-90 mb-1", getAppointmentColor(apt.status))}
                                                             >
-                                                                {format(new Date(apt.data), "HH:mm")} {apt.colaborador?.nome?.split(' ')[0] || '-'} - {apt.servico.nome}
+                                                                {format(new Date(apt.data), "HH:mm")} {apt.colaborador?.nome?.split(' ')[0] || '-'} - {apt.servico?.nome || 'Serviço'}
                                                             </div>
                                                         ))}
                                                     </div>
@@ -418,8 +418,8 @@ export function CalendarView({ agendamentos, clientes, servicos, colaboradores }
                                     <div className={cn("h-12 w-1 rounded-full", getAppointmentColor(apt.status))} />
                                     <div className="flex-1">
                                         <div className="flex items-center gap-2">
-                                            <span className="font-semibold text-gray-900">{apt.servico.nome}</span>
-                                            <span className="text-sm text-muted-foreground">• {apt.servico.duracaoMin} min</span>
+                                            <span className="font-semibold text-gray-900">{apt.servico?.nome || 'Serviço'}</span>
+                                            <span className="text-sm text-muted-foreground">• {apt.servico?.duracaoMin || 30} min</span>
                                         </div>
                                         <div className="text-sm text-muted-foreground mt-0.5">
                                             {apt.cliente?.nome || 'Cliente não informado'} • com {apt.colaborador?.nome || "Sem colaborador"}

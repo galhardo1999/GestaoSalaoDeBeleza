@@ -17,18 +17,12 @@ export default async function ServicosPage() {
     const servicosData = await db.servico.findMany({
         where: {
             empresaId: session.user.empresaId,
-            ativo: true // Mostrar apenas serviços ativos? O usuário não especificou, mas é mais seguro.
-            // Na verdade, a implementação anterior não filtrava por ativos.
-            // Vou filtrar por ativo apenas por precaução, ou mostrar todos.
-            // Os dados de teste do usuário não implicavam status.
-            // Vamos manter mostrando os ativos ou todos.
-            // Código anterior linha 46: `where`. `where` foi definido para filtrar por nome.
-            // Vou buscar TODOS por enquanto.
+            ativo: true
         },
         orderBy: { nome: 'asc' },
         include: {
             _count: {
-                select: { agendamentos: true }
+                select: { agendamento_itens: true }
             }
         },
     })
@@ -38,7 +32,7 @@ export default async function ServicosPage() {
         nome: s.nome,
         preco: Number(s.preco),
         duracao: s.duracaoMin,
-        agendamentos: s._count.agendamentos
+        agendamentos: s._count.agendamento_itens
     }))
 
     return (

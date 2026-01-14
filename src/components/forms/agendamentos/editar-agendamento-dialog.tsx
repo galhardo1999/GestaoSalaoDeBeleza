@@ -30,7 +30,7 @@ export function EditarAgendamentoDialog({ agendamento, clientes, servicos, colab
                     <Pencil className="w-4 h-4" />
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent className="sm:max-w-[600px]">
                 <DialogHeader>
                     <DialogTitle>Editar Agendamento</DialogTitle>
                     <DialogDescription>

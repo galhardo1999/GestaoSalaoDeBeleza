@@ -127,7 +127,11 @@ export async function buscarDetalhesCliente(id: string) {
                 agendamentos: {
                     orderBy: { data: 'desc' },
                     include: {
-                        servico: true,
+                        agendamento_itens: {
+                            include: {
+                                servicos: true
+                            }
+                        },
                         usuario: {
                             select: { nome: true }
                         }

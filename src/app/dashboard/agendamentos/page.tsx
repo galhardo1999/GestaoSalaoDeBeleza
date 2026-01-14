@@ -37,8 +37,13 @@ export default async function AgendamentosPage({
             where,
             include: {
                 cliente: true,
-                servico: true,
                 colaborador: true,
+                agendamento_itens: {
+                    include: {
+                        servicos: true,
+                        colaboradores: true,
+                    }
+                }
             },
             orderBy: {
                 data: 'asc',
@@ -78,36 +83,52 @@ export default async function AgendamentosPage({
     const formattedColaboradores = colaboradores.map(c => ({
         id: c.id,
         nome: c.nome,
-        // Add other fields if necessary, explicitly avoiding Decimal
-        // If 'comissao' exists and is needed, format it: comissao: Number(c.comissao)
     }))
 
-    const formattedAgendamentos = agendamentos.map(a => ({
-        id: a.id,
-        data: a.data,
-        status: a.status,
-        clienteId: a.clienteId, // Raw ID for form
-        servicoId: a.servicoId, // Raw ID for form
-        colaboradorId: a.colaboradorId, // Raw ID for form
-        observacoes: a.observacoes,
-        cliente: {
-            nome: a.cliente.nome,
-            telefone: a.cliente.telefone
-        },
-        servico: {
-            id: a.servico.id,
-            nome: a.servico.nome,
-            preco: Number(a.servico.preco),
-            duracaoMin: a.servico.duracaoMin,
-            ativo: a.servico.ativo,
-            criadoEm: a.servico.criadoEm,
-            atualizadoEm: a.servico.atualizadoEm
-        },
-        colaborador: a.colaborador ? {
-            id: a.colaborador.id,
-            nome: a.colaborador.nome
-        } : null
-    }))
+    // Format agendamentos with itens (services)
+    const formattedAgendamentos = agendamentos.map(a => {
+        // Get first service item for backward compatibility with single-service display
+        const firstItem = a.agendamento_itens[0]
+
+        return {
+            id: a.id,
+            data: a.data,
+            status: a.status,
+            clienteId: a.clienteId,
+            valor: a.valor ? Number(a.valor) : null,
+            colaboradorId: a.colaboradorId,
+            observacoes: a.observacoes,
+            cliente: {
+                nome: a.cliente.nome,
+                telefone: a.cliente.telefone
+            },
+            // For backward compatibility - show first service or null
+            servico: firstItem ? {
+                id: firstItem.servicos.id,
+                nome: firstItem.servicos.nome,
+                preco: Number(firstItem.preco),
+                duracaoMin: firstItem.duracao,
+            } : null,
+            // All services for this appointment
+            itens: a.agendamento_itens.map(item => ({
+                id: item.id,
+                servico: {
+                    id: item.servicos.id,
+                    nome: item.servicos.nome,
+                },
+                colaborador: {
+                    id: item.colaboradores.id,
+                    nome: item.colaboradores.nome,
+                },
+                preco: Number(item.preco),
+                duracao: item.duracao,
+            })),
+            colaborador: a.colaborador ? {
+                id: a.colaborador.id,
+                nome: a.colaborador.nome
+            } : null
+        }
+    })
 
     const whatsappTemplate = user?.empresa?.mensagemWhatsapp
 

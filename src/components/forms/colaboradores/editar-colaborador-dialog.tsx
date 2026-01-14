@@ -34,6 +34,7 @@ export function EditarColaboradorDialog({ colaborador, servicos, children }: Edi
             description="Faça alterações nos dados do colaborador abaixo."
             trigger={children ?? defaultTrigger}
             scrollable
+            contentClassName="sm:max-w-[600px]"
         >
             {({ onSuccess }) => (
                 <FormEditarColaborador

@@ -26,7 +26,8 @@ export default async function ColaboradoresPage() {
             where,
             orderBy: { nome: 'asc' },
             include: {
-                servicos: true
+                servicos: true,
+                horarios: true
             } as any // Cast como any porque a relação pode ser implícita ou explícita, verificado no código anterior
         }),
         db.servico.findMany({
@@ -55,6 +56,7 @@ export default async function ColaboradoresPage() {
         comissaoTipo: c.comissaoTipo,
         comissaoValor: c.comissaoValor ? Number(c.comissaoValor) : null,
         servicosPrestados: c.servicos ? c.servicos.map((s: any) => s.nome) : [],
+        horarios: c.horarios || [],
         servicosRaw: c.servicos ? c.servicos.map((s: any) => ({
             id: s.id,
             nome: s.nome,

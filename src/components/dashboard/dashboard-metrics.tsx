@@ -33,7 +33,7 @@ export async function DashboardMetrics({ date, empresaId }: DashboardMetricsProp
                     }
                 },
                 include: {
-                    servico: true
+                    agendamento_itens: true
                 }
             }
         }
@@ -44,7 +44,9 @@ export async function DashboardMetrics({ date, empresaId }: DashboardMetricsProp
     const availableCollaboratorsCount = activeCollaborators.filter(colaborador => {
         const currentAppointment = colaborador.agendamentos.find(apt => {
             const start = new Date(apt.data)
-            const end = new Date(start.getTime() + apt.servico.duracaoMin * 60000)
+            // Calculate total duration from all items, or use default 30 min
+            const totalDuration = apt.agendamento_itens.reduce((sum, item) => sum + item.duracao, 0) || 30
+            const end = new Date(start.getTime() + totalDuration * 60000)
             return currentTimeKey >= start && currentTimeKey <= end
         })
         return !currentAppointment

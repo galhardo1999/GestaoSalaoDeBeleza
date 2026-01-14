@@ -2,8 +2,8 @@
 
 import { db } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
-import { agendamentoSchema } from '@/lib/validations/agendamento'
+import { agendamentoSchema, agendamentoMultiServicoSchema } from '@/lib/validations/agendamento'
+import { z } from 'zod'
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 
@@ -13,6 +13,7 @@ type ActionState = {
         servicoId?: string[]
         data?: string[]
         colaboradorId?: string[]
+        servicos?: string[]
         _form?: string[]
     }
     message?: string
@@ -28,36 +29,80 @@ export async function criarAgendamento(
         return { message: "Erro: Usuário sem empresa definida." }
     }
 
-    const validatedFields = agendamentoSchema.safeParse({
+    // Parse services JSON from form
+    const servicosRaw = formData.get('servicos')
+    let servicos: { servicoId: string; colaboradorId?: string; valor?: string }[] = []
+
+    try {
+        servicos = JSON.parse(servicosRaw as string || '[]')
+    } catch {
+        return { errors: { servicos: ['Formato de serviços inválido'] } }
+    }
+
+    const validatedFields = agendamentoMultiServicoSchema.safeParse({
         clienteId: formData.get('clienteId'),
-        servicoId: formData.get('servicoId'),
         data: formData.get('data'),
-        colaboradorId: formData.get('colaboradorId'),
+        servicos,
         observacoes: formData.get('observacoes'),
-        valor: formData.get('valor'), // Added valor
     })
 
     if (!validatedFields.success) {
         return {
-            errors: validatedFields.error.flatten().fieldErrors,
+            errors: validatedFields.error.flatten().fieldErrors as ActionState['errors'],
         }
     }
 
-    const { clienteId, servicoId, data, colaboradorId, observacoes, valor } = validatedFields.data
+    const { clienteId, data, observacoes } = validatedFields.data
+    const validatedServicos = validatedFields.data.servicos
+
+    // Calculate total value
+    const totalValor = validatedServicos.reduce((acc, s) => {
+        const valorStr = typeof s.valor === 'string' ? s.valor : String(s.valor || '0')
+        return acc + (parseFloat(valorStr) || 0)
+    }, 0)
 
     try {
-        await db.agendamento.create({
-            data: {
-                clienteId,
-                servicoId,
-                data: new Date(`${data}:00-03:00`),
-                colaboradorId: colaboradorId || null,
-                observacoes,
-                status: 'PENDENTE' as any,
-                valor: valor as any,
-                empresaId: session.user.empresaId,
-                usuarioId: session.user.id
-            },
+        // Get service details for duration
+        const servicoIds = validatedServicos.map(s => s.servicoId)
+        const servicosDb = await db.servico.findMany({
+            where: { id: { in: servicoIds } },
+            select: { id: true, duracaoMin: true, preco: true }
+        })
+        const servicoMap = new Map(servicosDb.map(s => [s.id, s]))
+
+        // Create single agendamento with items in transaction
+        await db.$transaction(async (tx) => {
+            // Create the main appointment
+            const agendamento = await tx.agendamento.create({
+                data: {
+                    clienteId,
+                    data: new Date(`${data}:00-03:00`),
+                    observacoes,
+                    status: 'PENDENTE',
+                    valor: totalValor,
+                    empresaId: session.user.empresaId!,
+                    usuarioId: session.user.id,
+                    // Use first colaborador as main if any
+                    colaboradorId: validatedServicos[0]?.colaboradorId || null,
+                },
+            })
+
+            // Create agendamento_itens for each service
+            for (const servico of validatedServicos) {
+                const servicoInfo = servicoMap.get(servico.servicoId)
+                const valorStr = typeof servico.valor === 'string' ? servico.valor : String(servico.valor || '0')
+                await tx.agendamento_itens.create({
+                    data: {
+                        id: crypto.randomUUID(),
+                        agendamento_id: agendamento.id,
+                        servico_id: servico.servicoId,
+                        colaborador_id: servico.colaboradorId || validatedServicos[0]?.colaboradorId || '',
+                        preco: parseFloat(valorStr) || Number(servicoInfo?.preco || 0),
+                        duracao: servicoInfo?.duracaoMin || 30,
+                        atualizado_em: new Date(),
+                    }
+                })
+            }
         })
     } catch (error) {
         console.error('Erro de Banco de Dados:', error)
@@ -141,36 +186,7 @@ export async function concluirAgendamento(id: string) {
     }
 }
 
-export async function reagendarAgendamento(
-    id: string,
-    novaData: Date
-): Promise<{ message?: string; error?: string }> {
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.empresaId) return { error: "Sem permissão" }
 
-    try {
-        // Verificação de propriedade
-        const count = await db.agendamento.count({
-            where: { id, empresaId: session.user.empresaId }
-        })
-        if (count === 0) return { error: "Agendamento não encontrado" }
-
-        await db.agendamento.update({
-            where: { id },
-            data: {
-                data: novaData,
-                status: 'AGENDADO'
-            }
-        })
-        revalidatePath('/dashboard/agendamentos')
-        revalidatePath('/dashboard/calendario')
-        revalidatePath('/dashboard')
-        return { message: "Agendamento reagendado com sucesso!" }
-    } catch (error) {
-        console.error("Failed to reschedule:", error)
-        return { error: "Erro ao reagendar. Tente novamente." }
-    }
-}
 
 export async function editarAgendamento(
     id: string,
@@ -182,13 +198,19 @@ export async function editarAgendamento(
         return { message: "Erro: Usuário sem empresa definida." }
     }
 
-    const validatedFields = agendamentoSchema.safeParse({
+    const servicosJson = formData.get('servicos') as string
+    let servicosData: any[] = []
+    try {
+        servicosData = JSON.parse(servicosJson || '[]')
+    } catch (e) {
+        return { message: "Erro: Dados dos serviços inválidos." }
+    }
+
+    const validatedFields = agendamentoMultiServicoSchema.safeParse({
         clienteId: formData.get('clienteId'),
-        servicoId: formData.get('servicoId'),
         data: formData.get('data'),
-        colaboradorId: formData.get('colaboradorId'),
         observacoes: formData.get('observacoes'),
-        valor: formData.get('valor'), // Added valor
+        servicos: servicosData
     })
 
     if (!validatedFields.success) {
@@ -197,35 +219,70 @@ export async function editarAgendamento(
         }
     }
 
-    const { clienteId, servicoId, data, colaboradorId, observacoes, valor } = validatedFields.data
+    const { clienteId, data, observacoes, servicos } = validatedFields.data
 
     try {
-        // Verificação de propriedade
         const count = await db.agendamento.count({
             where: { id, empresaId: session.user.empresaId }
         })
         if (count === 0) return { message: "Erro: Agendamento não encontrado ou sem permissão." }
 
-        await db.agendamento.update({
-            where: { id },
-            data: {
-                clienteId,
-                servicoId,
-                data: new Date(`${data}:00-03:00`),
-                colaboradorId: colaboradorId || null,
-                observacoes,
-                valor: valor as any, // Updated value
-            },
+        // Calculate total
+        const totalValor = servicos.reduce((acc, item) => {
+            return acc + (item.valor || 0)
+        }, 0)
+
+        // Get services info for duration
+        const servicosIds = servicos.map(s => s.servicoId)
+        const servicosDb = await db.servico.findMany({
+            where: { id: { in: servicosIds } }
         })
+        const servicoMap = new Map(servicosDb.map(s => [s.id, s]))
+
+        await db.$transaction(async (tx) => {
+            // Update main record
+            await tx.agendamento.update({
+                where: { id },
+                data: {
+                    clienteId,
+                    data: new Date(`${data}:00-03:00`),
+                    observacoes,
+                    valor: String(totalValor),
+                    status: 'AGENDADO',
+                    colaboradorId: servicos[0]?.colaboradorId || null
+                }
+            })
+
+            // Replace items
+            await tx.agendamento_itens.deleteMany({
+                where: { agendamento_id: id }
+            })
+
+            for (const item of servicos) {
+                const servicoInfo = servicoMap.get(item.servicoId)
+                await tx.agendamento_itens.create({
+                    data: {
+                        id: crypto.randomUUID(),
+                        agendamento_id: id,
+                        servico_id: item.servicoId,
+                        colaborador_id: item.colaboradorId || '',
+                        preco: Number(item.valor || 0),
+                        duracao: servicoInfo?.duracaoMin || 30,
+                        atualizado_em: new Date()
+                    }
+                })
+            }
+        })
+
+        revalidatePath('/dashboard/agendamentos')
+        revalidatePath('/dashboard/calendario')
+        revalidatePath('/dashboard')
+        return { message: 'Agendamento atualizado com sucesso!', success: true }
+
     } catch (error) {
         console.error('Erro de Banco de Dados:', error)
         return {
             message: 'Erro ao atualizar agendamento.',
         }
     }
-
-    revalidatePath('/dashboard/agendamentos')
-    revalidatePath('/dashboard/calendario')
-    revalidatePath('/dashboard')
-    return { message: 'Agendamento atualizado com sucesso!', success: true }
 }

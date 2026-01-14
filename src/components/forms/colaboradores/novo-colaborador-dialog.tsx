@@ -22,6 +22,7 @@ export function NovoColaboradorDialog({ servicos, children }: NovoColaboradorDia
             trigger={children}
             triggerText="Novo Colaborador"
             scrollable
+            contentClassName="sm:max-w-[600px]"
         >
             {({ onSuccess }) => <FormNovoColaborador onSuccess={onSuccess} servicos={servicos} />}
         </FormDialog>

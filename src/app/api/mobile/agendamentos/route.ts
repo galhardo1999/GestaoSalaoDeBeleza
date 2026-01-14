@@ -43,8 +43,12 @@ export async function GET(req: Request) {
             },
             take: 20,
             include: {
-                servico: {
-                    select: { nome: true }
+                agendamento_itens: {
+                    include: {
+                        servicos: {
+                            select: { nome: true }
+                        }
+                    }
                 },
                 cliente: {
                     select: { nome: true }
@@ -57,7 +61,7 @@ export async function GET(req: Request) {
 
         const formatted = agendamentos.map(a => ({
             id: a.id,
-            service: a.servico.nome,
+            service: a.agendamento_itens[0]?.servicos?.nome || 'Serviço',
             date: a.data.toLocaleDateString('pt-BR'),
             time: a.data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
             status: a.status,

@@ -34,25 +34,25 @@ export default async function RelatorioServicosPage({
     const formattedMonth = format(startDate, "MMMM", { locale: ptBR })
     const capitalizedMonth = formattedMonth.charAt(0).toUpperCase() + formattedMonth.slice(1)
 
+    // Get all services
     const servicos = await db.servico.findMany({
         where: {
             empresaId: session.user.empresaId,
-            ativo: true // Only active services? Or all? Usually reports include all to show history.
-            // Let's include all for now, or just remove this filter if we want historical data of deleted/inactive services.
-            // Actually, if a service is deleted (soft delete not implemented?), we might miss it.
-            // Assuming we want currently defined services.
+            ativo: true
         },
         include: {
             _count: {
                 select: {
-                    agendamentos: {
+                    agendamento_itens: {
                         where: {
-                            data: {
-                                gte: startDate,
-                                lte: endDate
-                            },
-                            status: {
-                                not: 'CANCELADO'
+                            agendamentos: {
+                                data: {
+                                    gte: startDate,
+                                    lte: endDate
+                                },
+                                status: {
+                                    not: 'CANCELADO'
+                                }
                             }
                         }
                     }
@@ -66,7 +66,7 @@ export default async function RelatorioServicosPage({
 
     const sortedServicos = servicos
         .map(s => {
-            const count = s._count.agendamentos
+            const count = s._count.agendamento_itens
             const price = Number(s.preco)
             return {
                 ...s,

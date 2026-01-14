@@ -34,7 +34,7 @@ import {
     PaginationNext,
     PaginationPrevious,
 } from "@/components/ui/pagination"
-import { Search, Plus, Trash2, Calendar as CalendarIcon, X, MessageCircle, CalendarClock, Check } from "lucide-react"
+import { Search, Plus, Trash2, Calendar as CalendarIcon, X, MessageCircle, Check } from "lucide-react"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { cn } from "@/lib/utils"
@@ -42,7 +42,6 @@ import { cn } from "@/lib/utils"
 // Importações do sistema existente
 import { NovoAgendamentoDialog } from "@/components/forms/agendamentos/novo-agendamento-dialog"
 import { BotaoCancelarAgendamento } from "@/components/forms/agendamentos/botao-cancelar-agendamento"
-import { ReagendarDialog } from "@/components/forms/agendamentos/reagendar-dialog"
 import { WhatsAppButton } from "@/components/dashboard/whatsapp-button"
 import { BotaoConfirmarAgendamento } from "@/components/forms/agendamentos/botao-confirmar-agendamento"
 import { BotaoConcluirAgendamento } from "@/components/forms/agendamentos/botao-concluir-agendamento"
@@ -52,8 +51,16 @@ interface AgendamentoData {
     id: string
     data: Date
     status: string
+    valor?: number | null
     cliente: { nome: string; telefone: string }
-    servico: { nome: string; preco: number }
+    servico: { nome: string; preco: number; duracaoMin?: number } | null
+    itens?: {
+        id: string
+        servico: { id: string; nome: string }
+        colaborador: { id: string; nome: string }
+        preco: number
+        duracao: number
+    }[]
     colaborador: { id: string; nome: string } | null
 }
 
@@ -110,9 +117,10 @@ export function AgendamentosClient({
         return initialAgendamentos.filter(agendamento => {
             // Filtrar por Termo de Busca
             const searchLower = searchTerm.toLowerCase()
+            const servicoNome = agendamento.servico?.nome || agendamento.itens?.[0]?.servico?.nome || ''
             const matchesSearch =
                 agendamento.cliente.nome.toLowerCase().includes(searchLower) ||
-                agendamento.servico.nome.toLowerCase().includes(searchLower)
+                servicoNome.toLowerCase().includes(searchLower)
 
             // Filtrar por Status
             const matchesStatus = statusFilter === "todos" || agendamento.status === statusFilter
@@ -296,8 +304,9 @@ export function AgendamentosClient({
                             <TableHead className="w-[100px]">Data</TableHead>
                             <TableHead className="w-[80px]">Hora</TableHead>
                             <TableHead className="min-w-[180px]">Cliente</TableHead>
-                            <TableHead className="min-w-[150px]">Serviço</TableHead>
                             <TableHead className="min-w-[150px]">Colaborador</TableHead>
+                            <TableHead className="min-w-[150px]">Serviço</TableHead>
+                            <TableHead className="w-[100px]">Tempo</TableHead>
                             <TableHead className="w-[100px]">Preço</TableHead>
                             <TableHead className="w-[140px]">Status</TableHead>
                             <TableHead className="w-[100px] text-right">Ações</TableHead>
@@ -306,7 +315,7 @@ export function AgendamentosClient({
                     <TableBody>
                         {currentAgendamentos.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={8} className="text-center py-8">
+                                <TableCell colSpan={9} className="text-center py-8">
                                     <div className="flex flex-col items-center gap-2 text-muted-foreground">
                                         <CalendarIcon className="w-8 h-8" />
                                         <p>Nenhum agendamento encontrado</p>
@@ -323,9 +332,39 @@ export function AgendamentosClient({
                                         </TableCell>
                                         <TableCell>{format(new Date(appointment.data), "HH:mm")}</TableCell>
                                         <TableCell>{appointment.cliente.nome}</TableCell>
-                                        <TableCell>{appointment.servico.nome}</TableCell>
-                                        <TableCell>{appointment.colaborador?.nome || '-'}</TableCell>
-                                        <TableCell>{formatCurrency(appointment.servico.preco)}</TableCell>
+                                        <TableCell>
+                                            <div className="flex flex-col gap-1">
+                                                {appointment.itens && appointment.itens.length > 0 ? (
+                                                    appointment.itens.map((item, idx) => (
+                                                        <span key={idx} className="block text-sm text-muted-foreground">
+                                                            {item.colaborador?.nome?.split(' ')[0] || '-'}
+                                                        </span>
+                                                    ))
+                                                ) : (
+                                                    <span>{appointment.colaborador?.nome?.split(' ')[0] || '-'}</span>
+                                                )}
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            <div className="flex flex-col gap-1">
+                                                {appointment.itens && appointment.itens.length > 0 ? (
+                                                    appointment.itens.map((item, idx) => (
+                                                        <span key={idx} className="block text-sm">
+                                                            {item.servico.nome}
+                                                        </span>
+                                                    ))
+                                                ) : (
+                                                    <span>{appointment.servico?.nome || '-'}</span>
+                                                )}
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            {appointment.itens && appointment.itens.length > 0
+                                                ? appointment.itens.reduce((acc, item) => acc + (item.duracao || 0), 0) + ' min'
+                                                : (appointment.servico?.duracaoMin || 0) + ' min'
+                                            }
+                                        </TableCell>
+                                        <TableCell>{formatCurrency(appointment.valor || appointment.servico?.preco || 0)}</TableCell>
                                         <TableCell>
                                             <Badge className={status.className} variant={status.variant}>
                                                 {status.label}
@@ -346,18 +385,14 @@ export function AgendamentosClient({
                                                             phone={appointment.cliente.telefone}
                                                             clientName={appointment.cliente.nome}
                                                             date={new Date(appointment.data)}
-                                                            serviceName={appointment.servico.nome}
+                                                            serviceName={appointment.servico?.nome || appointment.itens?.[0]?.servico?.nome || ''}
                                                             messageTemplate={whatsappTemplate}
                                                             variant="ghost"
                                                             size="icon"
                                                             className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50"
                                                         />
 
-                                                        <ReagendarDialog id={appointment.id} currentDate={new Date(appointment.data)}>
-                                                            <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-blue-50 text-blue-600" title="Reagendar">
-                                                                <CalendarClock className="w-4 h-4" />
-                                                            </Button>
-                                                        </ReagendarDialog>
+
 
                                                         <EditarAgendamentoDialog
                                                             agendamento={appointment}
@@ -383,11 +418,7 @@ export function AgendamentosClient({
                                                 {appointment.status === 'AGENDADO' && (
                                                     <>
                                                         <BotaoConcluirAgendamento id={appointment.id} />
-                                                        <ReagendarDialog id={appointment.id} currentDate={new Date(appointment.data)}>
-                                                            <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-blue-50 text-blue-600" title="Reagendar">
-                                                                <CalendarClock className="w-4 h-4" />
-                                                            </Button>
-                                                        </ReagendarDialog>
+
 
                                                         <EditarAgendamentoDialog
                                                             agendamento={appointment}
@@ -418,11 +449,7 @@ export function AgendamentosClient({
                                                             </Button>
                                                         </BotaoConfirmarAgendamento>
 
-                                                        <ReagendarDialog id={appointment.id} currentDate={new Date(appointment.data)}>
-                                                            <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-blue-50 text-blue-600" title="Reagendar">
-                                                                <CalendarClock className="w-4 h-4" />
-                                                            </Button>
-                                                        </ReagendarDialog>
+
 
                                                         <BotaoCancelarAgendamento id={appointment.id}>
                                                             <Button
@@ -527,7 +554,7 @@ export function AgendamentosClient({
                     Total desta página:{" "}
                     <span className="font-semibold text-foreground">
                         {formatCurrency(
-                            currentAgendamentos.reduce((acc, a) => acc + Number(a.servico.preco), 0)
+                            currentAgendamentos.reduce((acc, a) => acc + Number(a.servico?.preco || a.valor || 0), 0)
                         )}
                     </span>
                 </span>

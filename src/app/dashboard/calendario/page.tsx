@@ -26,7 +26,11 @@ export default async function CalendarioPage() {
             where: { empresaId },
             include: {
                 cliente: true,
-                servico: true,
+                agendamento_itens: {
+                    include: {
+                        servicos: true
+                    }
+                },
                 colaborador: true,
             }
         }),
@@ -71,44 +75,45 @@ export default async function CalendarioPage() {
     }))
 
     // Serializar agendamentos para garantir tipos corretos
-    const formattedAgendamentos = agendamentos.map(apt => ({
-        id: apt.id,
-        data: apt.data.toISOString(),
-        status: apt.status.toString(),
-        valor: apt.valor ? Number(apt.valor) : null,
-        observacoes: apt.observacoes,
-        clienteId: apt.clienteId,
-        cliente: apt.cliente ? {
-            id: apt.cliente.id,
-            nome: apt.cliente.nome,
-            email: apt.cliente.email,
-            telefone: apt.cliente.telefone
-        } : null,
-        servicoId: apt.servicoId,
-        servico: {
-            id: apt.servico.id,
-            nome: apt.servico.nome,
-            preco: Number(apt.servico.preco),
-            duracaoMin: apt.servico.duracaoMin,
-            ativo: apt.servico.ativo,
-            criadoEm: apt.servico.criadoEm.toISOString(),
-            atualizadoEm: apt.servico.atualizadoEm.toISOString(),
-            empresaId: apt.servico.empresaId
-        },
-        colaboradorId: apt.colaboradorId,
-        colaborador: apt.colaborador ? {
-            id: apt.colaborador.id,
-            nome: apt.colaborador.nome,
-            email: apt.colaborador.email,
-            foto: apt.colaborador.foto,
-            comissaoTipo: apt.colaborador.comissaoTipo,
-            comissaoValor: apt.colaborador.comissaoValor ? Number(apt.colaborador.comissaoValor) : null
-        } : null,
-        empresaId: apt.empresaId,
-        usuarioId: apt.usuarioId,
-        criadoEm: apt.criadoEm.toISOString(),
-        atualizadoEm: apt.atualizadoEm.toISOString()
-    }))
+    const formattedAgendamentos = agendamentos.map(apt => {
+        const firstItem = apt.agendamento_itens[0]
+        const totalDuration = apt.agendamento_itens.reduce((sum, item) => sum + item.duracao, 0) || 30
+
+        return {
+            id: apt.id,
+            data: apt.data.toISOString(),
+            status: apt.status.toString(),
+            valor: apt.valor ? Number(apt.valor) : null,
+            observacoes: apt.observacoes,
+            clienteId: apt.clienteId,
+            cliente: apt.cliente ? {
+                id: apt.cliente.id,
+                nome: apt.cliente.nome,
+                email: apt.cliente.email,
+                telefone: apt.cliente.telefone
+            } : null,
+            servico: firstItem ? {
+                id: firstItem.servicos.id,
+                nome: firstItem.servicos.nome,
+                preco: Number(firstItem.preco),
+                duracaoMin: totalDuration,
+                ativo: firstItem.servicos.ativo,
+            } : null,
+            colaboradorId: apt.colaboradorId,
+            colaborador: apt.colaborador ? {
+                id: apt.colaborador.id,
+                nome: apt.colaborador.nome,
+                email: apt.colaborador.email,
+                foto: apt.colaborador.foto,
+                comissaoTipo: apt.colaborador.comissaoTipo,
+                comissaoValor: apt.colaborador.comissaoValor ? Number(apt.colaborador.comissaoValor) : null
+            } : null,
+            empresaId: apt.empresaId,
+            usuarioId: apt.usuarioId,
+            criadoEm: apt.criadoEm.toISOString(),
+            atualizadoEm: apt.atualizadoEm.toISOString()
+        }
+    })
 
     // Serializar clientes
     const formattedClientes = clientes.map(c => ({

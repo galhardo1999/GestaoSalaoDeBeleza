@@ -25,7 +25,8 @@ export function TeamList({ colaboradores }: TeamListProps) {
     const teamStatus = colaboradores.map(colaborador => {
         const currentAppointment = colaborador.agendamentos.find((apt: any) => {
             const start = new Date(apt.data)
-            const end = addMinutes(start, apt.servico.duracaoMin)
+            const duration = apt.servico?.duracaoMin || 30
+            const end = addMinutes(start, duration)
             return isWithinInterval(now, { start, end })
         })
 
@@ -33,8 +34,8 @@ export function TeamList({ colaboradores }: TeamListProps) {
             return {
                 ...colaborador,
                 status: 'ATENDENDO',
-                clientName: currentAppointment.cliente.nome,
-                serviceName: currentAppointment.servico.nome
+                clientName: currentAppointment.cliente?.nome || 'Cliente',
+                serviceName: currentAppointment.servico?.nome || 'Serviço'
             }
         }
 

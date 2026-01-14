@@ -22,7 +22,11 @@ export async function DashboardTeam({ empresaId }: DashboardTeamProps) {
                     }
                 },
                 include: {
-                    servico: true,
+                    agendamento_itens: {
+                        include: {
+                            servicos: true
+                        }
+                    },
                     cliente: true
                 }
             }
@@ -53,28 +57,32 @@ export async function DashboardTeam({ empresaId }: DashboardTeamProps) {
             atualizadoEm: s.atualizadoEm.toISOString(),
             empresaId: s.empresaId
         })),
-        agendamentos: c.agendamentos.map(a => ({
-            id: a.id,
-            data: a.data.toISOString(),
-            status: a.status,
-            valor: a.valor ? Number(a.valor) : null,
-            observacoes: a.observacoes,
-            criadoEm: a.criadoEm.toISOString(),
-            atualizadoEm: a.atualizadoEm.toISOString(),
-            servico: {
-                id: a.servico.id,
-                nome: a.servico.nome,
-                preco: Number(a.servico.preco),
-                duracaoMin: a.servico.duracaoMin,
-                ativo: a.servico.ativo
-            },
-            cliente: a.cliente ? {
-                id: a.cliente.id,
-                nome: a.cliente.nome,
-                email: a.cliente.email,
-                telefone: a.cliente.telefone
-            } : null
-        }))
+        agendamentos: c.agendamentos.map(a => {
+            const firstItem = a.agendamento_itens[0]
+            const totalDuration = a.agendamento_itens.reduce((sum, item) => sum + item.duracao, 0) || 30
+            return {
+                id: a.id,
+                data: a.data.toISOString(),
+                status: a.status,
+                valor: a.valor ? Number(a.valor) : null,
+                observacoes: a.observacoes,
+                criadoEm: a.criadoEm.toISOString(),
+                atualizadoEm: a.atualizadoEm.toISOString(),
+                servico: firstItem ? {
+                    id: firstItem.servicos.id,
+                    nome: firstItem.servicos.nome,
+                    preco: Number(firstItem.preco),
+                    duracaoMin: totalDuration,
+                    ativo: firstItem.servicos.ativo
+                } : null,
+                cliente: a.cliente ? {
+                    id: a.cliente.id,
+                    nome: a.cliente.nome,
+                    email: a.cliente.email,
+                    telefone: a.cliente.telefone
+                } : null
+            }
+        })
     }))
 
     return <TeamList colaboradores={serializedColaboradores} />

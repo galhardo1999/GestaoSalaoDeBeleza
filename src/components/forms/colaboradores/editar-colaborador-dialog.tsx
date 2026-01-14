@@ -15,13 +15,15 @@ interface EditarColaboradorDialogProps {
     }
     servicos?: any[]
     children?: React.ReactNode
+    open?: boolean
+    onOpenChange?: (open: boolean) => void
 }
 
 /**
  * Dialog para editar um colaborador existente.
  * Usa o FormDialog unificado para gerenciamento de estado.
  */
-export function EditarColaboradorDialog({ colaborador, servicos, children }: EditarColaboradorDialogProps) {
+export function EditarColaboradorDialog({ colaborador, servicos, children, open, onOpenChange }: EditarColaboradorDialogProps) {
     const defaultTrigger = (
         <Button variant="ghost" size="icon" className="hover:bg-muted">
             <Pencil className="h-4 w-4" />
@@ -35,6 +37,8 @@ export function EditarColaboradorDialog({ colaborador, servicos, children }: Edi
             trigger={children ?? defaultTrigger}
             scrollable
             contentClassName="sm:max-w-[600px]"
+            open={open}
+            onOpenChange={onOpenChange}
         >
             {({ onSuccess }) => (
                 <FormEditarColaborador

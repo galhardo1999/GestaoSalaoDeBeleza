@@ -16,13 +16,15 @@ interface EditarClienteDialogProps {
         dataNascimento: Date | null
     }
     children?: React.ReactNode
+    open?: boolean
+    onOpenChange?: (open: boolean) => void
 }
 
 /**
  * Dialog para editar um cliente existente.
  * Usa o FormDialog unificado para gerenciamento de estado.
  */
-export function EditarClienteDialog({ cliente, children }: EditarClienteDialogProps) {
+export function EditarClienteDialog({ cliente, children, open, onOpenChange }: EditarClienteDialogProps) {
     const defaultTrigger = (
         <Button variant="ghost" size="icon" className="hover:bg-muted" title="Editar Cliente">
             <Pencil className="h-4 w-4" />
@@ -34,6 +36,8 @@ export function EditarClienteDialog({ cliente, children }: EditarClienteDialogPr
             title="Editar Cliente"
             description="Faça alterações nos dados do cliente abaixo."
             trigger={children ?? defaultTrigger}
+            open={open}
+            onOpenChange={onOpenChange}
         >
             {({ onSuccess }) => <FormEditarCliente cliente={cliente} onSuccess={onSuccess} />}
         </FormDialog>

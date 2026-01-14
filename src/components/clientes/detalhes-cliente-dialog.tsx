@@ -17,8 +17,10 @@ import { ptBR } from "date-fns/locale"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 interface DetalhesClienteDialogProps {
-    children: React.ReactNode
+    children?: React.ReactNode
     clienteId: string
+    open?: boolean
+    onOpenChange?: (open: boolean) => void
 }
 
 const formatStatus = (status: string) => {
@@ -38,8 +40,12 @@ const formatStatus = (status: string) => {
     }
 }
 
-export function DetalhesClienteDialog({ children, clienteId }: DetalhesClienteDialogProps) {
-    const [open, setOpen] = useState(false)
+export function DetalhesClienteDialog({ children, clienteId, open: controlledOpen, onOpenChange: controlledOnOpenChange }: DetalhesClienteDialogProps) {
+    const [internalOpen, setInternalOpen] = useState(false)
+    const isControlled = controlledOpen !== undefined
+    const open = isControlled ? controlledOpen : internalOpen
+    const setOpen = isControlled ? controlledOnOpenChange! : setInternalOpen
+
     const [cliente, setCliente] = useState<any>(null)
     const [loading, setLoading] = useState(false)
 
@@ -153,7 +159,7 @@ export function DetalhesClienteDialog({ children, clienteId }: DetalhesClienteDi
                                                             </div>
                                                         </td>
                                                         <td className="p-4 align-middle font-medium">
-                                                            {agendamento.servico?.nome || "Serviço Removido"}
+                                                            {agendamento.agendamento_itens?.[0]?.servicos?.nome || "Serviço Removido"}
                                                         </td>
                                                         <td className="p-4 align-middle">
                                                             {agendamento.usuario?.nome || "-"}

@@ -378,3 +378,47 @@ export async function updateHorariosColaborador(colaboradorId: string, horarios:
         return { success: false, error: "Erro ao atualizar horários" }
     }
 }
+
+export async function buscarDetalhesColaborador(id: string) {
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.empresaId) return null
+
+    try {
+        const colaborador = await db.colaborador.findUnique({
+            where: { id, empresaId: session.user.empresaId },
+            include: {
+                servicos: {
+                    select: {
+                        id: true,
+                        nome: true
+                    }
+                },
+                horarios: {
+                    orderBy: { diaSemana: 'asc' }
+                }
+            }
+        })
+
+        if (!colaborador) return null
+
+        // Buscar usuário vinculado pelo CPF (login)
+        let usuario = null
+        if (colaborador.cpf) {
+            usuario = await db.usuario.findUnique({
+                where: { cnpj: colaborador.cpf },
+                select: {
+                    id: true,
+                    cnpj: true
+                }
+            })
+        }
+
+        return {
+            ...colaborador,
+            usuario
+        }
+    } catch (error) {
+        console.error("Erro ao buscar detalhes do colaborador:", error)
+        return null
+    }
+}

@@ -74,6 +74,7 @@ export function ClientesClient({
 
     // --- Estado Local para controle do input ---
     const [searchTerm, setSearchTerm] = useState(initialSearch)
+    const [selectedCliente, setSelectedCliente] = useState<ClienteData | null>(null)
 
     // --- Manipuladores ---
     const handleSearch = useDebouncedCallback((term: string) => {
@@ -161,7 +162,11 @@ export function ClientesClient({
                             </TableRow>
                         ) : (
                             clientes.map((cliente) => (
-                                <TableRow key={cliente.id}>
+                                <TableRow
+                                    key={cliente.id}
+                                    onClick={() => setSelectedCliente(cliente)}
+                                    className="cursor-pointer hover:bg-muted/50 transition-colors"
+                                >
                                     <TableCell className="font-medium">
                                         {cliente.codigo}
                                     </TableCell>
@@ -170,17 +175,25 @@ export function ClientesClient({
                                     <TableCell>{formatTelefone(cliente.telefone)}</TableCell>
                                     <TableCell>{cliente.email}</TableCell>
                                     <TableCell className="text-right">
-                                        <div className="flex items-center justify-end gap-2">
+                                        <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
                                             <DetalhesClienteDialog clienteId={cliente.id}>
                                                 <Button variant="ghost" size="icon" title="Visualizar">
                                                     <Eye className="h-4 w-4" />
                                                 </Button>
                                             </DetalhesClienteDialog>
-                                            <EditarClienteDialog cliente={cliente}>
-                                                <Button variant="ghost" size="icon" title="Editar">
-                                                    <Pencil className="h-4 w-4" />
-                                                </Button>
-                                            </EditarClienteDialog>
+
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                title="Editar"
+                                                onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    setSelectedCliente(cliente)
+                                                }}
+                                            >
+                                                <Pencil className="h-4 w-4" />
+                                            </Button>
+
                                             <BotaoExcluirCliente id={cliente.id}>
                                                 <Button
                                                     variant="ghost"
@@ -262,6 +275,16 @@ export function ClientesClient({
             <div className="text-sm text-muted-foreground">
                 Mostrando {clientes.length} de {totalCount} registros
             </div>
+
+
+            {/* Modal de Detalhes (Global) - Substitui o Editar no clique da linha */}
+            {selectedCliente && (
+                <DetalhesClienteDialog
+                    clienteId={selectedCliente.id}
+                    open={!!selectedCliente}
+                    onOpenChange={(open) => !open && setSelectedCliente(null)}
+                />
+            )}
         </div>
     )
 }

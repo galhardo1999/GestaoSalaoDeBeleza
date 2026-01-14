@@ -27,11 +27,12 @@ import {
     PaginationNext,
     PaginationPrevious,
 } from "@/components/ui/pagination"
-import { Search, Scissors } from "lucide-react"
+import { Search, Scissors, Pencil } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 import { NovoServicoDialog } from "@/components/forms/servicos/novo-servico-dialog"
 import { EditarServicoDialog } from "@/components/forms/servicos/editar-servico-dialog"
+import { DetalhesServicoDialog } from "@/components/servicos/detalhes-servico-dialog"
 import { BotaoExcluirServico } from "@/components/forms/servicos/botao-excluir-servico"
 
 export interface ServicoClient {
@@ -52,6 +53,7 @@ export default function ServicosClient({ initialServicos }: ServicosClientProps)
     const [searchTerm, setSearchTerm] = useState("")
     const [currentPage, setCurrentPage] = useState(1)
     const [itemsPerPage, setItemsPerPage] = useState(25)
+    const [selectedServico, setSelectedServico] = useState<ServicoClient | null>(null)
 
     const filteredServicos = initialServicos.filter((servico) =>
         servico.nome.toLowerCase().includes(searchTerm.toLowerCase())
@@ -149,7 +151,11 @@ export default function ServicosClient({ initialServicos }: ServicosClientProps)
                             </TableRow>
                         ) : (
                             paginatedServicos.map((servico) => (
-                                <TableRow key={servico.id}>
+                                <TableRow
+                                    key={servico.id}
+                                    onClick={() => setSelectedServico(servico)}
+                                    className="cursor-pointer hover:bg-muted/50 transition-colors"
+                                >
                                     <TableCell className="font-medium">
                                         {servico.nome}
                                     </TableCell>
@@ -161,13 +167,16 @@ export default function ServicosClient({ initialServicos }: ServicosClientProps)
                                         </span>
                                     </TableCell>
                                     <TableCell className="text-right">
-                                        <div className="flex items-center justify-end gap-2">
-                                            <EditarServicoDialog servico={{
-                                                id: servico.id,
-                                                nome: servico.nome,
-                                                preco: servico.preco,
-                                                duracaoMin: servico.duracao
-                                            }} />
+                                        <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                title="Editar Serviço"
+                                                onClick={() => setSelectedServico(servico)}
+                                            >
+                                                <Pencil className="h-4 w-4" />
+                                            </Button>
+
                                             <BotaoExcluirServico id={servico.id} />
                                         </div>
                                     </TableCell>
@@ -243,6 +252,21 @@ export default function ServicosClient({ initialServicos }: ServicosClientProps)
             <div className="text-sm text-muted-foreground">
                 Exibindo {paginatedServicos.length} de {filteredServicos.length} serviços
             </div>
+
+            {/* Modal de Detalhes (Global) */}
+            {selectedServico && (
+                <DetalhesServicoDialog
+                    servico={{
+                        id: selectedServico.id,
+                        nome: selectedServico.nome,
+                        preco: selectedServico.preco,
+                        duracao: selectedServico.duracao,
+                        agendamentos: selectedServico.agendamentos
+                    }}
+                    open={!!selectedServico}
+                    onOpenChange={(open) => !open && setSelectedServico(null)}
+                />
+            )}
         </div>
     )
 }

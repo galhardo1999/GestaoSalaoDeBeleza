@@ -40,6 +40,7 @@ import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
 
 import { NovoColaboradorDialog } from "@/components/forms/colaboradores/novo-colaborador-dialog"
 import { EditarColaboradorDialog } from "@/components/forms/colaboradores/editar-colaborador-dialog"
+import { DetalhesColaboradorDialog } from "@/components/colaboradores/detalhes-colaborador-dialog"
 import { BotaoExcluirColaborador } from "@/components/forms/colaboradores/botao-excluir-colaborador"
 
 
@@ -81,6 +82,7 @@ export function ColaboradoresClient({ colaboradores, servicos }: ColaboradoresCl
     const [itemsPerPage, setItemsPerPage] = useState(25)
     const [currentPage, setCurrentPage] = useState(1)
     const [selectedPhoto, setSelectedPhoto] = useState<{ url: string; nome: string } | null>(null)
+    const [selectedColaborador, setSelectedColaborador] = useState<ColaboradorData | null>(null)
 
     // --- Filtragem ---
     const filteredColaboradores = useMemo(() => {
@@ -187,27 +189,33 @@ export function ColaboradoresClient({ colaboradores, servicos }: ColaboradoresCl
                             </TableRow>
                         ) : (
                             currentColaboradores.map((colaborador) => (
-                                <TableRow key={colaborador.id}>
+                                <TableRow
+                                    key={colaborador.id}
+                                    onClick={() => setSelectedColaborador(colaborador)}
+                                    className="cursor-pointer hover:bg-muted/50 transition-colors"
+                                >
                                     <TableCell className="font-medium text-muted-foreground">
                                         {colaborador.codigo}
                                     </TableCell>
                                     <TableCell>
-                                        <Avatar
-                                            className={cn(
-                                                "h-10 w-10",
-                                                colaborador.foto && "cursor-pointer hover:ring-2 hover:ring-primary hover:ring-offset-2 transition-all"
-                                            )}
-                                            onClick={() => {
-                                                if (colaborador.foto) {
-                                                    setSelectedPhoto({ url: colaborador.foto, nome: colaborador.nome })
-                                                }
-                                            }}
-                                        >
-                                            <AvatarImage src={colaborador.foto || undefined} />
-                                            <AvatarFallback>
-                                                {colaborador.nome.substring(0, 2).toUpperCase()}
-                                            </AvatarFallback>
-                                        </Avatar>
+                                        <div onClick={(e) => e.stopPropagation()}>
+                                            <Avatar
+                                                className={cn(
+                                                    "h-10 w-10",
+                                                    colaborador.foto && "cursor-pointer hover:ring-2 hover:ring-primary hover:ring-offset-2 transition-all"
+                                                )}
+                                                onClick={() => {
+                                                    if (colaborador.foto) {
+                                                        setSelectedPhoto({ url: colaborador.foto, nome: colaborador.nome })
+                                                    }
+                                                }}
+                                            >
+                                                <AvatarImage src={colaborador.foto || undefined} />
+                                                <AvatarFallback>
+                                                    {colaborador.nome.substring(0, 2).toUpperCase()}
+                                                </AvatarFallback>
+                                            </Avatar>
+                                        </div>
                                     </TableCell>
                                     <TableCell className="font-medium">
                                         {colaborador.nome}
@@ -239,19 +247,15 @@ export function ColaboradoresClient({ colaboradores, servicos }: ColaboradoresCl
                                         </div>
                                     </TableCell>
                                     <TableCell className="text-right">
-                                        <div className="flex items-center justify-end gap-2">
-                                            <EditarColaboradorDialog
-                                                colaborador={{
-                                                    ...colaborador,
-                                                    email: colaborador.email || "",
-                                                    servicos: colaborador.servicosRaw
-                                                }}
-                                                servicos={servicos}
+                                        <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                title="Editar"
+                                                onClick={() => setSelectedColaborador(colaborador)}
                                             >
-                                                <Button variant="ghost" size="icon" title="Editar">
-                                                    <Pencil className="h-4 w-4" />
-                                                </Button>
-                                            </EditarColaboradorDialog>
+                                                <Pencil className="h-4 w-4" />
+                                            </Button>
 
                                             <BotaoExcluirColaborador id={colaborador.id}>
                                                 <Button
@@ -339,6 +343,15 @@ export function ColaboradoresClient({ colaboradores, servicos }: ColaboradoresCl
             <div className="text-sm text-muted-foreground">
                 Exibindo {currentColaboradores.length} de {totalItems} colaboradores  (Total Filtrado)
             </div>
+
+            {/* Modal de Detalhes (Global) */}
+            {selectedColaborador && (
+                <DetalhesColaboradorDialog
+                    colaboradorId={selectedColaborador.id}
+                    open={!!selectedColaborador}
+                    onOpenChange={(open) => !open && setSelectedColaborador(null)}
+                />
+            )}
 
             {/* Photo Lightbox Modal */}
             <Dialog open={!!selectedPhoto} onOpenChange={(open) => !open && setSelectedPhoto(null)}>

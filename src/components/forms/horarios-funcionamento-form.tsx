@@ -47,7 +47,14 @@ export function HorariosFuncionamentoForm({ initialData }: HorariosFuncionamento
     const handleSubmit = async () => {
         setIsPending(true)
         try {
-            const result = await updateHorariosFuncionamento(horarios)
+            // Normalize horarios: ensure horaAbertura/horaFechamento have values when aberto is true
+            const normalizedHorarios = horarios.map(h => ({
+                ...h,
+                horaAbertura: h.aberto ? (h.horaAbertura || "09:00") : null,
+                horaFechamento: h.aberto ? (h.horaFechamento || "18:00") : null,
+            }))
+
+            const result = await updateHorariosFuncionamento(normalizedHorarios)
             if (result.success) {
                 alert("Horários salvos com sucesso!")
             } else {

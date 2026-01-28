@@ -6,7 +6,8 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Phone, MapPin, Clock, Search, Heart, Star, Instagram, Facebook, Wifi, Car, Accessibility, Snowflake, Tv, Coffee, Sofa, Dog, Baby, Armchair, Utensils } from "lucide-react"
+import { Phone, MapPin, Clock, Search, Star, Instagram, Facebook, Wifi, Car, Accessibility, Snowflake, Tv, Coffee, Sofa, Dog, Baby, Armchair, Utensils } from "lucide-react"
+import { BotaoAgendar } from "@/components/agendar/botao-agendar"
 
 // Force dynamic behavior ensuring slug is always read freshly
 export const dynamic = "force-dynamic"
@@ -20,7 +21,7 @@ interface BookingPageProps {
 export default async function BookingPage({ params }: BookingPageProps) {
     const { slug } = await params
 
-    // Fetch company data including related services and hours
+    // Fetch company data including related services, hours, and appointments
     const empresa = await db.empresa.findUnique({
         where: { slug },
         include: {
@@ -30,7 +31,31 @@ export default async function BookingPage({ params }: BookingPageProps) {
             horariosFuncionamento: {
                 orderBy: { diaSemana: 'asc' }
             },
-            colaboradores: true,
+            colaboradores: {
+                include: {
+                    servicos: {
+                        select: { id: true }
+                    }
+                }
+            },
+            horariosColaborador: true,
+            agendamentos: {
+                where: {
+                    data: {
+                        gte: new Date()
+                    },
+                    status: {
+                        in: ['AGENDADO', 'PENDENTE']
+                    }
+                },
+                include: {
+                    agendamento_itens: {
+                        select: {
+                            duracao: true
+                        }
+                    }
+                }
+            }
         }
     })
 
@@ -82,32 +107,17 @@ export default async function BookingPage({ params }: BookingPageProps) {
             {/* Header */}
             <header className="bg-white border-b sticky top-0 z-10">
                 <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <div className="relative h-10 w-10 overflow-hidden rounded-full border bg-gray-100">
-                            {empresa.logo ? (
-                                <Image src={empresa.logo} alt={empresa.nome} fill className="object-cover" />
-                            ) : (
-                                <div className="h-full w-full flex items-center justify-center text-xs font-bold text-gray-400">
-                                    Logo
-                                </div>
-                            )}
+                    <div className="flex items-center gap-3">
+                        <div className="relative h-10 w-10 overflow-hidden rounded-xl bg-blue-50 flex items-center justify-center">
+                            <svg className="h-6 w-6 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z" />
+                                <path d="M5 19l1 3 3-1-1-3-3 1z" />
+                            </svg>
                         </div>
                         <div>
-                            <h1 className="text-lg font-bold text-gray-900 leading-none">{empresa.nome}</h1>
-                            <div className="flex items-center gap-1 mt-1">
-                                <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                                <span className="text-xs font-medium text-gray-600">5.0</span>
-                            </div>
+                            <h1 className="text-lg font-bold text-gray-900 leading-none">Beleza</h1>
+                            <span className="text-xs text-gray-500">Gestão de Salão</span>
                         </div>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                        <Button variant="outline" size="icon" className="rounded-full h-9 w-9">
-                            <Heart className="h-4 w-4 text-gray-500" />
-                        </Button>
-                        <Button className="bg-[#0070BA] hover:bg-[#005ea6] text-white rounded-full px-6 h-9 font-medium">
-                            Agendar agora
-                        </Button>
                     </div>
                 </div>
             </header>
@@ -116,6 +126,59 @@ export default async function BookingPage({ params }: BookingPageProps) {
 
                 {/* Left Column (Main) */}
                 <div className="lg:col-span-2 space-y-6">
+                    {/* Company Info */}
+                    {(() => {
+                        // TODO: Replace with actual reviews data from database
+                        const reviews: any[] = []
+                        const averageRating = reviews.length > 0
+                            ? reviews.reduce((sum: number, r: any) => sum + r.rating, 0) / reviews.length
+                            : 0
+                        const totalReviews = reviews.length
+
+                        return (
+                            <div className="flex items-center gap-4">
+                                <div className="relative h-16 w-16 overflow-hidden rounded-full border-2 border-white shadow-lg bg-gray-100">
+                                    {empresa.logo ? (
+                                        <Image src={empresa.logo} alt={empresa.nome} fill className="object-cover" />
+                                    ) : (
+                                        <div className="h-full w-full flex items-center justify-center text-xs font-bold text-gray-400">
+                                            Logo
+                                        </div>
+                                    )}
+                                </div>
+                                <div>
+                                    <h2 className="text-xl font-bold text-gray-900">{empresa.nome}</h2>
+                                    <div className="flex items-center gap-1 mt-1">
+                                        <div className="flex">
+                                            {[1, 2, 3, 4, 5].map((star) => {
+                                                const isFilled = averageRating >= star
+                                                const isPartial = averageRating > star - 1 && averageRating < star
+                                                const fillPercentage = Math.min(100, Math.max(0, (averageRating - star + 1) * 100))
+
+                                                return (
+                                                    <div key={star} className="relative">
+                                                        <Star className="h-4 w-4 text-gray-300" />
+                                                        {(isFilled || isPartial) && (
+                                                            <div
+                                                                className="absolute inset-0 overflow-hidden"
+                                                                style={{ width: isPartial ? `${fillPercentage}%` : '100%' }}
+                                                            >
+                                                                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )
+                                            })}
+                                        </div>
+                                        {totalReviews > 0 && (
+                                            <span className="text-sm font-medium text-gray-600 ml-1">{averageRating.toFixed(1)}</span>
+                                        )}
+                                        <span className="text-sm text-gray-400 ml-1">• Salão de Beleza</span>
+                                    </div>
+                                </div>
+                            </div>
+                        )
+                    })()}
 
                     {/* Banner */}
                     <div className="relative w-full h-[200px] md:h-[300px] rounded-2xl overflow-hidden bg-gray-200">
@@ -133,15 +196,21 @@ export default async function BookingPage({ params }: BookingPageProps) {
                         <TabsList className="w-full justify-start h-auto bg-transparent border-b rounded-none p-0 gap-6">
                             <TabsTrigger
                                 value="servicos"
-                                className="bg-transparent border-b-2 border-transparent data-[state=active]:border-[#FF8C00] data-[state=active]:text-[#FF8C00] data-[state=active]:shadow-none rounded-none px-0 py-3 font-semibold text-gray-500"
+                                className="bg-transparent border-b-2 border-transparent data-[state=active]:border-[#0070BA] data-[state=active]:text-[#0070BA] data-[state=active]:bg-transparent data-[state=active]:shadow-none rounded-none px-0 py-3 font-semibold text-gray-500 hover:bg-transparent"
                             >
                                 Serviços
                             </TabsTrigger>
                             <TabsTrigger
                                 value="profissionais"
-                                className="bg-transparent border-b-2 border-transparent data-[state=active]:border-[#FF8C00] data-[state=active]:text-[#FF8C00] data-[state=active]:shadow-none rounded-none px-0 py-3 font-semibold text-gray-500"
+                                className="bg-transparent border-b-2 border-transparent data-[state=active]:border-[#0070BA] data-[state=active]:text-[#0070BA] data-[state=active]:bg-transparent data-[state=active]:shadow-none rounded-none px-0 py-3 font-semibold text-gray-500 hover:bg-transparent"
                             >
                                 Profissionais
+                            </TabsTrigger>
+                            <TabsTrigger
+                                value="avaliacoes"
+                                className="bg-transparent border-b-2 border-transparent data-[state=active]:border-[#0070BA] data-[state=active]:text-[#0070BA] data-[state=active]:bg-transparent data-[state=active]:shadow-none rounded-none px-0 py-3 font-semibold text-gray-500 hover:bg-transparent"
+                            >
+                                Avaliações
                             </TabsTrigger>
                         </TabsList>
 
@@ -217,12 +286,148 @@ export default async function BookingPage({ params }: BookingPageProps) {
                                     )}
                                 </div>
                             </TabsContent>
+
+                            {/* Reviews List */}
+                            <TabsContent value="avaliacoes" className="space-y-6 mt-0">
+                                {(() => {
+                                    // TODO: Replace with actual reviews data from database
+                                    const reviews: any[] = []
+                                    const averageRating = reviews.length > 0
+                                        ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+                                        : 0
+                                    const totalReviews = reviews.length
+
+                                    return (
+                                        <>
+                                            <div className="flex items-center justify-between mb-4">
+                                                <h3 className="text-xl font-bold text-gray-900">Avaliações</h3>
+                                                <div className="flex items-center gap-2">
+                                                    <div className="flex">
+                                                        {[1, 2, 3, 4, 5].map((star) => {
+                                                            const fillPercentage = Math.min(100, Math.max(0, (averageRating - star + 1) * 100))
+                                                            const isFilled = averageRating >= star
+                                                            const isPartial = averageRating > star - 1 && averageRating < star
+
+                                                            return (
+                                                                <div key={star} className="relative">
+                                                                    {/* Gray background star */}
+                                                                    <Star className="h-5 w-5 text-gray-300" />
+                                                                    {/* Filled overlay */}
+                                                                    {(isFilled || isPartial) && (
+                                                                        <div
+                                                                            className="absolute inset-0 overflow-hidden"
+                                                                            style={{ width: isPartial ? `${fillPercentage}%` : '100%' }}
+                                                                        >
+                                                                            <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            )
+                                                        })}
+                                                    </div>
+                                                    {totalReviews > 0 && (
+                                                        <span className="text-lg font-bold text-gray-900">{averageRating.toFixed(1)}</span>
+                                                    )}
+                                                    <span className="text-sm text-gray-500">
+                                                        ({totalReviews} {totalReviews === 1 ? 'avaliação' : 'avaliações'})
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-4">
+                                                {totalReviews === 0 ? (
+                                                    /* Empty state */
+                                                    <div className="py-12 text-center bg-white rounded-xl border">
+                                                        <div className="flex justify-center gap-1 mb-4">
+                                                            {[1, 2, 3, 4, 5].map((star) => (
+                                                                <Star key={star} className="h-8 w-8 text-gray-300" />
+                                                            ))}
+                                                        </div>
+                                                        <h4 className="font-semibold text-gray-900 mb-2">Nenhuma avaliação ainda</h4>
+                                                        <p className="text-sm text-gray-500">
+                                                            Seja o primeiro a avaliar este estabelecimento!
+                                                        </p>
+                                                    </div>
+                                                ) : (
+                                                    /* Reviews list */
+                                                    reviews.map((review, index) => (
+                                                        <div key={index} className="p-4 bg-white rounded-xl border">
+                                                            <div className="flex items-start gap-3">
+                                                                <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                                                                    <span className="text-sm font-medium text-gray-600">
+                                                                        {review.nome?.charAt(0).toUpperCase() || 'U'}
+                                                                    </span>
+                                                                </div>
+                                                                <div className="flex-1">
+                                                                    <div className="flex items-center justify-between">
+                                                                        <span className="font-semibold text-gray-900">{review.nome}</span>
+                                                                        <span className="text-xs text-gray-400">{review.data}</span>
+                                                                    </div>
+                                                                    <div className="flex gap-0.5 mt-1">
+                                                                        {[1, 2, 3, 4, 5].map((star) => (
+                                                                            <Star
+                                                                                key={star}
+                                                                                className={`h-4 w-4 ${star <= review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
+                                                                            />
+                                                                        ))}
+                                                                    </div>
+                                                                    {review.comentario && (
+                                                                        <p className="text-sm text-gray-600 mt-2">{review.comentario}</p>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    ))
+                                                )}
+                                            </div>
+                                        </>
+                                    )
+                                })()}
+                            </TabsContent>
                         </div>
                     </Tabs>
                 </div>
 
                 {/* Right Column (Sidebar) */}
                 <div className="space-y-6">
+                    {/* Agendar Button */}
+                    <BotaoAgendar
+                        empresaSlug={slug}
+                        empresaId={empresa.id}
+                        empresaNome={empresa.nome}
+                        servicos={empresa.servicos.map(s => ({
+                            id: s.id,
+                            nome: s.nome,
+                            preco: Number(s.preco),
+                            duracaoMin: s.duracaoMin
+                        }))}
+                        colaboradores={empresa.colaboradores.map(c => ({
+                            id: c.id,
+                            nome: c.nome,
+                            foto: c.foto,
+                            servicos: c.servicos
+                        }))}
+                        horariosColaborador={empresa.horariosColaborador.map(h => ({
+                            diaSemana: h.diaSemana,
+                            aberto: h.aberto,
+                            horaAbertura: h.horaAbertura,
+                            horaFechamento: h.horaFechamento,
+                            colaboradorId: h.colaboradorId
+                        }))}
+                        horariosFuncionamento={empresa.horariosFuncionamento.map(h => ({
+                            diaSemana: h.diaSemana,
+                            aberto: h.aberto,
+                            horaAbertura: h.horaAbertura,
+                            horaFechamento: h.horaFechamento
+                        }))}
+                        agendamentosExistentes={empresa.agendamentos.map(a => ({
+                            data: a.data,
+                            colaboradorId: a.colaboradorId,
+                            agendamento_itens: a.agendamento_itens
+                        }))}
+                        className="w-full bg-[#0070BA] hover:bg-[#005ea6] text-white rounded-xl h-12 font-semibold text-base shadow-lg"
+                    />
+
                     <Card className="border-none shadow-lg">
                         <CardContent className="p-6 space-y-6">
 
@@ -332,8 +537,8 @@ export default async function BookingPage({ params }: BookingPageProps) {
                                                     )}
                                                 </div>
                                                 <span className={isToday ? "font-medium text-gray-900" : "text-gray-500"}>
-                                                    {isOpen
-                                                        ? `${horario?.horaAbertura} - ${horario?.horaFechamento}`
+                                                    {isOpen && horario?.horaAbertura && horario?.horaFechamento
+                                                        ? `${horario.horaAbertura} - ${horario.horaFechamento}`
                                                         : "Fechado"}
                                                 </span>
                                             </div>

@@ -54,6 +54,7 @@ export default function ServicosClient({ initialServicos }: ServicosClientProps)
     const [currentPage, setCurrentPage] = useState(1)
     const [itemsPerPage, setItemsPerPage] = useState(25)
     const [selectedServico, setSelectedServico] = useState<ServicoClient | null>(null)
+    const [editingServico, setEditingServico] = useState<ServicoClient | null>(null)
 
     const filteredServicos = initialServicos.filter((servico) =>
         servico.nome.toLowerCase().includes(searchTerm.toLowerCase())
@@ -172,7 +173,7 @@ export default function ServicosClient({ initialServicos }: ServicosClientProps)
                                                 variant="ghost"
                                                 size="icon"
                                                 title="Editar Serviço"
-                                                onClick={() => setSelectedServico(servico)}
+                                                onClick={() => setEditingServico(servico)}
                                             >
                                                 <Pencil className="h-4 w-4" />
                                             </Button>
@@ -253,7 +254,7 @@ export default function ServicosClient({ initialServicos }: ServicosClientProps)
                 Exibindo {paginatedServicos.length} de {filteredServicos.length} serviços
             </div>
 
-            {/* Modal de Detalhes (Global) */}
+            {/* Modal de Detalhes (Global) - Abre ao clicar na linha */}
             {selectedServico && (
                 <DetalhesServicoDialog
                     servico={{
@@ -265,6 +266,20 @@ export default function ServicosClient({ initialServicos }: ServicosClientProps)
                     }}
                     open={!!selectedServico}
                     onOpenChange={(open) => !open && setSelectedServico(null)}
+                />
+            )}
+
+            {/* Modal de Edição (Global) - Abre ao clicar no ícone de editar */}
+            {editingServico && (
+                <EditarServicoDialog
+                    servico={{
+                        id: editingServico.id,
+                        nome: editingServico.nome,
+                        preco: editingServico.preco,
+                        duracaoMin: editingServico.duracao
+                    }}
+                    open={!!editingServico}
+                    onOpenChange={(open) => !open && setEditingServico(null)}
                 />
             )}
         </div>

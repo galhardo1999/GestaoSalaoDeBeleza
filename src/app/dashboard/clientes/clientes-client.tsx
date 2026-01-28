@@ -75,6 +75,7 @@ export function ClientesClient({
     // --- Estado Local para controle do input ---
     const [searchTerm, setSearchTerm] = useState(initialSearch)
     const [selectedCliente, setSelectedCliente] = useState<ClienteData | null>(null)
+    const [editingCliente, setEditingCliente] = useState<ClienteData | null>(null)
 
     // --- Manipuladores ---
     const handleSearch = useDebouncedCallback((term: string) => {
@@ -186,10 +187,7 @@ export function ClientesClient({
                                                 variant="ghost"
                                                 size="icon"
                                                 title="Editar"
-                                                onClick={(e) => {
-                                                    e.stopPropagation()
-                                                    setSelectedCliente(cliente)
-                                                }}
+                                                onClick={() => setEditingCliente(cliente)}
                                             >
                                                 <Pencil className="h-4 w-4" />
                                             </Button>
@@ -277,12 +275,29 @@ export function ClientesClient({
             </div>
 
 
-            {/* Modal de Detalhes (Global) - Substitui o Editar no clique da linha */}
+            {/* Modal de Detalhes (Global) - Abre ao clicar na linha */}
             {selectedCliente && (
                 <DetalhesClienteDialog
                     clienteId={selectedCliente.id}
                     open={!!selectedCliente}
                     onOpenChange={(open) => !open && setSelectedCliente(null)}
+                />
+            )}
+
+            {/* Modal de Edição (Global) - Abre ao clicar no ícone de editar */}
+            {editingCliente && (
+                <EditarClienteDialog
+                    cliente={{
+                        id: editingCliente.id,
+                        nome: editingCliente.nome,
+                        cpf: editingCliente.cpf !== '-' ? editingCliente.cpf : null,
+                        telefone: editingCliente.telefone,
+                        email: editingCliente.email,
+                        observacoes: editingCliente.observacoes,
+                        dataNascimento: editingCliente.dataNascimento
+                    }}
+                    open={!!editingCliente}
+                    onOpenChange={(open) => !open && setEditingCliente(null)}
                 />
             )}
         </div>

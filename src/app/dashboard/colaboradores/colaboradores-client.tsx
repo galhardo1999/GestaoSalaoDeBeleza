@@ -83,6 +83,7 @@ export function ColaboradoresClient({ colaboradores, servicos }: ColaboradoresCl
     const [currentPage, setCurrentPage] = useState(1)
     const [selectedPhoto, setSelectedPhoto] = useState<{ url: string; nome: string } | null>(null)
     const [selectedColaborador, setSelectedColaborador] = useState<ColaboradorData | null>(null)
+    const [editingColaborador, setEditingColaborador] = useState<ColaboradorData | null>(null)
 
     // --- Filtragem ---
     const filteredColaboradores = useMemo(() => {
@@ -252,7 +253,7 @@ export function ColaboradoresClient({ colaboradores, servicos }: ColaboradoresCl
                                                 variant="ghost"
                                                 size="icon"
                                                 title="Editar"
-                                                onClick={() => setSelectedColaborador(colaborador)}
+                                                onClick={() => setEditingColaborador(colaborador)}
                                             >
                                                 <Pencil className="h-4 w-4" />
                                             </Button>
@@ -344,12 +345,28 @@ export function ColaboradoresClient({ colaboradores, servicos }: ColaboradoresCl
                 Exibindo {currentColaboradores.length} de {totalItems} colaboradores  (Total Filtrado)
             </div>
 
-            {/* Modal de Detalhes (Global) */}
+            {/* Modal de Detalhes (Global) - Abre ao clicar na linha */}
             {selectedColaborador && (
                 <DetalhesColaboradorDialog
                     colaboradorId={selectedColaborador.id}
                     open={!!selectedColaborador}
                     onOpenChange={(open) => !open && setSelectedColaborador(null)}
+                />
+            )}
+
+            {/* Modal de Edição (Global) - Abre ao clicar no ícone de editar */}
+            {editingColaborador && (
+                <EditarColaboradorDialog
+                    colaborador={{
+                        id: editingColaborador.id,
+                        nome: editingColaborador.nome,
+                        email: editingColaborador.email || '',
+                        foto: editingColaborador.foto,
+                        servicos: editingColaborador.servicosRaw
+                    }}
+                    servicos={servicos}
+                    open={!!editingColaborador}
+                    onOpenChange={(open) => !open && setEditingColaborador(null)}
                 />
             )}
 

@@ -12,7 +12,33 @@ export async function GET(req: Request) {
     try {
         const empresa = await db.empresa.findUnique({
             where: { id: empresaId },
-            select: { nome: true }
+            select: {
+                id: true,
+                nome: true,
+                endereco: true,
+                numero: true,
+                bairro: true,
+                cidade: true,
+                estado: true,
+                banner: true,
+                logo: true,
+                servicos: {
+                    where: { ativo: true },
+                    select: {
+                        id: true,
+                        nome: true,
+                        preco: true,
+                        duracaoMin: true
+                    }
+                },
+                colaboradores: {
+                    select: {
+                        id: true,
+                        nome: true,
+                        foto: true
+                    }
+                }
+            }
         })
 
         if (!empresa) {

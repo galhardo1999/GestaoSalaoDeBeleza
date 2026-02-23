@@ -137,6 +137,8 @@ model Empresa {
   facebookUrl           String?
   formasPagamento       String?
   comodidades           String?
+  latitude              Float?
+  longitude             Float?
   agendamentos          Agendamento[]
   clientes              Cliente[]
   colaboradores         Colaborador[]

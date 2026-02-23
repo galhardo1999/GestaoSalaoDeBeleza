@@ -67,7 +67,7 @@ export default function LoginScreen() {
 
         try {
             // Replace with your machine's IP address
-            const API_URL = 'http://192.168.0.26:3000/api/mobile';
+            const API_URL = 'http://192.168.0.12:3000/api/mobile';
 
             // Clean non-numeric chars for CNPJ/CPF before sending, assuming DB validation expects numbers
             // or send raw if your DB stores with formatting. 

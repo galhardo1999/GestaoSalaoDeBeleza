@@ -63,15 +63,12 @@ export default async function BookingPage({ params }: BookingPageProps) {
         notFound()
     }
 
-    // Format address
     const address = [
         empresa.endereco,
         empresa.numero,
         empresa.bairro,
         empresa.cidade && empresa.estado ? `${empresa.cidade}/${empresa.estado}` : empresa.cidade
     ].filter(Boolean).join(", ")
-
-    // Helper for formatting currency
     const formatPrice = (price: any) => {
         return new Intl.NumberFormat('pt-BR', {
             style: 'currency',

@@ -1,6 +1,6 @@
 
 import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react-native';
 
@@ -19,10 +19,6 @@ export default function AppointmentsScreen() {
     const [loading, setLoading] = useState(true);
     const [selectedDate, setSelectedDate] = useState(new Date());
 
-    useEffect(() => {
-        fetchAppointments();
-    }, [selectedDate]); // Refetch when date changes
-
     const changeDate = (days: number) => {
         const newDate = new Date(selectedDate);
         newDate.setDate(selectedDate.getDate() + days);
@@ -33,27 +29,32 @@ export default function AppointmentsScreen() {
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const day = String(date.getDate()).padStart(2, '0');
-        return `${year} -${month} -${day} `;
+        return `${year}-${month}-${day}`;
     };
 
     const formatDateForDisplay = (date: Date) => {
         return date.toLocaleDateString('pt-BR');
     };
 
-    const fetchAppointments = async () => {
+    const fetchAppointments = useCallback(async () => {
         setLoading(true);
         try {
             const jsonValue = await AsyncStorage.getItem('user_data');
+            const token = await AsyncStorage.getItem('mobile_token');
             const user = jsonValue != null ? JSON.parse(jsonValue) : null;
 
-            if (!user?.empresaId) {
+            if (!user?.empresaId || !token) {
                 setLoading(false);
                 return;
             }
 
             const dateStr = formatDateForApi(selectedDate);
             const API_URL = 'http://192.168.0.26:3000/api/mobile';
-            const response = await fetch(`${API_URL}/agendamentos?empresaId=${user.empresaId}&date=${dateStr}`);
+            const response = await fetch(`${API_URL}/agendamentos?date=${dateStr}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
             const data = await response.json();
 
             if (data.success) {
@@ -67,7 +68,11 @@ export default function AppointmentsScreen() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [selectedDate]);
+
+    useEffect(() => {
+        fetchAppointments();
+    }, [fetchAppointments]);
 
     const renderHeader = () => (
         <View style={styles.dateHeader}>

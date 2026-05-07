@@ -1,101 +1,155 @@
 "use server"
 
 import { db } from "@/lib/db"
+import { exigirSuperAdmin } from "@/lib/seguranca"
 import { hash } from "bcryptjs"
 import { revalidatePath } from "next/cache"
-import { getServerSession } from "next-auth"
-import { authOptions } from "@/lib/auth"
+import { z } from "zod"
 
-export async function createCompanyUser(empresaId: string, formData: FormData) {
-    const session = await getServerSession(authOptions)
+const usuarioEmpresaSchema = z.object({
+    nome: z.string().trim().min(2).max(120),
+    cnpj: z.string().transform((valor) => valor.replace(/\D/g, "")).refine(
+        (valor) => valor.length === 11 || valor.length === 14,
+        "Documento invalido",
+    ),
+    cargo: z.enum(["ADMIN", "FUNCIONARIO"]),
+    senha: z.string().min(8).max(128),
+})
 
-    // @ts-ignore
-    if (!session || (session.user.cargo !== "SUPER_ADMIN" && session.user.empresaId !== empresaId)) {
-        return { error: "Acesso não autorizado." }
-    }
+const editarUsuarioEmpresaSchema = usuarioEmpresaSchema
+    .omit({ cnpj: true, senha: true })
+    .extend({
+        senha: z.string().max(128).optional(),
+    })
 
-    const nome = formData.get("nome") as string
-    const cnpj = formData.get("cnpj") as string
-    const cargo = formData.get("cargo") as "ADMIN" | "FUNCIONARIO"
-    const senha = formData.get("senha") as string
+const idsSchema = z.object({
+    empresaId: z.string().cuid(),
+    userId: z.string().cuid().optional(),
+})
 
-    if (!nome || !cnpj || !cargo || !senha) {
-        return { error: "Todos os campos são obrigatórios." }
-    }
+type ResultadoAcao =
+    | { success: true; error?: never }
+    | { success: false; error: string }
 
+const validarEmpresa = async (empresaId: string) => {
+    const empresa = await db.empresa.findUnique({
+        where: { id: empresaId },
+        select: { id: true },
+    })
+
+    return Boolean(empresa)
+}
+
+const validarUsuarioDaEmpresa = async (userId: string, empresaId: string) => {
+    const usuario = await db.usuario.findFirst({
+        where: { id: userId, empresaId },
+        select: { id: true },
+    })
+
+    return Boolean(usuario)
+}
+
+export async function createCompanyUser(empresaId: string, formData: FormData): Promise<ResultadoAcao> {
     try {
-        const hashedPassword = await hash(senha, 10)
+        await exigirSuperAdmin()
+
+        const ids = idsSchema.safeParse({ empresaId })
+        if (!ids.success || !(await validarEmpresa(empresaId))) {
+            return { success: false, error: "Empresa invalida." }
+        }
+
+        const parsed = usuarioEmpresaSchema.safeParse({
+            nome: formData.get("nome"),
+            cnpj: formData.get("cnpj"),
+            cargo: formData.get("cargo"),
+            senha: formData.get("senha"),
+        })
+
+        if (!parsed.success) {
+            return { success: false, error: "Dados invalidos." }
+        }
+
+        const senhaCriptografada = await hash(parsed.data.senha, 12)
         await db.usuario.create({
             data: {
-                nome,
-                cnpj: cnpj.replace(/\D/g, ""),
-                cargo,
-                senha: hashedPassword,
-                empresaId
-            }
+                nome: parsed.data.nome,
+                cnpj: parsed.data.cnpj,
+                cargo: parsed.data.cargo,
+                senha: senhaCriptografada,
+                empresaId,
+            },
         })
-    } catch (error: any) {
-        if (error.code === 'P2002') {
-            return { error: "Usuário com este CNPJ já existe." }
+    } catch (erro) {
+        if (typeof erro === "object" && erro !== null && "code" in erro && erro.code === "P2002") {
+            return { success: false, error: "Usuario com este documento ja existe." }
         }
-        return { error: "Erro ao criar usuário." }
+        return { success: false, error: "Erro ao criar usuario." }
     }
 
     revalidatePath(`/admin/empresas/${empresaId}`)
     return { success: true }
 }
 
-export async function updateCompanyUser(userId: string, empresaId: string, formData: FormData) {
-    const session = await getServerSession(authOptions)
-
-    // @ts-ignore
-    if (!session || (session.user.cargo !== "SUPER_ADMIN" && session.user.empresaId !== empresaId)) {
-        return { error: "Acesso não autorizado." }
-    }
-
-    const nome = formData.get("nome") as string
-    const cargo = formData.get("cargo") as "ADMIN" | "FUNCIONARIO"
-    const senha = formData.get("senha") as string | null
-
-    if (!nome || !cargo) {
-        return { error: "Nome e Cargo são obrigatórios." }
-    }
-
+export async function updateCompanyUser(
+    userId: string,
+    empresaId: string,
+    formData: FormData,
+): Promise<ResultadoAcao> {
     try {
-        const data: any = {
-            nome,
-            cargo
+        await exigirSuperAdmin()
+
+        const ids = idsSchema.safeParse({ userId, empresaId })
+        if (!ids.success || !(await validarUsuarioDaEmpresa(userId, empresaId))) {
+            return { success: false, error: "Usuario nao encontrado ou acesso negado." }
         }
-        if (senha && senha.trim() !== "") {
-            data.senha = await hash(senha, 10)
+
+        const parsed = editarUsuarioEmpresaSchema.safeParse({
+            nome: formData.get("nome"),
+            cargo: formData.get("cargo"),
+            senha: formData.get("senha") || undefined,
+        })
+
+        if (!parsed.success) {
+            return { success: false, error: "Dados invalidos." }
         }
+
+        const data = parsed.data.senha && parsed.data.senha.trim() !== ""
+            ? {
+                nome: parsed.data.nome,
+                cargo: parsed.data.cargo,
+                senha: await hash(parsed.data.senha, 12),
+            }
+            : {
+                nome: parsed.data.nome,
+                cargo: parsed.data.cargo,
+            }
 
         await db.usuario.update({
             where: { id: userId },
-            data
+            data,
         })
-    } catch (error) {
-        return { error: "Erro ao atualizar usuário." }
+    } catch {
+        return { success: false, error: "Erro ao atualizar usuario." }
     }
 
     revalidatePath(`/admin/empresas/${empresaId}`)
     return { success: true }
 }
 
-export async function deleteCompanyUser(userId: string, empresaId: string) {
-    const session = await getServerSession(authOptions)
-
-    // @ts-ignore
-    if (!session || (session.user.cargo !== "SUPER_ADMIN" && session.user.empresaId !== empresaId)) {
-        return { error: "Acesso não autorizado." }
-    }
-
+export async function deleteCompanyUser(userId: string, empresaId: string): Promise<ResultadoAcao> {
     try {
+        await exigirSuperAdmin()
+
+        const ids = idsSchema.safeParse({ userId, empresaId })
+        if (!ids.success || !(await validarUsuarioDaEmpresa(userId, empresaId))) {
+            return { success: false, error: "Usuario nao encontrado ou acesso negado." }
+        }
+
         await db.usuario.delete({
-            where: { id: userId }
+            where: { id: userId },
         })
-    } catch (error) {
-        return { error: "Erro ao excluir usuário." }
+    } catch {
+        return { success: false, error: "Erro ao excluir usuario." }
     }
 
     revalidatePath(`/admin/empresas/${empresaId}`)

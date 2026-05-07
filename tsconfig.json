@@ -38,6 +38,8 @@
   ],
   "exclude": [
     "node_modules",
-    "AppGestaoSalaoDeBeleza"
+    "AppGestaoSalaoDeBeleza",
+    "AppU",
+    "AppE"
   ]
 }

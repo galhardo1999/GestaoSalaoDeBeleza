@@ -1,210 +1,144 @@
 "use server"
 
 import { db } from "@/lib/db"
+import { aplicarRateLimit } from "@/lib/seguranca"
 import { revalidatePath } from "next/cache"
+import { z } from "zod"
 
-interface CriarAgendamentoInput {
-    empresaId: string
-    colaboradorId: string
-    servicoId: string
-    data: Date
-    preco: number
-    duracao: number
-    clienteId?: string
-    clienteNome?: string
-    clienteCpf?: string
-    clienteTelefone?: string
-    clienteEmail?: string
-    observacoes?: string
+const criarAgendamentoClienteSchema = z.object({
+    empresaId: z.string().cuid(),
+    colaboradorId: z.string().cuid(),
+    servicoId: z.string().cuid(),
+    data: z.coerce.date().refine((valor) => valor.getTime() > Date.now(), {
+        message: "A data do agendamento deve ser no futuro",
+    }),
+    clienteNome: z.string().trim().min(2).max(120),
+    clienteCpf: z.string().max(18).optional(),
+    clienteTelefone: z.string().min(8).max(20).transform((valor) => valor.replace(/\D/g, "")),
+    clienteEmail: z.string().email().max(160).optional().or(z.literal("")),
+    observacoes: z.string().max(1000).optional(),
+})
+
+type CriarAgendamentoClienteInput = z.input<typeof criarAgendamentoClienteSchema>
+
+const normalizarOpcional = (valor?: string) => {
+    if (!valor) return null
+    const texto = valor.trim()
+    return texto.length > 0 ? texto : null
 }
 
-export async function criarAgendamentoCliente(input: CriarAgendamentoInput) {
-    try {
-        const {
-            empresaId,
-            colaboradorId,
-            servicoId,
-            data,
-            preco,
-            duracao,
-            clienteId,
-            clienteNome,
-            clienteCpf,
-            clienteTelefone,
-            clienteEmail,
-            observacoes
-        } = input
+export async function criarAgendamentoCliente(input: CriarAgendamentoClienteInput) {
+    const parsed = criarAgendamentoClienteSchema.safeParse(input)
 
-        // Validate the service exists and belongs to the company
+    if (!parsed.success) {
+        return { success: false, error: "Dados invalidos" }
+    }
+
+    const {
+        empresaId,
+        colaboradorId,
+        servicoId,
+        data,
+        clienteNome,
+        clienteCpf,
+        clienteTelefone,
+        clienteEmail,
+        observacoes,
+    } = parsed.data
+
+    const limite = aplicarRateLimit(`agendamento_publico:${empresaId}:${clienteTelefone}`, 5, 15 * 60 * 1000)
+    if (!limite.permitido) {
+        return { success: false, error: "Muitas tentativas de agendamento. Tente novamente em instantes." }
+    }
+
+    try {
         const servico = await db.servico.findFirst({
             where: {
                 id: servicoId,
                 empresaId,
                 ativo: true,
             },
+            select: {
+                id: true,
+                preco: true,
+                duracaoMin: true,
+            },
         })
 
         if (!servico) {
-            return { success: false, error: "Serviço não encontrado" }
+            return { success: false, error: "Servico nao encontrado" }
         }
 
-        // Validate the collaborator exists and belongs to the company
         const colaborador = await db.colaborador.findFirst({
             where: {
                 id: colaboradorId,
                 empresaId,
-            },
-            include: {
                 servicos: {
-                    where: { id: servicoId },
+                    some: { id: servicoId },
                 },
             },
+            select: { id: true },
         })
 
         if (!colaborador) {
-            return { success: false, error: "Profissional não encontrado" }
+            return { success: false, error: "Profissional nao encontrado para este servico" }
         }
 
-        if (colaborador.servicos.length === 0) {
-            return { success: false, error: "Este profissional não realiza o serviço selecionado" }
-        }
-
-        // Check for time conflicts
         const agendamentoExistente = await db.agendamento.findFirst({
             where: {
                 colaboradorId,
                 data: {
-                    gte: new Date(data.getTime() - duracao * 60 * 1000),
-                    lte: new Date(data.getTime() + duracao * 60 * 1000),
+                    gte: new Date(data.getTime() - servico.duracaoMin * 60 * 1000),
+                    lte: new Date(data.getTime() + servico.duracaoMin * 60 * 1000),
                 },
                 status: {
                     in: ["AGENDADO", "PENDENTE"],
                 },
             },
+            select: { id: true },
         })
 
         if (agendamentoExistente) {
-            return { success: false, error: "Horário não disponível. Por favor, escolha outro horário." }
+            return { success: false, error: "Horario nao disponivel. Por favor, escolha outro horario." }
         }
 
-        // Determine or create the client
-        let finalClienteId = clienteId
+        const cpfNormalizado = clienteCpf ? clienteCpf.replace(/\D/g, "") : null
+        const clienteExistente = await db.cliente.findFirst({
+            where: {
+                empresaId,
+                OR: [
+                    ...(cpfNormalizado ? [{ cpf: cpfNormalizado }] : []),
+                    { telefone: clienteTelefone },
+                ],
+            },
+            select: { id: true },
+        })
 
-        if (!finalClienteId && clienteNome && clienteTelefone) {
-            // Check if client already exists by phone or CPF
-            let existingCliente = null
+        const cliente = clienteExistente ?? await db.cliente.create({
+            data: {
+                nome: clienteNome,
+                telefone: clienteTelefone,
+                cpf: cpfNormalizado,
+                email: normalizarOpcional(clienteEmail),
+                empresaId,
+            },
+            select: { id: true },
+        })
 
-            if (clienteCpf) {
-                const cpfNormalizado = clienteCpf.replace(/\D/g, '')
-                // Buscar cliente pelo CPF normalizado (remove formatação do banco também)
-                existingCliente = await db.cliente.findFirst({
-                    where: {
-                        empresaId,
-                        OR: [
-                            { cpf: cpfNormalizado },
-                            { cpf: clienteCpf }, // CPF com formatação original
-                        ],
-                    },
-                })
-
-                // Se não encontrou, tenta buscar todos clientes da empresa e comparar CPF normalizado
-                if (!existingCliente) {
-                    const clientesComCpf = await db.cliente.findMany({
-                        where: {
-                            empresaId,
-                            cpf: { not: null },
-                        },
-                        select: { id: true, cpf: true },
-                    })
-
-                    const clienteEncontrado = clientesComCpf.find(
-                        c => c.cpf && c.cpf.replace(/\D/g, '') === cpfNormalizado
-                    )
-
-                    if (clienteEncontrado) {
-                        existingCliente = await db.cliente.findUnique({
-                            where: { id: clienteEncontrado.id },
-                        })
-                    }
-                }
-            }
-
-            if (!existingCliente) {
-                const telefoneNormalizado = clienteTelefone.replace(/\D/g, '')
-                // Buscar cliente pelo telefone normalizado
-                existingCliente = await db.cliente.findFirst({
-                    where: {
-                        empresaId,
-                        OR: [
-                            { telefone: telefoneNormalizado },
-                            { telefone: clienteTelefone }, // Telefone com formatação original
-                        ],
-                    },
-                })
-
-                // Se não encontrou, tenta buscar todos clientes da empresa e comparar telefone normalizado
-                if (!existingCliente) {
-                    const clientesComTelefone = await db.cliente.findMany({
-                        where: {
-                            empresaId,
-                        },
-                        select: { id: true, telefone: true },
-                    })
-
-                    const clienteEncontrado = clientesComTelefone.find(
-                        c => c.telefone && c.telefone.replace(/\D/g, '') === telefoneNormalizado
-                    )
-
-                    if (clienteEncontrado) {
-                        existingCliente = await db.cliente.findUnique({
-                            where: { id: clienteEncontrado.id },
-                        })
-                    }
-                }
-            }
-
-            if (existingCliente) {
-                finalClienteId = existingCliente.id
-            } else {
-                // Create new client
-                const novoCliente = await db.cliente.create({
-                    data: {
-                        nome: clienteNome,
-                        telefone: clienteTelefone.replace(/\D/g, ''),
-                        cpf: clienteCpf ? clienteCpf.replace(/\D/g, '') : null,
-                        email: clienteEmail || null,
-                        empresaId,
-                    },
-                })
-                finalClienteId = novoCliente.id
-            }
-        } else if (!finalClienteId) {
-            // Fallback: create a demo client
-            const demoCliente = await db.cliente.create({
-                data: {
-                    nome: "Cliente Demo",
-                    telefone: "00000000000",
-                    empresaId,
-                },
-            })
-            finalClienteId = demoCliente.id
-        }
-
-        // Create the agendamento
         const agendamento = await db.agendamento.create({
             data: {
                 data,
                 status: "AGENDADO",
                 observacoes,
-                clienteId: finalClienteId,
+                clienteId: cliente.id,
                 colaboradorId,
                 empresaId,
-                valor: preco,
+                valor: servico.preco,
                 agendamento_itens: {
                     create: {
                         id: crypto.randomUUID(),
-                        preco,
-                        duracao,
+                        preco: servico.preco,
+                        duracao: servico.duracaoMin,
                         servico_id: servicoId,
                         colaborador_id: colaboradorId,
                         atualizado_em: new Date(),
@@ -213,17 +147,16 @@ export async function criarAgendamentoCliente(input: CriarAgendamentoInput) {
             },
         })
 
-        // Revalidate paths
         revalidatePath(`/dashboard/agendamentos`)
         revalidatePath(`/dashboard/calendario`)
 
         return {
             success: true,
             agendamentoId: agendamento.id,
-            message: "Agendamento criado com sucesso!"
+            message: "Agendamento criado com sucesso!",
         }
-    } catch (error) {
-        console.error("Erro ao criar agendamento:", error)
+    } catch (erro) {
+        console.error("Erro ao criar agendamento:", erro)
         return { success: false, error: "Erro ao criar agendamento. Tente novamente." }
     }
 }

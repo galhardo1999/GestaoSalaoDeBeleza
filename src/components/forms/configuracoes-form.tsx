@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Checkbox } from "@/components/ui/checkbox"
 import { useEffect, useState, useRef } from "react"
 
 import { updateCompanySettings } from "@/actions/configuracoes"
@@ -69,14 +68,45 @@ const formSchema = z.object({
     comodidades: z.array(z.string()).default([]),
 })
 
-interface ConfiguracoesFormProps {
-    initialData: any
-    userId: string
-    userEmail?: string | null
-    horariosData?: any[]
+const ABAS_CONFIGURACOES = ['details', 'messages', 'horarios', 'redes', 'pagamento', 'comodidades'] as const
+
+type AbaConfiguracoes = typeof ABAS_CONFIGURACOES[number]
+type DadosConfiguracoes = {
+    nome?: string | null
+    telefone1?: string | null
+    telefone2?: string | null
+    cnpj?: string | null
+    email?: string | null
+    cep?: string | null
+    endereco?: string | null
+    numero?: string | null
+    bairro?: string | null
+    cidade?: string | null
+    estado?: string | null
+    mensagemWhatsapp?: string | null
+    googleAvaliacaoUrl?: string | null
+    instagramUrl?: string | null
+    facebookUrl?: string | null
+    logo?: string | null
+    banner?: string | null
+    formasPagamento?: string | null
+    comodidades?: string | null
+}
+type HorarioConfiguracao = {
+    id?: string | null
+    diaSemana: number
+    aberto: boolean
+    horaAbertura: string | null
+    horaFechamento: string | null
 }
 
-export function ConfiguracoesForm({ initialData, userId, userEmail, horariosData }: ConfiguracoesFormProps) {
+interface ConfiguracoesFormProps {
+    initialData: DadosConfiguracoes | null | undefined
+    userEmail?: string | null
+    horariosData?: HorarioConfiguracao[]
+}
+
+export function ConfiguracoesForm({ initialData, userEmail, horariosData }: ConfiguracoesFormProps) {
     const [isPending, setIsPending] = useState(false)
     const [logoPreview, setLogoPreview] = useState<string | null>(initialData?.logo || null)
     const [bannerPreview, setBannerPreview] = useState<string | null>(initialData?.banner || null)
@@ -85,16 +115,16 @@ export function ConfiguracoesForm({ initialData, userId, userEmail, horariosData
     const searchParams = useSearchParams()
     const pathname = usePathname()
 
-    const [activeTab, setActiveTab] = useState<'details' | 'messages' | 'horarios' | 'redes' | 'pagamento' | 'comodidades'>('details')
+    const [activeTab, setActiveTab] = useState<AbaConfiguracoes>('details')
 
     useEffect(() => {
         const tab = searchParams.get('tab')
-        if (tab && ['details', 'messages', 'horarios', 'redes', 'pagamento', 'comodidades'].includes(tab)) {
-            setActiveTab(tab as any)
+        if (tab && ABAS_CONFIGURACOES.includes(tab as AbaConfiguracoes)) {
+            setActiveTab(tab as AbaConfiguracoes)
         }
     }, [searchParams])
 
-    const handleTabChange = (tab: 'details' | 'messages' | 'horarios' | 'redes' | 'pagamento' | 'comodidades') => {
+    const handleTabChange = (tab: AbaConfiguracoes) => {
         setActiveTab(tab)
         const params = new URLSearchParams(searchParams.toString())
         params.set('tab', tab)
@@ -148,7 +178,7 @@ export function ConfiguracoesForm({ initialData, userId, userEmail, horariosData
     async function onSubmit(values: z.infer<typeof formSchema>) {
         setIsPending(true)
         try {
-            const result = await updateCompanySettings(userId, {
+            const result = await updateCompanySettings({
                 nome: values.nome,
                 telefone1: values.telefone1,
                 telefone2: values.telefone2,

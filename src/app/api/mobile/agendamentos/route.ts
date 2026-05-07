@@ -1,80 +1,96 @@
 import { db } from "@/lib/db"
+import { verificarTokenMobile } from "@/lib/seguranca"
 import { NextResponse } from "next/server"
+import { z } from "zod"
+
+const consultaAgendamentosSchema = z.object({
+    date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+})
+
+const criarIntervaloDia = (data: string) => {
+    const [ano, mes, dia] = data.split("-").map(Number)
+
+    return {
+        inicio: new Date(ano, mes - 1, dia, 0, 0, 0, 0),
+        fim: new Date(ano, mes - 1, dia, 23, 59, 59, 999),
+    }
+}
 
 export async function GET(req: Request) {
-    const { searchParams } = new URL(req.url)
-    const empresaId = searchParams.get('empresaId')
-    const dateParam = searchParams.get('date')
+    const token = verificarTokenMobile(req.headers)
 
-    if (!empresaId) {
-        return NextResponse.json({ success: false, error: "Empresa ID é obrigatório" }, { status: 400 })
+    if (!token) {
+        return NextResponse.json({ success: false, error: "Nao autorizado" }, { status: 401 })
+    }
+
+    const { searchParams } = new URL(req.url)
+    const parsed = consultaAgendamentosSchema.safeParse({
+        date: searchParams.get("date") ?? undefined,
+    })
+
+    if (!parsed.success) {
+        return NextResponse.json(
+            { success: false, error: "Dados invalidos", details: parsed.error.flatten() },
+            { status: 400 },
+        )
     }
 
     try {
-        const whereClause: any = {
-            empresaId: empresaId,
-        }
+        const intervalo = parsed.data.date ? criarIntervaloDia(parsed.data.date) : null
 
-        if (dateParam) {
-            // dateParam is YYYY-MM-DD
-            // Create range for that day in local time
-            // Appending T00:00:00 ensures local time parsing in most environments or use split
-            const parts = dateParam.split('-')
-            const year = parseInt(parts[0])
-            const month = parseInt(parts[1]) - 1
-            const day = parseInt(parts[2])
-
-            const startOfDay = new Date(year, month, day, 0, 0, 0, 0)
-            const endOfDay = new Date(year, month, day, 23, 59, 59, 999)
-
-            whereClause.data = {
-                gte: startOfDay,
-                lte: endOfDay
-            }
-        }
-
-        // Fetch upcoming appointments
-        // Assuming Agendamento model has data, servico, cliente, colaborador relations
-        // Based on schema viewed earlier
         const agendamentos = await db.agendamento.findMany({
-            where: whereClause,
+            where: {
+                empresaId: token.empresaId,
+                ...(intervalo
+                    ? {
+                        data: {
+                            gte: intervalo.inicio,
+                            lte: intervalo.fim,
+                        },
+                    }
+                    : {}),
+            },
             orderBy: {
-                data: 'desc' // Show newest first or nearest? Usually nearest future. Let's do desc for now (latest added/dates)
+                data: "desc",
             },
             take: 20,
-            include: {
+            select: {
+                id: true,
+                data: true,
+                status: true,
                 agendamento_itens: {
-                    include: {
+                    take: 1,
+                    select: {
                         servicos: {
-                            select: { nome: true }
-                        }
-                    }
+                            select: { nome: true },
+                        },
+                    },
                 },
                 cliente: {
-                    select: { nome: true }
+                    select: { nome: true },
                 },
                 colaborador: {
-                    select: { nome: true }
-                }
-            }
+                    select: { nome: true },
+                },
+            },
         })
 
-        const formatted = agendamentos.map(a => ({
-            id: a.id,
-            service: a.agendamento_itens[0]?.servicos?.nome || 'Serviço',
-            date: a.data.toLocaleDateString('pt-BR'),
-            time: a.data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-            status: a.status,
-            client: a.cliente.nome,
-            professional: a.colaborador?.nome || 'N/A'
+        const agendamentosFormatados = agendamentos.map((agendamento) => ({
+            id: agendamento.id,
+            service: agendamento.agendamento_itens[0]?.servicos?.nome || "Servico",
+            date: agendamento.data.toLocaleDateString("pt-BR"),
+            time: agendamento.data.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+            status: agendamento.status,
+            client: agendamento.cliente.nome,
+            professional: agendamento.colaborador?.nome || "N/A",
         }))
 
         return NextResponse.json({
             success: true,
-            data: formatted
+            data: agendamentosFormatados,
         })
-    } catch (error) {
-        console.error("Error fetching appointments:", error)
+    } catch (erro) {
+        console.error("Erro ao buscar agendamentos mobile:", erro)
         return NextResponse.json({ success: false, error: "Erro interno" }, { status: 500 })
     }
 }

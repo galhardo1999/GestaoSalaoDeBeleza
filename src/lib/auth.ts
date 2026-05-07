@@ -30,8 +30,8 @@ export const authOptions: NextAuthOptions = {
 
                 if (!user) {
                     // Simular verificação de senha para evitar ataque de enumeração (Timing Attack)
-                    // Hash gerado previamente para custo 10
-                    await compare(credentials.password, '$2b$10$BCbHAbe.6fXYukM83SzymulKnJBBnAOT3.W9vrHzmnNessy59sBlG')
+                    // Hash dummy com custo 12 para reduzir enumeracao por timing.
+                    await compare(credentials.password, '$2b$12$QZFbOv4D..danWphB6CJJOAOtZ.oQPUsezMV8q0X6.7nL5806uwJa')
                     return null
                 }
 

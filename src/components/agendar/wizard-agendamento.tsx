@@ -62,7 +62,7 @@ interface WizardAgendamentoProps {
     horariosColaborador: HorarioColaborador[]
     horariosFuncionamento: HorarioFuncionamento[]
     agendamentosExistentes: Agendamento[]
-    clienteId?: string // Will be used when real auth is implemented
+    clienteId?: string // Mantido por compatibilidade com props existentes; a action publica nao confia neste valor.
 }
 
 type Step = 0 | 1 | 2 | 3 | 4
@@ -79,13 +79,11 @@ export function WizardAgendamento({
     open,
     onOpenChange,
     empresaId,
-    empresaNome,
     servicos,
     colaboradores,
     horariosColaborador,
     horariosFuncionamento,
     agendamentosExistentes,
-    clienteId,
 }: WizardAgendamentoProps) {
     const [step, setStep] = useState<Step>(0)
     const [selectedServico, setSelectedServico] = useState<Servico | null>(null)
@@ -270,12 +268,9 @@ export function WizardAgendamento({
                 colaboradorId: selectedColaborador.id,
                 servicoId: selectedServico.id,
                 data: dataAgendamento,
-                preco: selectedServico.preco,
-                duracao: selectedServico.duracaoMin,
-                clienteId,
-                clienteNome: clienteNome || undefined,
+                clienteNome,
                 clienteCpf: clienteCpf || undefined,
-                clienteTelefone: clienteTelefone || undefined,
+                clienteTelefone,
                 clienteEmail: clienteEmail || undefined,
             })
 
@@ -287,7 +282,7 @@ export function WizardAgendamento({
             } else {
                 setSubmitError(result.error || "Erro ao criar agendamento")
             }
-        } catch (error) {
+        } catch {
             setSubmitError("Erro ao criar agendamento. Tente novamente.")
         } finally {
             setIsSubmitting(false)

@@ -17,7 +17,7 @@ async function main() {
     const count = faker.number.int({ min: 8, max: 15 })
     console.log(`Creating ${count} collaborators for empresa: ${empresas[0].nome}`)
 
-    const defaultPassword = await hash('123456', 10)
+    const defaultPassword = await hash('123456', 12)
 
     for (let i = 0; i < count; i++) {
         await db.colaborador.create({

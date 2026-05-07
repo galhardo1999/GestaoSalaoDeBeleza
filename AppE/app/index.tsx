@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Image, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { router } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StatusBar } from 'expo-status-bar';
@@ -11,20 +11,17 @@ export default function LoginScreen() {
     const [rememberMe, setRememberMe] = useState(false);
 
     useEffect(() => {
-        loadStoredIdentifier();
+        void AsyncStorage.getItem('saved_identifier')
+            .then((storedIdentifier) => {
+                if (storedIdentifier) {
+                    setIdentifier(storedIdentifier);
+                    setRememberMe(true);
+                }
+            })
+            .catch((error) => {
+                console.log('Error loading identifier:', error);
+            });
     }, []);
-
-    const loadStoredIdentifier = async () => {
-        try {
-            const storedIdentifier = await AsyncStorage.getItem('saved_identifier');
-            if (storedIdentifier) {
-                setIdentifier(storedIdentifier);
-                setRememberMe(true);
-            }
-        } catch (error) {
-            console.log('Error loading identifier:', error);
-        }
-    };
 
     const formatIdentifier = (text: string) => {
         // Remove non-numeric characters
@@ -96,6 +93,7 @@ export default function LoginScreen() {
 
                 // Store user data
                 await AsyncStorage.setItem('user_data', JSON.stringify(data.user));
+                await AsyncStorage.setItem('mobile_token', data.token);
 
                 router.replace('/dashboard');
             } else {

@@ -23,7 +23,7 @@ export default async function ConfiguracoesPage() {
         )
     }
 
-    const { data: company, userEmail } = await getCompanySettings(session.user.id)
+    const { data: company, userEmail } = await getCompanySettings()
     const horariosData = session.user.empresaId
         ? await getHorariosFuncionamento(session.user.empresaId)
         : []
@@ -36,7 +36,6 @@ export default async function ConfiguracoesPage() {
             <div className="bg-white rounded-xl border p-6">
                 <ConfiguracoesForm
                     initialData={company}
-                    userId={session.user.id}
                     userEmail={userEmail}
                     horariosData={horariosData}
                 />

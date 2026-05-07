@@ -75,7 +75,7 @@ export async function criarColaborador(
             }
         }
 
-        const hashedPassword = await hash(senha, 10)
+        const hashedPassword = await hash(senha, 12)
 
         // Verificar propriedade dos serviços
         if (servicos && servicos.length > 0) {
@@ -253,7 +253,7 @@ export async function editarColaborador(
         }
 
         if (senha) {
-            dataToUpdate.senha = await hash(senha, 10)
+            dataToUpdate.senha = await hash(senha, 12)
         }
 
         await db.$transaction(async (tx) => {
@@ -275,7 +275,7 @@ export async function editarColaborador(
                         cnpj: cpf || existingUser.cnpj // Update CPF if changed, otherwise keep old
                     }
                     if (senha) {
-                        userUpdate.senha = await hash(senha, 10)
+                        userUpdate.senha = await hash(senha, 12)
                     }
 
                     await tx.usuario.update({
@@ -289,7 +289,7 @@ export async function editarColaborador(
                         data: {
                             nome,
                             cnpj: cpf,
-                            senha: await hash(senha, 10),
+                            senha: await hash(senha, 12),
                             cargo: 'FUNCIONARIO',
                             empresaId: session.user.empresaId
                         }
@@ -301,7 +301,7 @@ export async function editarColaborador(
                     data: {
                         nome,
                         cnpj: cpf,
-                        senha: await hash(senha, 10),
+                        senha: await hash(senha, 12),
                         cargo: 'FUNCIONARIO',
                         empresaId: session.user.empresaId
                     }

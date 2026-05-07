@@ -1,62 +1,86 @@
 import { db } from "@/lib/db"
+import { aplicarRateLimit, criarTokenMobile, obterIpRequisicao } from "@/lib/seguranca"
 import { compare } from "bcryptjs"
 import { NextResponse } from "next/server"
+import { z } from "zod"
+
+const loginMobileSchema = z.object({
+    cnpj: z.string().min(11).max(18).transform((valor) => valor.replace(/\D/g, "")),
+    password: z.string().min(1).max(128),
+})
+
+const HASH_DUMMY = "$2b$12$QZFbOv4D..danWphB6CJJOAOtZ.oQPUsezMV8q0X6.7nL5806uwJa"
 
 export async function POST(req: Request) {
     try {
-        const body = await req.json()
-        const { cnpj, password } = body
+        const body: unknown = await req.json()
+        const parsed = loginMobileSchema.safeParse(body)
 
-        if (!cnpj || !password) {
-            return NextResponse.json({ success: false, error: "CNPJ e senha são obrigatórios" }, { status: 400 })
+        if (!parsed.success) {
+            return NextResponse.json(
+                { success: false, error: "Dados invalidos", details: parsed.error.flatten() },
+                { status: 400 },
+            )
         }
 
-        // Sanitize CNPJ input (remove non-digits) to ensure matching with DB
-        const cleanCnpj = cnpj.replace(/\D/g, "")
+        const { cnpj, password } = parsed.data
+        const ip = obterIpRequisicao(req.headers)
+        const limite = aplicarRateLimit(`login_mobile:${ip}:${cnpj}`, 5)
 
-        console.log("------------------------------------------")
-        console.log("MOBILE LOGIN REQUEST RECEIVED")
-        console.log("Raw CNPJ:", cnpj)
-        console.log("Clean CNPJ:", cleanCnpj)
-        console.log("Password provided:", !!password)
+        if (!limite.permitido) {
+            return NextResponse.json(
+                { success: false, error: "Muitas tentativas. Tente novamente em instantes." },
+                {
+                    status: 429,
+                    headers: {
+                        "Retry-After": Math.ceil((limite.resetEm - Date.now()) / 1000).toString(),
+                    },
+                },
+            )
+        }
 
         const user = await db.usuario.findUnique({
-            where: { cnpj: cleanCnpj },
+            where: { cnpj },
             include: {
-                empresa: true
-            }
+                empresa: true,
+            },
         })
 
-        console.log("User found in DB:", !!user ? "YES" : "NO")
-        if (user) {
-            console.log("User Cargo:", user.cargo)
-            console.log("User Hash:", user.senha.substring(0, 10) + "...")
-        }
-
         if (!user) {
-            return NextResponse.json({ success: false, error: "Credenciais inválidas" }, { status: 401 })
+            await compare(password, HASH_DUMMY)
+            return NextResponse.json({ success: false, error: "Credenciais invalidas" }, { status: 401 })
         }
 
-        const isPasswordValid = await compare(password, user.senha)
+        const senhaValida = await compare(password, user.senha)
 
-        if (!isPasswordValid) {
-            return NextResponse.json({ success: false, error: "Credenciais inválidas" }, { status: 401 })
+        if (!senhaValida) {
+            return NextResponse.json({ success: false, error: "Credenciais invalidas" }, { status: 401 })
         }
+
+        if (!user.empresaId) {
+            return NextResponse.json({ success: false, error: "Usuario sem empresa vinculada" }, { status: 403 })
+        }
+
+        const token = criarTokenMobile({
+            usuarioId: user.id,
+            empresaId: user.empresaId,
+            cargo: user.cargo,
+        })
 
         return NextResponse.json({
             success: true,
+            token,
             user: {
                 id: user.id,
                 nome: user.nome,
                 cnpj: user.cnpj,
                 cargo: user.cargo,
                 empresaId: user.empresaId,
-                empresaNome: user.empresa?.nome
-            }
+                empresaNome: user.empresa?.nome,
+            },
         })
-
-    } catch (error) {
-        console.error("Login error:", error)
+    } catch (erro) {
+        console.error("Login mobile error:", erro)
         return NextResponse.json({ success: false, error: "Erro interno do servidor" }, { status: 500 })
     }
 }

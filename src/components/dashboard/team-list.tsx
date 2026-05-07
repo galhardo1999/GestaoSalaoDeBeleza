@@ -1,119 +1,116 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { addMinutes, isWithinInterval } from "date-fns"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { cn } from "@/lib/utils"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Users } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
-interface TeamListProps {
-    colaboradores: any[] // Using any for simplicity with complex Prisma types, can refine later
+type ServicoEquipe = {
+    nome: string
+}
+
+type AgendamentoEquipe = {
+    data: string
+    valor: number | null
+    servico: {
+        nome: string
+        duracaoMin: number
+    } | null
+    cliente: {
+        nome: string
+    } | null
+}
+
+type ColaboradorEquipe = {
+    id: string
+    nome: string
+    foto: string | null
+    servicos: ServicoEquipe[]
+    agendamentos: AgendamentoEquipe[]
+}
+
+type TeamListProps = {
+    colaboradores: ColaboradorEquipe[]
 }
 
 export function TeamList({ colaboradores }: TeamListProps) {
-    const [now, setNow] = useState(new Date())
-
-    useEffect(() => {
-        // Update every 30 seconds to be responsive
-        const interval = setInterval(() => {
-            setNow(new Date())
-        }, 30000)
-
-        return () => clearInterval(interval)
-    }, [])
-
-    const teamStatus = colaboradores.map(colaborador => {
-        const currentAppointment = colaborador.agendamentos.find((apt: any) => {
-            const start = new Date(apt.data)
-            const duration = apt.servico?.duracaoMin || 30
-            const end = addMinutes(start, duration)
-            return isWithinInterval(now, { start, end })
-        })
-
-        if (currentAppointment) {
-            return {
-                ...colaborador,
-                status: 'ATENDENDO',
-                clientName: currentAppointment.cliente?.nome || 'Cliente',
-                serviceName: currentAppointment.servico?.nome || 'Serviço'
-            }
-        }
+    const desempenho = colaboradores.map((colaborador) => {
+        const atendimentos = colaborador.agendamentos.length
+        const receita = colaborador.agendamentos.reduce((sum, apt) => sum + Number(apt.valor || 0), 0)
+        
+        // Ex: 8 horas diárias (480 min)
+        const tempoTotalMin = colaborador.agendamentos.reduce((sum, apt) => sum + (apt.servico?.duracaoMin || 30), 0)
+        const ocupacao = Math.min(Math.round((tempoTotalMin / 480) * 100), 100)
 
         return {
             ...colaborador,
-            status: 'DISPONIVEL',
-            clientName: null,
-            serviceName: null
+            atendimentos,
+            receita,
+            ocupacao
         }
-    })
+    }).sort((a, b) => b.receita - a.receita) // Sort by highest revenue
 
-    const availableCount = teamStatus.filter((c: any) => c.status === 'DISPONIVEL').length
+    // Mapeamento de cores para as barras de progresso (apenas para variar visualmente)
+    const getBarColor = (index: number) => {
+        const colors = ["bg-[#7B61FF]", "bg-[#4ADE80]", "bg-[#3B82F6]", "bg-[#F97316]", "bg-[#EC4899]"]
+        return colors[index % colors.length]
+    }
 
     return (
-        <Card className="bg-white h-fit">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <div>
-                    <CardTitle className="text-xl font-serif">Equipe</CardTitle>
-                    <p className="text-sm text-gray-500">Status em tempo real</p>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-500">
-                    <span className="h-2 w-2 rounded-full bg-emerald-400" />
-                    {availableCount} disponíveis
-                </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                {teamStatus.map((member: any) => (
-                    <div
-                        key={member.id}
-                        className="flex items-center justify-between rounded-xl border p-4 bg-gray-50/50 gap-4"
-                    >
-                        <div className="flex items-center gap-4 min-w-0">
-                            <div className="relative flex-shrink-0">
-                                <Avatar className="h-10 w-10 border-2 border-white shadow-sm">
-                                    <AvatarImage src={member.foto || undefined} />
-                                    <AvatarFallback className="bg-orange-100 text-orange-600 font-medium">
-                                        {member.nome.charAt(0).toUpperCase()}
+        <Card className="rounded-[10px] border-[#2A2418] bg-[#111111] py-0 shadow-[0_18px_50px_rgba(0,0,0,0.30)]">
+            <div className="flex items-center gap-2 p-5 border-b border-[#2A2418]">
+                <Users className="h-4 w-4 text-[#71685F]" />
+                <h2 className="font-heading text-[15px] font-semibold text-[#F5F0E8]">Desempenho dos colaboradores hoje</h2>
+            </div>
+            
+            <CardContent className="p-0">
+                <div className="px-5 py-2 space-y-1">
+                    {desempenho.map((colaborador, index) => (
+                        <div
+                            key={colaborador.id}
+                            className="flex items-center justify-between gap-4 py-3 border-b border-[#2A2418] last:border-0 hover:bg-[#1B1B1B] -mx-5 px-5 transition-colors"
+                        >
+                            <div className="flex min-w-0 items-center gap-3">
+                                <Avatar className="h-9 w-9 border border-[#2A2418]">
+                                    <AvatarImage src={colaborador.foto || undefined} />
+                                    <AvatarFallback className="bg-[#EAEAEA] text-[#111111] font-bold text-[11px]">
+                                        {colaborador.nome.substring(0, 2).toUpperCase()}
                                     </AvatarFallback>
                                 </Avatar>
-                                <span className={cn(
-                                    "absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white",
-                                    member.status === 'ATENDENDO' ? "bg-amber-400" : "bg-emerald-400"
-                                )} />
+                                <div className="min-w-0 flex-1">
+                                    <p className="truncate text-[13px] font-bold text-[#F5F0E8]">{colaborador.nome}</p>
+                                    <p className="mt-0.5 truncate text-[11px] font-medium text-[#A9A198]">
+                                        {colaborador.atendimentos} atend. - R$ {colaborador.receita.toLocaleString('pt-BR', { minimumFractionDigits: 0 })}
+                                    </p>
+                                </div>
                             </div>
-                            <div className="min-w-0 flex-1">
-                                <p className="font-semibold text-gray-900 truncate">{member.nome}</p>
-                                <p className="text-sm text-gray-500 truncate">
-                                    {member.servicos && member.servicos.length > 0
-                                        ? member.servicos.map((s: any) => s.nome).join(', ')
-                                        : 'Sem serviços'}
-                                </p>
+
+                            <div className="flex flex-col items-end gap-1.5 w-24">
+                                <div className="h-1.5 w-full bg-[#1B1B1B] rounded-full overflow-hidden">
+                                    <div 
+                                        className={`h-full rounded-full ${getBarColor(index)}`} 
+                                        style={{ width: `${colaborador.ocupacao}%` }}
+                                    />
+                                </div>
+                                <span className="text-[10px] font-semibold text-[#71685F]">
+                                    {colaborador.ocupacao}%
+                                </span>
                             </div>
                         </div>
+                    ))}
 
-                        {member.status === 'ATENDENDO' ? (
-                            <div className="text-right flex-shrink-0">
-                                <div className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800">
-                                    <span className="mr-1.5 h-1.5 w-1.5 rounded-full bg-amber-500" />
-                                    Atendendo
-                                </div>
-                                <p className="text-xs text-gray-400 mt-1">
-                                    com {member.clientName?.split(' ')[0]}
-                                </p>
-                            </div>
-                        ) : (
-                            <div className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-800 flex-shrink-0">
-                                <span className="mr-1.5 h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                                Disponível
-                            </div>
-                        )}
-                    </div>
-                ))}
+                    {desempenho.length === 0 && (
+                        <div className="flex h-full items-center justify-center p-8 text-center text-[#A9A198]">
+                            <p className="text-sm font-medium">Nenhum colaborador encontrado.</p>
+                        </div>
+                    )}
+                </div>
 
-                {teamStatus.length === 0 && (
-                    <p className="text-center text-sm text-muted-foreground py-4">
-                        Nenhum colaborador encontrado.
-                    </p>
-                )}
+                <div className="p-5 border-t border-[#2A2418]">
+                    <Button variant="outline" className="w-full h-10 border-[#2A2418] bg-transparent text-[#A9A198] hover:bg-[#1B1B1B] hover:text-[#D4AF37] hover:border-[#D4AF37]/50 rounded-[8px] text-[13px] font-semibold transition-colors">
+                        Ver comissões do mês
+                    </Button>
+                </div>
             </CardContent>
         </Card>
     )

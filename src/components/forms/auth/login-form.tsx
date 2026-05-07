@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { signIn, getSession } from "next-auth/react"
-import { Loader2 } from "lucide-react"
+import { Loader2, ArrowRight } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -18,7 +18,6 @@ import {
     FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
 const formSchema = z.object({
     cnpj: z.string().min(11, {
@@ -68,76 +67,93 @@ export function LoginForm() {
     }
 
     return (
-        <Card className="w-[350px]">
-            <CardHeader>
-                <CardTitle>Acesso ao Sistema</CardTitle>
-                <CardDescription>
-                    Entre com seu CPF/CNPJ e senha para continuar.
-                </CardDescription>
-            </CardHeader>
-            <CardContent>
-                <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                        <FormField
-                            control={form.control}
-                            name="cnpj"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>CPF/CNPJ</FormLabel>
-                                    <FormControl>
-                                        <Input
-                                            placeholder="00.000.000/0000-00"
-                                            {...field}
-                                            onChange={(e) => {
-                                                let value = e.target.value.replace(/\D/g, "")
+        <div className="w-full">
+            <div className="mb-8 text-center lg:text-left">
+                <h2 className="font-heading text-3xl font-bold tracking-tight mb-2">Bem-vindo(a) de volta</h2>
+                <p className="text-muted-foreground text-sm">
+                    Entre com suas credenciais para acessar o painel de gestão.
+                </p>
+            </div>
+            
+            <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                    <FormField
+                        control={form.control}
+                        name="cnpj"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel className="text-foreground/80 uppercase text-xs tracking-wider font-semibold">CPF/CNPJ</FormLabel>
+                                <FormControl>
+                                    <Input
+                                        className="h-12 border-muted-foreground/20 focus-visible:ring-primary focus-visible:border-primary transition-all rounded-md"
+                                        placeholder="00.000.000/0000-00"
+                                        {...field}
+                                        onChange={(e) => {
+                                            let value = e.target.value.replace(/\D/g, "")
 
-                                                if (value.length > 14) value = value.slice(0, 14)
+                                            if (value.length > 14) value = value.slice(0, 14)
 
-                                                if (value.length > 11) {
-                                                    // Máscara CNPJ
-                                                    value = value.replace(/^(\d{2})(\d)/, "$1.$2")
-                                                    value = value.replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3")
-                                                    value = value.replace(/\.(\d{3})(\d)/, ".$1/$2")
-                                                    value = value.replace(/(\d{4})(\d)/, "$1-$2")
-                                                } else {
-                                                    // Máscara CPF
-                                                    value = value.replace(/^(\d{3})(\d)/, "$1.$2")
-                                                    value = value.replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3")
-                                                    value = value.replace(/\.(\d{3})(\d)/, ".$1-$2")
-                                                }
+                                            if (value.length > 11) {
+                                                // Máscara CNPJ
+                                                value = value.replace(/^(\d{2})(\d)/, "$1.$2")
+                                                value = value.replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3")
+                                                value = value.replace(/\.(\d{3})(\d)/, ".$1/$2")
+                                                value = value.replace(/(\d{4})(\d)/, "$1-$2")
+                                            } else {
+                                                // Máscara CPF
+                                                value = value.replace(/^(\d{3})(\d)/, "$1.$2")
+                                                value = value.replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3")
+                                                value = value.replace(/\.(\d{3})(\d)/, ".$1-$2")
+                                            }
 
-                                                field.onChange(value)
-                                            }}
-                                            maxLength={18}
-                                        />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="password"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Senha</FormLabel>
-                                    <FormControl>
-                                        <Input type="password" placeholder="******" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        {error && (
-                            <div className="text-sm text-red-500 font-medium">{error}</div>
+                                            field.onChange(value)
+                                        }}
+                                        maxLength={18}
+                                    />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
                         )}
-                        <Button type="submit" className="w-full" disabled={isLoading}>
-                            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            Entrar
-                        </Button>
-                    </form>
-                </Form>
-            </CardContent>
-        </Card>
+                    />
+                    <FormField
+                        control={form.control}
+                        name="password"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel className="text-foreground/80 uppercase text-xs tracking-wider font-semibold">Senha</FormLabel>
+                                <FormControl>
+                                    <Input 
+                                        className="h-12 border-muted-foreground/20 focus-visible:ring-primary focus-visible:border-primary transition-all rounded-md" 
+                                        type="password" 
+                                        placeholder="******" 
+                                        {...field} 
+                                    />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    {error && (
+                        <div className="text-sm text-destructive font-medium bg-destructive/10 p-3 rounded-md border border-destructive/20 text-center">
+                            {error}
+                        </div>
+                    )}
+                    <Button 
+                        type="submit" 
+                        className="w-full h-12 text-base font-semibold transition-all hover:shadow-gold rounded-md group" 
+                        disabled={isLoading}
+                    >
+                        {isLoading ? (
+                            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        ) : (
+                            <>
+                                Entrar no sistema
+                                <ArrowRight className="ml-2 h-4 w-4 opacity-70 group-hover:translate-x-1 transition-transform" />
+                            </>
+                        )}
+                    </Button>
+                </form>
+            </Form>
+        </div>
     )
 }

@@ -3,10 +3,18 @@ import { TeamList } from "./team-list"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 
 interface DashboardTeamProps {
+    date: Date
     empresaId: string
 }
 
-export async function DashboardTeam({ empresaId }: DashboardTeamProps) {
+export async function DashboardTeam({ date, empresaId }: DashboardTeamProps) {
+    const year = date.getFullYear()
+    const month = date.getMonth()
+    const day = date.getDate()
+
+    const startOfDay = new Date(Date.UTC(year, month, day, 3, 0, 0))
+    const endOfDay = new Date(Date.UTC(year, month, day, 26, 59, 59))
+
     const colaboradores = await db.colaborador.findMany({
         where: { empresaId },
         include: {
@@ -14,8 +22,8 @@ export async function DashboardTeam({ empresaId }: DashboardTeamProps) {
             agendamentos: {
                 where: {
                     data: {
-                        gte: new Date(new Date().setHours(0, 0, 0, 0)),
-                        lt: new Date(new Date().setHours(23, 59, 59, 999))
+                        gte: startOfDay,
+                        lt: endOfDay
                     },
                     status: {
                         notIn: ['CANCELADO', 'NAO_COMPARECEU']
@@ -36,50 +44,23 @@ export async function DashboardTeam({ empresaId }: DashboardTeamProps) {
     // Serialize data to convert Prisma Decimal and Date to plain JavaScript types
     const serializedColaboradores = colaboradores.map(c => ({
         id: c.id,
-        codigo: c.codigo,
         nome: c.nome,
-        email: c.email,
-        cpf: c.cpf,
-        senha: c.senha,
         foto: c.foto,
-        comissaoTipo: c.comissaoTipo,
-        comissaoValor: c.comissaoValor ? Number(c.comissaoValor) : null,
-        criadoEm: c.criadoEm.toISOString(),
-        atualizadoEm: c.atualizadoEm.toISOString(),
-        empresaId: c.empresaId,
         servicos: c.servicos.map(s => ({
-            id: s.id,
             nome: s.nome,
-            preco: Number(s.preco),
-            duracaoMin: s.duracaoMin,
-            ativo: s.ativo,
-            criadoEm: s.criadoEm.toISOString(),
-            atualizadoEm: s.atualizadoEm.toISOString(),
-            empresaId: s.empresaId
         })),
         agendamentos: c.agendamentos.map(a => {
             const firstItem = a.agendamento_itens[0]
-            const totalDuration = a.agendamento_itens.reduce((sum, item) => sum + item.duracao, 0) || 30
+            const totalDuration = a.agendamento_itens.reduce((sum, item) => sum + (item.duracao || item.servicos.duracaoMin || 30), 0)
             return {
-                id: a.id,
                 data: a.data.toISOString(),
-                status: a.status,
                 valor: a.valor ? Number(a.valor) : null,
-                observacoes: a.observacoes,
-                criadoEm: a.criadoEm.toISOString(),
-                atualizadoEm: a.atualizadoEm.toISOString(),
                 servico: firstItem ? {
-                    id: firstItem.servicos.id,
                     nome: firstItem.servicos.nome,
-                    preco: Number(firstItem.preco),
                     duracaoMin: totalDuration,
-                    ativo: firstItem.servicos.ativo
                 } : null,
                 cliente: a.cliente ? {
-                    id: a.cliente.id,
                     nome: a.cliente.nome,
-                    email: a.cliente.email,
-                    telefone: a.cliente.telefone
                 } : null
             }
         })
@@ -90,24 +71,25 @@ export async function DashboardTeam({ empresaId }: DashboardTeamProps) {
 
 export function DashboardTeamSkeleton() {
     return (
-        <Card className="bg-white h-fit">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <div>
-                    <div className="h-6 w-24 bg-gray-200 rounded animate-pulse mb-1" />
-                    <div className="h-4 w-32 bg-gray-200 rounded animate-pulse" />
-                </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
+        <Card className="h-[400px] rounded-[10px] border-[#2A2418] bg-[#111111] py-0 shadow-[0_18px_50px_rgba(0,0,0,0.30)] flex flex-col">
+            <div className="flex items-center gap-2 p-5 border-b border-[#2A2418]">
+                <div className="h-4 w-4 rounded bg-[#2A2418] animate-pulse" />
+                <div className="h-4 w-32 rounded bg-[#2A2418] animate-pulse" />
+            </div>
+            <CardContent className="flex-1 space-y-4 px-5 pb-5 pt-4">
                 {[1, 2, 3].map((i) => (
-                    <div key={i} className="flex items-center justify-between rounded-xl border p-4 bg-gray-50/50">
+                    <div key={i} className="flex items-center justify-between border-b border-[#2A2418] pb-3 last:border-0">
                         <div className="flex items-center gap-4">
-                            <div className="h-10 w-10 rounded-full bg-gray-200 animate-pulse" />
+                            <div className="h-9 w-9 animate-pulse rounded-full bg-[#2A2418]" />
                             <div>
-                                <div className="h-4 w-24 bg-gray-200 rounded animate-pulse mb-1" />
-                                <div className="h-3 w-16 bg-gray-200 rounded animate-pulse" />
+                                <div className="mb-1 h-3 w-24 animate-pulse rounded bg-[#2A2418]" />
+                                <div className="h-2 w-16 animate-pulse rounded bg-[#2A2418]" />
                             </div>
                         </div>
-                        <div className="h-6 w-20 bg-gray-200 rounded-full animate-pulse" />
+                        <div className="flex flex-col items-end gap-1.5 w-24">
+                            <div className="h-1.5 w-full bg-[#2A2418] rounded-full animate-pulse" />
+                            <div className="h-2 w-6 bg-[#2A2418] rounded animate-pulse" />
+                        </div>
                     </div>
                 ))}
             </CardContent>

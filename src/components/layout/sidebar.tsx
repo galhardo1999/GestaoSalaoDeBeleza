@@ -1,17 +1,32 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { ChevronLeft, ChevronRight, LayoutDashboard, Calendar, Users, Scissors, LogOut, ListTodo, Settings, Sparkles, UserCog, Wallet, BarChart3, ChevronDown, Percent, PieChart, Folder, ChevronsUpDown, Loader2, FileText } from "lucide-react"
 import { signOut } from "next-auth/react"
 import {
-    Tooltip,
-    TooltipContent,
-    TooltipProvider,
-    TooltipTrigger,
-} from "@/components/ui/tooltip"
+    Calendar,
+    ChevronDown,
+    ChevronLeft,
+    ChevronRight,
+    ChevronsUpDown,
+    FileText,
+    Folder,
+    LayoutDashboard,
+    ListTodo,
+    Loader2,
+    LogOut,
+    Percent,
+    PieChart,
+    Scissors,
+    Settings,
+    UserCog,
+    Users,
+    Wallet,
+    type LucideIcon,
+} from "lucide-react"
+import { getCompaniesForSwitcher, switchCompany } from "@/actions/super-admin"
+import { Button } from "@/components/ui/button"
 import {
     Collapsible,
     CollapsibleContent,
@@ -25,17 +40,22 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { useState, useEffect } from "react"
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip"
+import { cn } from "@/lib/utils"
 
-interface RouteItem {
+type RotaMenu = {
     label: string
-    icon: any
+    icon: LucideIcon
     href: string
-    active?: boolean
-    submenus?: RouteItem[]
+    submenus?: RotaMenu[]
 }
 
-const routes: RouteItem[] = [
+const rotas: RotaMenu[] = [
     {
         label: "Dashboard",
         icon: LayoutDashboard,
@@ -71,7 +91,7 @@ const routes: RouteItem[] = [
                 icon: Scissors,
                 href: "/dashboard/servicos",
             },
-        ]
+        ],
     },
     {
         label: "Financeiro",
@@ -81,27 +101,29 @@ const routes: RouteItem[] = [
             {
                 label: "Visão Geral",
                 href: "/dashboard/financeiro",
-                icon: PieChart
+                icon: PieChart,
             },
             {
                 label: "Comissões",
                 href: "/dashboard/financeiro/comissao",
-                icon: Percent
-            }
-        ]
+                icon: Percent,
+            },
+        ],
     },
     {
         label: "Relatórios",
         icon: FileText,
         href: "/dashboard/relatorios",
     },
-
 ]
 
+type EmpresaSwitcher = {
+    value: string
+    label: string
+    cnpj: string
+}
 
-import { getCompaniesForSwitcher, switchCompany } from "@/actions/super-admin"
-// ...
-interface SidebarProps {
+type SidebarProps = {
     isCollapsed: boolean
     toggleCollapse: () => void
     companyName?: string
@@ -110,205 +132,234 @@ interface SidebarProps {
     userCargo?: string
 }
 
+const formatarCnpj = (cnpj: string) =>
+    cnpj.replace(/\D/g, "").replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2}).*/, "$1.$2.$3/$4-$5")
+
 export function Sidebar({ isCollapsed, toggleCollapse, companyName, companyCnpj, userName, userCargo }: SidebarProps) {
     const pathname = usePathname()
-    // State to track open collapsibles, could be based on current path
-    const [openMenus, setOpenMenus] = useState<string[]>([])
-    const [companies, setCompanies] = useState<{ value: string, label: string, cnpj: string }[]>([])
-    const [isLoadingCompanies, setIsLoadingCompanies] = useState(false)
-    const [isSwitcherOpen, setIsSwitcherOpen] = useState(false)
+    const [menusAbertos, setMenusAbertos] = useState<string[]>([])
+    const [empresas, setEmpresas] = useState<EmpresaSwitcher[]>([])
+    const [carregandoEmpresas, setCarregandoEmpresas] = useState(false)
+    const [switcherAberto, setSwitcherAberto] = useState(false)
 
     useEffect(() => {
-        if (userCargo === "SUPER_ADMIN") {
-            const load = async () => {
-                setIsLoadingCompanies(true)
-                try {
-                    const data = await getCompaniesForSwitcher()
-                    setCompanies(data)
-                } catch (error) {
-                    console.error("Failed to load companies", error)
-                } finally {
-                    setIsLoadingCompanies(false)
-                }
-            }
-            load()
+        const menusAtivos = rotas
+            .filter((rota) => rota.submenus?.some((submenu) => pathname === submenu.href))
+            .map((rota) => rota.label)
+
+        if (menusAtivos.length > 0) {
+            setMenusAbertos((menusAtuais) => Array.from(new Set([...menusAtuais, ...menusAtivos])))
         }
+    }, [pathname])
+
+    useEffect(() => {
+        if (userCargo !== "SUPER_ADMIN") {
+            return
+        }
+
+        const carregarEmpresas = async () => {
+            setCarregandoEmpresas(true)
+            try {
+                const dados = await getCompaniesForSwitcher()
+                setEmpresas(dados)
+            } catch (erro) {
+                console.error("Falha ao carregar empresas", erro)
+            } finally {
+                setCarregandoEmpresas(false)
+            }
+        }
+
+        carregarEmpresas()
     }, [userCargo])
 
-    const handleSwitch = async (empresaId: string) => {
+    const trocarEmpresa = async (empresaId: string) => {
         try {
             await switchCompany(empresaId)
             window.location.reload()
-        } catch (error) {
-            console.error("Failed to switch company", error)
+        } catch (erro) {
+            console.error("Falha ao trocar de empresa", erro)
             alert("Erro ao trocar de empresa")
         }
     }
 
-    const toggleMenu = (label: string) => {
-        setOpenMenus(prev =>
-            prev.includes(label) ? prev.filter(l => l !== label) : [...prev, label]
+    const alternarMenu = (label: string) => {
+        setMenusAbertos((menusAtuais) =>
+            menusAtuais.includes(label)
+                ? menusAtuais.filter((menu) => menu !== label)
+                : [...menusAtuais, label]
         )
     }
 
+    const classeItemMenu = (ativo: boolean) =>
+        cn(
+            "group relative flex w-full items-center rounded-[8px] px-3.5 py-3 text-sm font-medium transition-colors",
+            ativo
+                ? "bg-[#D4AF37]/10 text-[#F5F0E8]"
+                : "text-[#A9A198] hover:bg-[#171717] hover:text-[#F5F0E8]",
+            isCollapsed && "justify-center px-2"
+        )
+
+    const classeIconeMenu = (ativo: boolean, comMargem = true) =>
+        cn(
+            "h-5 w-5 transition-colors",
+            ativo ? "text-[#D4AF37]" : "text-[#756C62] group-hover:text-[#D4AF37]",
+            comMargem && !isCollapsed && "mr-3.5"
+        )
+
     return (
         <TooltipProvider delayDuration={0}>
-            <div className="space-y-4 py-4 flex flex-col h-full bg-white relative">
+            <div className="flex h-full flex-col border-r border-[#2A2418] bg-[#0F0F0F] py-5 text-[#F5F0E8]">
                 <Button
                     onClick={toggleCollapse}
                     variant="ghost"
                     size="icon"
                     className={cn(
-                        "absolute -right-3 top-6 h-8 w-8 rounded-full bg-white border shadow-sm hover:bg-gray-50 z-20 hidden md:flex items-center justify-center",
+                        "absolute -right-3 top-7 z-20 hidden h-8 w-8 items-center justify-center rounded-[8px] border border-[#3A301C] bg-[#141414] text-[#C9A84C] shadow-[0_10px_25px_rgba(0,0,0,0.35)] hover:border-[#D4AF37]/60 hover:bg-[#191919] md:flex",
                         isCollapsed ? "translate-x-1" : ""
                     )}
                 >
-                    {isCollapsed ? <ChevronRight className="h-4 w-4 text-gray-600" /> : <ChevronLeft className="h-4 w-4 text-gray-600" />}
+                    {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
                 </Button>
 
-                <div className="px-4 py-2 flex-1 relative">
-                    <div className="mb-2">
-                        <Link href="/dashboard" className="flex items-center overflow-hidden mb-4">
-                            <div className="h-12 w-12 min-w-[3rem] rounded-2xl bg-blue-50 flex items-center justify-center mr-3 hover:opacity-80 transition shrink-0">
-                                <Sparkles className="h-6 w-6 text-blue-600" />
-                            </div>
-                            {!isCollapsed && (
-                                <div className="overflow-hidden transition-all duration-300 whitespace-nowrap">
-                                    <h1 className="text-2xl font-bold text-gray-900 leading-none mb-1">
-                                        Beleza
-                                    </h1>
-                                    <p className="text-sm text-gray-500 font-medium">
-                                        Gestão de Salão
-                                    </p>
-                                </div>
-                            )}
-                        </Link>
-
+                <div className="relative flex-1 overflow-y-auto px-4">
+                    <Link href="/dashboard" className="mb-7 flex items-center overflow-hidden">
+                        <div className="mr-3 flex h-12 w-12 min-w-[3rem] shrink-0 items-center justify-center rounded-[10px] border border-[#D4AF37]/35 bg-[#D4AF37]/10 text-[#D4AF37] shadow-[0_12px_28px_rgba(212,175,55,0.08)] transition-colors hover:border-[#D4AF37]/60">
+                            <Scissors className="h-6 w-6" />
+                        </div>
                         {!isCollapsed && (
-                            <div className="pl-1 animate-in fade-in duration-300 selection:bg-none">
-
-                                {userCargo === "SUPER_ADMIN" ? (
-                                    <DropdownMenu open={isSwitcherOpen} onOpenChange={setIsSwitcherOpen}>
-                                        <DropdownMenuTrigger asChild>
-                                            <div className="cursor-pointer hover:bg-gray-100 p-2 rounded-md -ml-2 transition-colors group">
-                                                <div className="flex items-center justify-between">
-                                                    <div>
-                                                        {companyName ? (
-                                                            <>
-                                                                <p className="text-sm font-bold text-gray-900 truncate max-w-[180px]" title={companyName}>
-                                                                    {companyName}
-                                                                </p>
-                                                                {companyCnpj && (
-                                                                    <p className="text-sm text-gray-400 mt-0.5">
-                                                                        {companyCnpj.replace(/\D/g, "").replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2}).*/, "$1.$2.$3/$4-$5")}
-                                                                    </p>
-                                                                )}
-                                                            </>
-                                                        ) : (
-                                                            <p className="text-sm font-semibold text-blue-600">
-                                                                Selecionar Empresa
-                                                            </p>
-                                                        )}
-                                                    </div>
-                                                    <ChevronsUpDown className="h-4 w-4 text-gray-400 group-hover:text-gray-600" />
-                                                </div>
-                                                {userName && (
-                                                    <p className="text-xs text-gray-500 mt-1 font-medium truncate" title={userName}>
-                                                        {userCargo === "SUPER_ADMIN" ? "Administrador" : `Usuário: ${userName}`}
-                                                    </p>
-                                                )}
-                                            </div>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent className="w-64 max-h-[300px] overflow-y-auto" align="start">
-                                            <DropdownMenuLabel>Trocar Empresa</DropdownMenuLabel>
-                                            <DropdownMenuSeparator />
-                                            {isLoadingCompanies ? (
-                                                <div className="flex items-center justify-center p-4">
-                                                    <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
-                                                </div>
-                                            ) : (
-                                                companies.map((company) => (
-                                                    <DropdownMenuItem
-                                                        key={company.value} onSelect={() => handleSwitch(company.value)}
-                                                        className="flex flex-col items-start gap-1 cursor-pointer"
-                                                    >
-                                                        <span className="font-medium">{company.label}</span>
-                                                        <span className="text-xs text-gray-400">{company.cnpj.replace(/\D/g, "").replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2}).*/, "$1.$2.$3/$4-$5")}</span>
-                                                    </DropdownMenuItem>
-                                                ))
-                                            )}
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
-                                ) : (companyName || companyCnpj) ? (
-                                    <>
-                                        {companyName && (
-                                            <p className="text-sm font-bold text-gray-900 truncate" title={companyName}>
-                                                {companyName}
-                                            </p>
-                                        )}
-                                        {companyCnpj && (
-                                            <p className="text-sm text-gray-400 mt-0.5">
-                                                {companyCnpj.replace(/\D/g, "").replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2}).*/, "$1.$2.$3/$4-$5")}
-                                            </p>
-                                        )}
-                                        {userName && (
-                                            <p className="text-xs text-gray-500 mt-1 font-medium truncate" title={userName}>
-                                                {userCargo === "SUPER_ADMIN" ? "Administrador" : `Usuário: ${userName}`}
-                                            </p>
-                                        )}
-                                    </>
-                                ) : null}
+                            <div className="overflow-hidden whitespace-nowrap transition-all duration-300">
+                                <h1 className="font-heading text-[1.35rem] font-semibold leading-none tracking-normal text-[#F5F0E8]">
+                                    BARBER & CO.
+                                </h1>
+                                <p className="mt-1.5 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#C9A84C]">
+                                    Gestão Premium
+                                </p>
                             </div>
                         )}
-                    </div>
+                    </Link>
 
-                    <div className="h-[1px] bg-gray-100 w-full mb-6" />
+                    {!isCollapsed && (
+                        <div className="mb-5 animate-in fade-in duration-300">
+                            {userCargo === "SUPER_ADMIN" ? (
+                                <DropdownMenu open={switcherAberto} onOpenChange={setSwitcherAberto}>
+                                    <DropdownMenuTrigger asChild>
+                                        <button className="group w-full cursor-pointer rounded-[10px] border border-[#2A2418] bg-[#151515] p-3 text-left transition-colors hover:border-[#D4AF37]/35 hover:bg-[#181818]">
+                                            <div className="flex items-center justify-between gap-3">
+                                                <div className="min-w-0">
+                                                    {companyName ? (
+                                                        <>
+                                                            <p className="truncate text-sm font-semibold text-[#F5F0E8]" title={companyName}>
+                                                                {companyName}
+                                                            </p>
+                                                            {companyCnpj && (
+                                                                <p className="mt-1 text-xs text-[#A9A198]">
+                                                                    {formatarCnpj(companyCnpj)}
+                                                                </p>
+                                                            )}
+                                                        </>
+                                                    ) : (
+                                                        <p className="text-sm font-semibold text-[#D4AF37]">
+                                                            Selecionar Empresa
+                                                        </p>
+                                                    )}
+                                                </div>
+                                                <ChevronsUpDown className="h-4 w-4 shrink-0 text-[#7D756C] group-hover:text-[#D4AF37]" />
+                                            </div>
+                                            {userName && (
+                                                <p className="mt-3 truncate border-t border-[#2A2418] pt-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#8C8379]" title={userName}>
+                                                    {userCargo === "SUPER_ADMIN" ? "Administrador" : userName}
+                                                </p>
+                                            )}
+                                        </button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent className="max-h-[300px] w-64 overflow-y-auto border-[#2A2418] bg-[#151515] text-[#F5F0E8] shadow-[0_24px_70px_rgba(0,0,0,0.55)]" align="start">
+                                        <DropdownMenuLabel className="font-heading text-[#C9A84C]">Trocar Empresa</DropdownMenuLabel>
+                                        <DropdownMenuSeparator className="bg-[#2A2418]" />
+                                        {carregandoEmpresas ? (
+                                            <div className="flex items-center justify-center p-4">
+                                                <Loader2 className="h-4 w-4 animate-spin text-[#D4AF37]" />
+                                            </div>
+                                        ) : (
+                                            empresas.map((empresa) => (
+                                                <DropdownMenuItem
+                                                    key={empresa.value}
+                                                    onSelect={() => trocarEmpresa(empresa.value)}
+                                                    className="flex cursor-pointer flex-col items-start gap-1 focus:bg-[#D4AF37]/10 focus:text-[#D4AF37]"
+                                                >
+                                                    <span className="font-medium">{empresa.label}</span>
+                                                    <span className="text-xs text-[#A9A198]">{formatarCnpj(empresa.cnpj)}</span>
+                                                </DropdownMenuItem>
+                                            ))
+                                        )}
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            ) : (companyName || companyCnpj) ? (
+                                <div className="rounded-[10px] border border-[#2A2418] bg-[#151515] p-3">
+                                    {companyName && (
+                                        <p className="truncate text-sm font-semibold text-[#F5F0E8]" title={companyName}>
+                                            {companyName}
+                                        </p>
+                                    )}
+                                    {companyCnpj && (
+                                        <p className="mt-1 text-xs text-[#A9A198]">
+                                            {formatarCnpj(companyCnpj)}
+                                        </p>
+                                    )}
+                                    {userName && (
+                                        <p className="mt-3 truncate border-t border-[#2A2418] pt-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#8C8379]" title={userName}>
+                                            {userCargo === "SUPER_ADMIN" ? "Administrador" : userName}
+                                        </p>
+                                    )}
+                                </div>
+                            ) : null}
+                        </div>
+                    )}
+
+                    <div className="mb-4 h-px w-full bg-[#2A2418]" />
+                    {!isCollapsed && (
+                        <p className="mb-3 px-2 text-[10px] font-semibold uppercase tracking-[0.28em] text-[#71685F]">
+                            Operação
+                        </p>
+                    )}
 
                     <div className="space-y-1.5">
-                        {routes.map((route) => {
-                            const isActive = pathname === route.href || route.submenus?.some(s => pathname === s.href)
+                        {rotas.map((rota) => {
+                            const ativo = pathname === rota.href || Boolean(rota.submenus?.some((submenu) => pathname === submenu.href))
 
-                            if (route.submenus) {
+                            if (rota.submenus) {
                                 if (isCollapsed) {
-                                    // Collapsed mode: Dropdown
                                     return (
-                                        <DropdownMenu key={route.href}>
+                                        <DropdownMenu key={rota.href}>
                                             <DropdownMenuTrigger asChild>
                                                 <Button
                                                     variant="ghost"
-                                                    className={cn(
-                                                        "w-full h-auto p-3.5 justify-center rounded-2xl group",
-                                                        isActive ? "bg-blue-50 text-blue-600" : "text-gray-500 hover:text-gray-900 hover:bg-gray-50",
-                                                        "px-2"
-                                                    )}
+                                                    className={classeItemMenu(ativo)}
                                                 >
-                                                    <div className="flex items-center flex-1">
-                                                        <route.icon className={cn("h-[22px] w-[22px] transition-transform duration-200 group-hover:scale-110",
-                                                            isActive ? "text-blue-600" : "text-gray-400 group-hover:text-gray-500"
-                                                        )} />
-                                                    </div>
+                                                    {ativo && <span className="absolute left-0 top-2 h-7 w-[2px] rounded-r-full bg-[#D4AF37]" />}
+                                                    <rota.icon className={classeIconeMenu(ativo, false)} />
                                                 </Button>
                                             </DropdownMenuTrigger>
-                                            <DropdownMenuContent side="right" align="start" sideOffset={20} className="w-48 ml-2">
-                                                <DropdownMenuLabel className="text-xs font-normal text-muted-foreground px-2 py-1.5">
-                                                    {route.label}
+                                            <DropdownMenuContent side="right" align="start" sideOffset={18} className="ml-2 w-52 border-[#2A2418] bg-[#151515] text-[#F5F0E8] shadow-[0_24px_70px_rgba(0,0,0,0.55)]">
+                                                <DropdownMenuLabel className="px-2 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-[#C9A84C]">
+                                                    {rota.label}
                                                 </DropdownMenuLabel>
-                                                <DropdownMenuSeparator className="-mx-1 my-1" />
-                                                {route.submenus.map(sub => {
-                                                    const isSubActive = pathname === sub.href
+                                                <DropdownMenuSeparator className="-mx-1 my-1 bg-[#2A2418]" />
+                                                {rota.submenus.map((submenu) => {
+                                                    const submenuAtivo = pathname === submenu.href
+
                                                     return (
-                                                        <DropdownMenuItem key={sub.href} asChild className="p-0 focus:bg-transparent">
+                                                        <DropdownMenuItem key={submenu.href} asChild className="p-0 focus:bg-transparent">
                                                             <Link
-                                                                href={sub.href}
+                                                                href={submenu.href}
                                                                 className={cn(
-                                                                    "flex items-center w-full px-2 py-1.5 mx-1 my-0.5 rounded-md text-sm transition-colors cursor-pointer",
-                                                                    isSubActive
-                                                                        ? "bg-blue-50 text-blue-600 font-medium"
-                                                                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                                                                    "mx-1 my-0.5 flex w-full items-center rounded-[7px] px-2 py-2 text-sm transition-colors",
+                                                                    submenuAtivo
+                                                                        ? "bg-[#D4AF37]/10 text-[#D4AF37]"
+                                                                        : "text-[#A9A198] hover:bg-[#1B1B1B] hover:text-[#F5F0E8]"
                                                                 )}
                                                             >
-                                                                <sub.icon className={cn("mr-2 h-4 w-4", isSubActive ? "text-blue-600" : "text-gray-400")} />
-                                                                {sub.label}
+                                                                <submenu.icon className={cn("mr-2 h-4 w-4", submenuAtivo ? "text-[#D4AF37]" : "text-[#756C62]")} />
+                                                                {submenu.label}
                                                             </Link>
                                                         </DropdownMenuItem>
                                                     )
@@ -318,50 +369,45 @@ export function Sidebar({ isCollapsed, toggleCollapse, companyName, companyCnpj,
                                     )
                                 }
 
-                                // Expanded mode: Collapsible
-                                const isOpen = openMenus.includes(route.label)
+                                const aberto = menusAbertos.includes(rota.label)
+
                                 return (
                                     <Collapsible
-                                        key={route.href}
-                                        open={isOpen}
-                                        onOpenChange={() => toggleMenu(route.label)}
+                                        key={rota.href}
+                                        open={aberto}
+                                        onOpenChange={() => alternarMenu(rota.label)}
                                         className="w-full"
                                     >
                                         <CollapsibleTrigger asChild>
                                             <Button
                                                 variant="ghost"
-                                                className={cn(
-                                                    "w-full p-3.5 justify-between font-medium rounded-2xl h-auto transition-all duration-200 ease-in-out group text-sm",
-                                                    isActive
-                                                        ? "text-blue-600 bg-blue-50 font-semibold"
-                                                        : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
-                                                )}
+                                                className={cn(classeItemMenu(ativo), "justify-between")}
                                             >
+                                                {ativo && <span className="absolute left-0 top-2 h-7 w-[2px] rounded-r-full bg-[#D4AF37]" />}
                                                 <div className="flex items-center">
-                                                    <route.icon className={cn("h-[22px] w-[22px] mr-3.5 transition-transform duration-200 group-hover:scale-110",
-                                                        isActive ? "text-blue-600" : "text-gray-400 group-hover:text-gray-500"
-                                                    )} />
-                                                    {route.label}
+                                                    <rota.icon className={classeIconeMenu(ativo)} />
+                                                    {rota.label}
                                                 </div>
-                                                <ChevronDown className={cn("h-4 w-4 transition-transform duration-200", isOpen && "rotate-180")} />
+                                                <ChevronDown className={cn("h-4 w-4 text-[#756C62] transition-transform duration-200", aberto && "rotate-180 text-[#D4AF37]")} />
                                             </Button>
                                         </CollapsibleTrigger>
-                                        <CollapsibleContent className="pl-4 pt-2 space-y-1">
-                                            {route.submenus.map(sub => {
-                                                const isSubActive = pathname === sub.href
+                                        <CollapsibleContent className="relative space-y-1 pt-2 pl-5 before:absolute before:bottom-2 before:left-6 before:top-2 before:w-px before:bg-[#2A2418]">
+                                            {rota.submenus.map((submenu) => {
+                                                const submenuAtivo = pathname === submenu.href
+
                                                 return (
                                                     <Link
-                                                        key={sub.href}
-                                                        href={sub.href}
+                                                        key={submenu.href}
+                                                        href={submenu.href}
                                                         className={cn(
-                                                            "flex items-center p-2 rounded-xl text-sm transition-colors",
-                                                            isSubActive
-                                                                ? "text-blue-600 bg-blue-50/50 font-medium"
-                                                                : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
+                                                            "relative z-10 ml-5 flex items-center rounded-[7px] px-3 py-2 text-sm transition-colors",
+                                                            submenuAtivo
+                                                                ? "bg-[#D4AF37]/10 font-semibold text-[#D4AF37]"
+                                                                : "text-[#8C8379] hover:bg-[#171717] hover:text-[#F5F0E8]"
                                                         )}
                                                     >
-                                                        <sub.icon className={cn("h-4 w-4 mr-3", isSubActive ? "text-blue-600" : "text-gray-400")} />
-                                                        {sub.label}
+                                                        <submenu.icon className={cn("mr-3 h-4 w-4", submenuAtivo ? "text-[#D4AF37]" : "text-[#756C62]")} />
+                                                        {submenu.label}
                                                     </Link>
                                                 )
                                             })}
@@ -371,30 +417,19 @@ export function Sidebar({ isCollapsed, toggleCollapse, companyName, companyCnpj,
                             }
 
                             return (
-                                <Tooltip key={route.href}>
+                                <Tooltip key={rota.href}>
                                     <TooltipTrigger asChild>
-                                        <Link
-                                            href={route.href}
-                                            className={cn(
-                                                "text-sm group flex p-3.5 w-full justify-start font-medium cursor-pointer rounded-2xl transition-all duration-200 ease-in-out",
-                                                isActive
-                                                    ? "text-blue-600 bg-blue-50 font-semibold"
-                                                    : "text-gray-500 hover:text-gray-900 hover:bg-gray-50",
-                                                isCollapsed && "justify-center px-2"
-                                            )}
-                                        >
-                                            <div className="flex items-center flex-1">
-                                                <route.icon className={cn("h-[22px] w-[22px] transition-transform duration-200 group-hover:scale-110",
-                                                    isActive ? "text-blue-600" : "text-gray-400 group-hover:text-gray-500",
-                                                    !isCollapsed && "mr-3.5"
-                                                )} />
-                                                {!isCollapsed && route.label}
+                                        <Link href={rota.href} className={classeItemMenu(ativo)}>
+                                            {ativo && <span className="absolute left-0 top-2 h-7 w-[2px] rounded-r-full bg-[#D4AF37]" />}
+                                            <div className="flex items-center">
+                                                <rota.icon className={classeIconeMenu(ativo)} />
+                                                {!isCollapsed && rota.label}
                                             </div>
                                         </Link>
                                     </TooltipTrigger>
                                     {isCollapsed && (
-                                        <TooltipContent side="right">
-                                            {route.label}
+                                        <TooltipContent side="right" className="border-[#2A2418] bg-[#151515] text-[#F5F0E8]">
+                                            {rota.label}
                                         </TooltipContent>
                                     )}
                                 </Tooltip>
@@ -403,53 +438,54 @@ export function Sidebar({ isCollapsed, toggleCollapse, companyName, companyCnpj,
                     </div>
                 </div>
 
-                <div className="px-4 py-2 mb-4 space-y-1.5">
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Link
-                                href="/dashboard/configuracoes"
-                                className={cn(
-                                    "text-sm group flex p-3.5 w-full justify-start font-medium cursor-pointer rounded-2xl transition-all duration-200",
-                                    pathname === "/dashboard/configuracoes"
-                                        ? "text-blue-600 bg-blue-50 font-semibold"
-                                        : "text-gray-500 hover:text-gray-900 hover:bg-gray-50",
-                                    isCollapsed && "justify-center px-2"
-                                )}
-                            >
-                                <div className="flex items-center flex-1">
-                                    <Settings className={cn("h-5 w-5 transition-transform duration-200 group-hover:scale-110",
-                                        pathname === "/dashboard/configuracoes" ? "text-blue-600" : "text-gray-400 group-hover:text-gray-500",
-                                        !isCollapsed && "mr-3"
-                                    )} />
-                                    {!isCollapsed && "Configurações"}
-                                </div>
-                            </Link>
-                        </TooltipTrigger>
-                        {isCollapsed && (
-                            <TooltipContent side="right">
-                                Configurações
-                            </TooltipContent>
-                        )}
-                    </Tooltip>
+                <div className="px-4 pt-4">
+                    {!isCollapsed && (
+                        <p className="mb-3 px-2 text-[10px] font-semibold uppercase tracking-[0.28em] text-[#71685F]">
+                            Sistema
+                        </p>
+                    )}
+                    <div className="space-y-1.5 border-t border-[#2A2418] pt-4">
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Link
+                                    href="/dashboard/configuracoes"
+                                    className={classeItemMenu(pathname === "/dashboard/configuracoes")}
+                                >
+                                    {pathname === "/dashboard/configuracoes" && <span className="absolute left-0 top-2 h-7 w-[2px] rounded-r-full bg-[#D4AF37]" />}
+                                    <div className="flex items-center">
+                                        <Settings className={classeIconeMenu(pathname === "/dashboard/configuracoes")} />
+                                        {!isCollapsed && "Configurações"}
+                                    </div>
+                                </Link>
+                            </TooltipTrigger>
+                            {isCollapsed && (
+                                <TooltipContent side="right" className="border-[#2A2418] bg-[#151515] text-[#F5F0E8]">
+                                    Configurações
+                                </TooltipContent>
+                            )}
+                        </Tooltip>
 
-                    <div className="h-[1px] bg-gray-100 w-full my-2" />
-
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button
-                                onClick={() => signOut({ redirect: false }).then(() => { window.location.href = "/login" })}
-                                variant="ghost"
-                                className={cn(
-                                    "w-full group text-gray-500 hover:text-red-500 hover:bg-red-50 justify-start rounded-xl p-3 h-auto",
-                                    isCollapsed && "justify-center px-2"
-                                )}
-                            >
-                                <LogOut className={cn("h-5 w-5 transition-transform duration-200 group-hover:scale-110", !isCollapsed && "mr-3")} />
-                                {!isCollapsed && "Sair"}
-                            </Button>
-                        </TooltipTrigger>
-                        {isCollapsed && <TooltipContent side="right">Sair</TooltipContent>}
-                    </Tooltip>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    onClick={() => signOut({ redirect: false }).then(() => { window.location.href = "/login" })}
+                                    variant="ghost"
+                                    className={cn(
+                                        "group flex h-auto w-full items-center rounded-[8px] px-3.5 py-3 text-sm font-medium text-[#A9A198] transition-colors hover:bg-red-500/10 hover:text-red-300",
+                                        isCollapsed && "justify-center px-2"
+                                    )}
+                                >
+                                    <LogOut className={cn("h-5 w-5 text-[#756C62] transition-colors group-hover:text-red-300", !isCollapsed && "mr-3.5")} />
+                                    {!isCollapsed && "Sair"}
+                                </Button>
+                            </TooltipTrigger>
+                            {isCollapsed && (
+                                <TooltipContent side="right" className="border-[#2A2418] bg-[#151515] text-[#F5F0E8]">
+                                    Sair
+                                </TooltipContent>
+                            )}
+                        </Tooltip>
+                    </div>
                 </div>
             </div>
         </TooltipProvider>

@@ -1,4 +1,3 @@
-
 import { db } from "@/lib/db"
 import { UpcomingAppointments } from "@/components/dashboard/upcoming-appointments"
 import { Card } from "@/components/ui/card"
@@ -19,9 +18,6 @@ export async function DashboardUpcoming({ date, empresaId }: DashboardUpcomingPr
     const upcomingAppointments = await db.agendamento.findMany({
         where: {
             empresaId,
-            status: {
-                not: 'CANCELADO' as any
-            },
             data: {
                 gte: startOfDay,
                 lt: endOfDay
@@ -34,7 +30,7 @@ export async function DashboardUpcoming({ date, empresaId }: DashboardUpcomingPr
             cliente: { select: { nome: true } },
             agendamento_itens: {
                 include: {
-                    servicos: { select: { nome: true } }
+                    servicos: { select: { nome: true, duracaoMin: true } }
                 }
             },
             colaborador: { select: { nome: true } }
@@ -42,31 +38,34 @@ export async function DashboardUpcoming({ date, empresaId }: DashboardUpcomingPr
     })
 
     // Format for the client component
-    const formattedAppointments = upcomingAppointments.map(apt => ({
-        id: apt.id,
-        data: apt.data,
-        status: apt.status,
-        cliente: apt.cliente,
-        servico: apt.agendamento_itens[0]?.servicos || { nome: 'Serviço' },
-        colaborador: apt.colaborador
-    }))
+    const formattedAppointments = upcomingAppointments.map(apt => {
+        const totalDuration = apt.agendamento_itens.reduce((sum, item) => sum + (item.duracao || item.servicos.duracaoMin || 30), 0)
+        return {
+            id: apt.id,
+            data: apt.data,
+            status: apt.status,
+            cliente: apt.cliente,
+            servico: apt.agendamento_itens[0]?.servicos || { nome: 'Serviço' },
+            colaborador: apt.colaborador,
+            duracaoMin: totalDuration
+        }
+    })
 
     return <UpcomingAppointments appointments={formattedAppointments} date={date} />
 }
 
 export function DashboardUpcomingSkeleton() {
     return (
-        <Card className="bg-white shadow-sm border-border h-[400px] p-6">
-            <div className="flex justify-between items-center mb-6">
-                <div className="space-y-2">
-                    <div className="h-8 w-48 bg-gray-100 rounded animate-pulse" />
-                    <div className="h-4 w-32 bg-gray-100 rounded animate-pulse" />
+        <Card className="bg-[#111111] border-[#2A2418] shadow-[0_18px_50px_rgba(0,0,0,0.30)] h-[400px] p-6 rounded-[10px]">
+            <div className="flex justify-between items-center mb-6 border-b border-[#2A2418] pb-4">
+                <div className="flex items-center gap-2">
+                    <div className="h-4 w-4 bg-[#2A2418] rounded animate-pulse" />
+                    <div className="h-4 w-32 bg-[#2A2418] rounded animate-pulse" />
                 </div>
-                <div className="h-10 w-10 bg-gray-100 rounded animate-pulse" />
             </div>
             <div className="space-y-4">
                 {[1, 2, 3].map((i) => (
-                    <div key={i} className="h-20 w-full bg-gray-50 rounded-xl animate-pulse" />
+                    <div key={i} className="h-16 w-full bg-[#1B1B1B] rounded-[8px] animate-pulse" />
                 ))}
             </div>
         </Card>

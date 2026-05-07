@@ -1,19 +1,13 @@
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
 import { format } from "date-fns"
-import { ptBR } from "date-fns/locale"
-import { User, Clock } from "lucide-react"
 import Link from "next/link"
-import { Badge } from "@/components/ui/badge"
-
-import { DateScrollPicker } from "@/components/dashboard/date-scroll-picker"
+import { Clock } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
 
 interface UpcomingAppointment {
     id: string
     data: Date
     status: string
-    // ... keeps existing interfaces ...
     cliente: {
         nome: string
     }
@@ -23,6 +17,7 @@ interface UpcomingAppointment {
     colaborador?: {
         nome: string
     } | null
+    duracaoMin?: number
 }
 
 interface UpcomingAppointmentsProps {
@@ -36,91 +31,87 @@ export function UpcomingAppointments({ appointments, date }: UpcomingAppointment
     const getStatusVariant = (status: string) => {
         switch (status) {
             case 'CONCLUIDO':
-                return "bg-gray-100 text-gray-600 hover:bg-gray-100"
+                return "text-[#4ADE80] border-[#4ADE80]/20 bg-[#4ADE80]/10"
             case 'CONFIRMADO':
-                return "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
             case 'AGENDADO':
-                return "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
+                return "text-[#3B82F6] border-[#3B82F6]/20 bg-[#3B82F6]/10"
             case 'PENDENTE':
-                return "bg-gray-50 text-gray-600 border border-gray-200 hover:bg-gray-100"
+                return "text-[#F59E0B] border-[#F59E0B]/20 bg-[#F59E0B]/10"
+            case 'CANCELADO':
+            case 'NAO_COMPARECEU':
+                return "text-[#EF4444] border-[#EF4444]/20 bg-[#EF4444]/10"
             default:
-                return "bg-gray-100 text-gray-500 hover:bg-gray-100"
+                return "text-[#A9A198] border-[#A9A198]/20 bg-[#A9A198]/10"
         }
     }
 
     const getStatusLabel = (status: string) => {
         switch (status) {
-            case 'AGENDADO': return 'Confirmado'
+            case 'AGENDADO': return 'Agendado'
             case 'CONCLUIDO': return 'Concluído'
+            case 'PENDENTE': return 'Pendente'
+            case 'CANCELADO': return 'Cancelado'
+            case 'NAO_COMPARECEU': return 'Não compareceu'
             default: return status.charAt(0) + status.slice(1).toLowerCase()
         }
     }
 
     return (
-        <Card className="bg-white shadow-sm border-border">
-            <div className="p-6 pb-0 flex items-start justify-between">
-                <div>
-                    <h2 className="text-2xl font-medium text-gray-900">Agenda do dia</h2>
-                </div>
-                <div className="h-10 w-10 rounded-xl bg-gray-100 flex items-center justify-center text-gray-500">
-                    <Clock className="h-5 w-5" />
-                </div>
+        <Card className="rounded-[10px] border-[#2A2418] bg-[#111111] py-0 shadow-[0_18px_50px_rgba(0,0,0,0.30)]">
+            <div className="flex items-center gap-2 p-5 border-b border-[#2A2418]">
+                <Clock className="h-4 w-4 text-[#71685F]" />
+                <h2 className="font-heading text-[15px] font-semibold text-[#F5F0E8]">Próximos agendamentos</h2>
             </div>
 
-            <div className="px-6 mt-4">
-                <DateScrollPicker selectedDate={displayDate} />
-            </div>
-
-            <CardContent className="px-6 pb-6 space-y-4">
-                {appointments.length === 0 ? (
-                    <Card className="p-8 text-center text-muted-foreground bg-gray-50 border-dashed border-2 shadow-none">
-                        Nenhum agendamento para hoje.
-                    </Card>
-                ) : (
-                    appointments.map((appointment) => (
-                        <div key={appointment.id} className="group relative flex items-center gap-4 rounded-2xl border bg-white p-4 transition-all hover:shadow-md">
-                            {/* Coluna de Tempo */}
-                            <div className="text-lg font-bold text-gray-900 min-w-[60px] text-center">
-                                {new Intl.DateTimeFormat('pt-BR', {
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                    timeZone: 'America/Sao_Paulo'
-                                }).format(appointment.data)}
-                            </div>
-
-                            {/* Separador Vertical */}
-                            <div className="h-10 w-[1px] bg-gray-100" />
-
-                            {/* Coluna de Conteúdo */}
-                            <div className="flex-1 space-y-1">
-                                <div className="flex items-center gap-3 flex-wrap">
-                                    <h3 className="font-bold text-gray-900 text-lg">
-                                        {appointment.cliente.nome}
-                                    </h3>
-                                    <Badge variant="secondary" className={`text-xs font-normal px-2.5 py-0.5 rounded-full ${getStatusVariant(appointment.status)}`}>
-                                        {getStatusLabel(appointment.status)}
-                                    </Badge>
-                                </div>
-                                <p className="text-sm text-gray-500 pl-0.5">
-                                    {appointment.servico.nome}
-                                </p>
-                            </div>
-
-                            {/* Coluna de Colaborador */}
-                            <div className="flex items-center gap-3 pl-4">
-                                <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600">
-                                    <User className="h-5 w-5" />
-                                </div>
-                                <span className="text-sm font-medium text-gray-600 hidden sm:block">
-                                    {appointment.colaborador?.nome ? appointment.colaborador.nome.split(' ')[0] : 'Sem colaborador'}
-                                </span>
-                            </div>
+            <CardContent className="p-0">
+                <div className="px-5 py-2 space-y-1">
+                    {appointments.length === 0 ? (
+                        <div className="flex h-full items-center justify-center p-8 text-center text-[#A9A198]">
+                            <p className="text-sm font-medium">Nenhum agendamento para esta data.</p>
                         </div>
-                    ))
-                )}
+                    ) : (
+                        appointments.map((appointment) => {
+                            const hora = new Intl.DateTimeFormat('pt-BR', {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                timeZone: 'America/Sao_Paulo'
+                            }).format(appointment.data)
+                            
+                            const duracao = appointment.duracaoMin || 30;
 
-                <div className="pt-2">
-                    <Button variant="outline" className="w-full h-12 text-gray-500 hover:text-gray-900 border-gray-200 rounded-xl text-base font-normal" asChild>
+                            return (
+                                <div key={appointment.id} className="group relative flex items-center gap-4 py-3 border-b border-[#2A2418] last:border-0 hover:bg-[#1B1B1B] -mx-5 px-5 transition-colors">
+                                    <div className="min-w-[50px] text-left">
+                                        <div className="text-[13px] font-bold text-[#F5F0E8] font-heading">{hora}</div>
+                                        <div className="text-[10px] font-semibold text-[#71685F] mt-0.5">{duracao} min</div>
+                                    </div>
+
+                                    {appointment.status === 'CANCELADO' && (
+                                        <div className="absolute left-[64px] top-1/2 w-[calc(100%-80px)] h-px bg-[#EF4444]/30 -translate-y-1/2 z-10 pointer-events-none" />
+                                    )}
+
+                                    <div className="flex-1 min-w-0">
+                                        <h3 className={`truncate text-sm font-semibold ${appointment.status === 'CANCELADO' ? 'text-[#71685F]' : 'text-[#F5F0E8]'}`}>
+                                            {appointment.cliente.nome}
+                                        </h3>
+                                        <p className="truncate text-[11px] text-[#A9A198] mt-0.5">
+                                            {appointment.servico.nome} {appointment.colaborador?.nome ? `- ${appointment.colaborador.nome.split(' ')[0]}` : ''}
+                                        </p>
+                                    </div>
+
+                                    <div className="flex-shrink-0">
+                                        <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold ${getStatusVariant(appointment.status)}`}>
+                                            {getStatusLabel(appointment.status)}
+                                        </span>
+                                    </div>
+                                </div>
+                            )
+                        })
+                    )}
+                </div>
+
+                <div className="p-5 border-t border-[#2A2418]">
+                    <Button variant="outline" className="w-full h-10 border-[#2A2418] bg-transparent text-[#A9A198] hover:bg-[#1B1B1B] hover:text-[#D4AF37] hover:border-[#D4AF37]/50 rounded-[8px] text-[13px] font-semibold transition-colors" asChild>
                         <Link href={`/dashboard/agendamentos?date=${format(displayDate, 'yyyy-MM-dd')}`}>
                             Ver todos os agendamentos
                         </Link>

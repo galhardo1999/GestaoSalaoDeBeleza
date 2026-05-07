@@ -1,17 +1,27 @@
 "use client"
 
-import { useState, useEffect, startTransition } from "react"
+import { startTransition, useEffect, useState } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
-import { cn } from "@/lib/utils"
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { useRouter, useSearchParams, usePathname } from "next/navigation"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { getMonthlyAppointmentCounts } from "@/actions/dashboard"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { cn } from "@/lib/utils"
 
-const DAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"]
-const MONTHS = [
-    "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-    "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+const DIAS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"]
+const MESES = [
+    "Janeiro",
+    "Fevereiro",
+    "Março",
+    "Abril",
+    "Maio",
+    "Junho",
+    "Julho",
+    "Agosto",
+    "Setembro",
+    "Outubro",
+    "Novembro",
+    "Dezembro",
 ]
 
 export function DashboardCalendar() {
@@ -20,176 +30,165 @@ export function DashboardCalendar() {
     const searchParams = useSearchParams()
 
     const dateParam = searchParams.get("date")
-    // Initialize selectedDate from URL or default to today
-    const [selectedDate, setSelectedDate] = useState(() => {
+    const [dataSelecionada, setDataSelecionada] = useState(() => {
         if (dateParam) {
-            const [y, m, d] = dateParam.split('-').map(Number)
-            return new Date(y, m - 1, d)
+            const [ano, mes, dia] = dateParam.split("-").map(Number)
+            return new Date(ano, mes - 1, dia)
         }
         return new Date()
     })
 
-    const [currentDate, setCurrentDate] = useState(new Date(selectedDate)) // Start calendar view at selected date
-    const [eventsData, setEventsData] = useState<Record<string, number>>({})
+    const [dataAtual, setDataAtual] = useState(new Date(dataSelecionada))
+    const [eventosPorDia, setEventosPorDia] = useState<Record<string, number>>({})
 
-    const year = currentDate.getFullYear()
-    const month = currentDate.getMonth()
+    const ano = dataAtual.getFullYear()
+    const mes = dataAtual.getMonth()
 
-    const firstDayOfMonth = new Date(year, month, 1).getDay()
-    const daysInMonth = new Date(year, month + 1, 0).getDate()
+    const primeiroDiaDoMes = new Date(ano, mes, 1).getDay()
+    const diasNoMes = new Date(ano, mes + 1, 0).getDate()
 
-    // Sync state with URL date param
     useEffect(() => {
         if (dateParam) {
-            const [y, m, d] = dateParam.split('-').map(Number)
-            const newDate = new Date(y, m - 1, d)
-            setSelectedDate(newDate)
-            // Optional: only change view if the month is different? 
-            // Better to change view to ensure the selected date is visible.
-            setCurrentDate(newDate)
+            const [anoSelecionado, mesSelecionado, diaSelecionado] = dateParam.split("-").map(Number)
+            const novaData = new Date(anoSelecionado, mesSelecionado - 1, diaSelecionado)
+            setDataSelecionada(novaData)
+            setDataAtual(novaData)
         }
     }, [dateParam])
 
     useEffect(() => {
-        const fetchCounts = async () => {
+        const carregarContagens = async () => {
             try {
-                const counts = await getMonthlyAppointmentCounts(year, month)
-                setEventsData(counts)
-            } catch (error) {
-                console.error("Failed to fetch calendar counts:", error)
+                const contagens = await getMonthlyAppointmentCounts(ano, mes)
+                setEventosPorDia(contagens)
+            } catch (erro) {
+                console.error("Falha ao buscar contagens do calendário:", erro)
             }
         }
-        fetchCounts()
-    }, [year, month])
 
-    const prevMonth = () => {
-        setCurrentDate(new Date(year, month - 1, 1))
+        carregarContagens()
+    }, [ano, mes])
+
+    const mesAnterior = () => {
+        setDataAtual(new Date(ano, mes - 1, 1))
     }
 
-    const nextMonth = () => {
-        setCurrentDate(new Date(year, month + 1, 1))
+    const proximoMes = () => {
+        setDataAtual(new Date(ano, mes + 1, 1))
     }
 
-    const getDayKey = (day: number) => {
-        return `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`
+    const obterChaveDia = (dia: number) => {
+        return `${ano}-${String(mes + 1).padStart(2, "0")}-${String(dia).padStart(2, "0")}`
     }
 
-    const isToday = (day: number) => {
-        const today = new Date()
+    const ehHoje = (dia: number) => {
+        const hoje = new Date()
         return (
-            day === today.getDate() &&
-            month === today.getMonth() &&
-            year === today.getFullYear()
+            dia === hoje.getDate() &&
+            mes === hoje.getMonth() &&
+            ano === hoje.getFullYear()
         )
     }
 
-    const isSelected = (day: number) => {
+    const estaSelecionado = (dia: number) => {
         return (
-            day === selectedDate.getDate() &&
-            month === selectedDate.getMonth() &&
-            year === selectedDate.getFullYear()
+            dia === dataSelecionada.getDate() &&
+            mes === dataSelecionada.getMonth() &&
+            ano === dataSelecionada.getFullYear()
         )
     }
 
-    const days = []
+    const dias = []
 
-    // Células vazias para dias antes do primeiro dia do mês
-    for (let i = 0; i < firstDayOfMonth; i++) {
-        days.push(<div key={`empty-${i}`} className="h-10" />)
+    for (let indice = 0; indice < primeiroDiaDoMes; indice++) {
+        dias.push(<div key={`empty-${indice}`} className="h-10" />)
     }
 
-    // Dias do mês
-    for (let day = 1; day <= daysInMonth; day++) {
-        const dayKey = getDayKey(day)
-        const eventCount = eventsData[dayKey] || 0
-        const hasEvents = eventCount > 0
+    for (let dia = 1; dia <= diasNoMes; dia++) {
+        const chaveDia = obterChaveDia(dia)
+        const quantidadeEventos = eventosPorDia[chaveDia] || 0
+        const temEventos = quantidadeEventos > 0
 
-        days.push(
+        dias.push(
             <button
-                key={day}
+                key={dia}
                 onClick={() => {
-                    const newDate = new Date(year, month, day)
-                    setSelectedDate(newDate)
-                    // Update URL
+                    const novaData = new Date(ano, mes, dia)
+                    setDataSelecionada(novaData)
                     const params = new URLSearchParams(searchParams)
-                    // Format YYYY-MM-DD manually to avoid timezone issues
-                    const dateStr = `${newDate.getFullYear()}-${String(newDate.getMonth() + 1).padStart(2, '0')}-${String(newDate.getDate()).padStart(2, '0')}`
-                    params.set("date", dateStr)
+                    const dataUrl = `${novaData.getFullYear()}-${String(novaData.getMonth() + 1).padStart(2, "0")}-${String(novaData.getDate()).padStart(2, "0")}`
+                    params.set("date", dataUrl)
                     startTransition(() => {
                         router.push(`${pathname}?${params.toString()}`)
                     })
                 }}
                 className={cn(
-                    "relative flex h-10 w-10 items-center justify-center rounded-xl text-sm font-medium transition-all duration-200",
-                    isSelected(day)
-                        ? "bg-slate-900 text-white shadow-md"
-                        : isToday(day)
-                            ? "bg-pink-50 text-pink-600 font-semibold" // Aproximando 'rose-light'
-                            : "text-gray-900 hover:bg-gray-100"
+                    "relative flex h-10 w-10 items-center justify-center rounded-[8px] text-sm font-semibold transition-colors duration-200",
+                    estaSelecionado(dia)
+                        ? "bg-[#D4AF37] text-[#0D0D0D] shadow-[0_10px_24px_rgba(212,175,55,0.18)]"
+                        : ehHoje(dia)
+                            ? "border border-[#D4AF37]/35 bg-[#D4AF37]/10 text-[#D4AF37]"
+                            : "text-[#A9A198] hover:bg-[#1B1B1B] hover:text-[#F5F0E8]"
                 )}
             >
-                {day}
-                {hasEvents && !isSelected(day) && (
-                    <span className="absolute bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-slate-900" />
+                {dia}
+                {temEventos && !estaSelecionado(dia) && (
+                    <span className="absolute bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-[#D4AF37]" />
                 )}
             </button>
         )
     }
 
     return (
-        <Card className="bg-white">
-            <CardContent className="p-6">
-                {/* Header */}
+        <Card className="rounded-[10px] border-[#2A2418] bg-[#111111] py-0 shadow-[0_18px_50px_rgba(0,0,0,0.30)]">
+            <CardContent className="p-5 sm:p-6">
                 <div className="mb-6 flex items-center justify-between px-2">
-                    <h2 className="text-xl font-semibold text-gray-900 capitalize">
-                        {MONTHS[month]} {year}
+                    <h2 className="font-heading text-2xl font-semibold capitalize text-[#F5F0E8]">
+                        {MESES[mes]} {ano}
                     </h2>
                     <div className="flex gap-1">
                         <Button
                             variant="ghost"
                             size="icon"
-                            onClick={prevMonth}
-                            className="h-8 w-8 text-gray-500 hover:text-gray-900"
+                            onClick={mesAnterior}
+                            className="h-8 w-8 rounded-[7px] text-[#8C8379] hover:bg-[#1B1B1B] hover:text-[#D4AF37]"
                         >
                             <ChevronLeft className="h-4 w-4" />
                         </Button>
                         <Button
                             variant="ghost"
                             size="icon"
-                            onClick={nextMonth}
-                            className="h-8 w-8 text-gray-500 hover:text-gray-900"
+                            onClick={proximoMes}
+                            className="h-8 w-8 rounded-[7px] text-[#8C8379] hover:bg-[#1B1B1B] hover:text-[#D4AF37]"
                         >
                             <ChevronRight className="h-4 w-4" />
                         </Button>
                     </div>
                 </div>
 
-                {/* Days of week */}
                 <div className="mb-2 grid grid-cols-7 gap-1">
-                    {DAYS.map((day) => (
+                    {DIAS.map((dia) => (
                         <div
-                            key={day}
-                            className="flex h-10 items-center justify-center text-xs font-medium text-gray-400 capitalize"
+                            key={dia}
+                            className="flex h-10 items-center justify-center text-[10px] font-semibold uppercase tracking-[0.12em] text-[#71685F]"
                         >
-                            {day}
+                            {dia}
                         </div>
                     ))}
                 </div>
 
-                {/* Calendar grid */}
-                <div className="grid grid-cols-7 gap-1">{days}</div>
+                <div className="grid grid-cols-7 gap-1">{dias}</div>
 
-                {/* Selected date info */}
-                <div className="mt-6 rounded-2xl bg-gray-50 p-4">
-                    <p className="text-lg font-semibold text-gray-900 capitalize" suppressHydrationWarning>
-                        {selectedDate.toLocaleDateString("pt-BR", {
+                <div className="mt-6 rounded-[10px] border border-[#2A2418] bg-[#0D0D0D] p-4">
+                    <p className="font-heading text-lg font-semibold capitalize text-[#F5F0E8]" suppressHydrationWarning>
+                        {dataSelecionada.toLocaleDateString("pt-BR", {
                             weekday: "long",
                             day: "numeric",
                             month: "long",
                         })}
                     </p>
-                    <p className="text-sm text-gray-500 mt-1">
-                        {eventsData[getDayKey(selectedDate.getDate())] || 0} agendamentos
+                    <p className="mt-1 text-sm font-semibold text-[#D4AF37]">
+                        {eventosPorDia[obterChaveDia(dataSelecionada.getDate())] || 0} agendamentos
                     </p>
                 </div>
             </CardContent>

@@ -17,6 +17,7 @@ import { DashboardTopServices } from "@/components/dashboard/dashboard-top-servi
 import { DashboardBirthdays } from "@/components/dashboard/dashboard-birthdays"
 import { DashboardAlerts } from "@/components/dashboard/dashboard-alerts"
 import { DashboardAvailableSlots } from "@/components/dashboard/dashboard-available-slots"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 export const dynamic = "force-dynamic"
 
@@ -86,21 +87,22 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     return (
         <div className="flex-1 space-y-8 pb-10">
             {/* Header */}
-            <div className="flex flex-col gap-4 border-b border-[#2A2418] pb-6 md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-col gap-4 border-b border-border pb-6 md:flex-row md:items-center md:justify-between">
                 <div>
-                    <h2 className="font-heading text-3xl font-semibold tracking-normal text-[#F5F0E8] md:text-4xl">
+                    <h2 className="font-heading text-3xl font-semibold tracking-normal text-foreground md:text-4xl">
                         Visão geral
                     </h2>
-                    <p className="mt-1 text-sm capitalize text-[#A9A198]">
+                    <p className="mt-1 text-sm capitalize text-muted-foreground">
                         {dataFormatada}
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <Button variant="outline" className="border-[#2A2418] bg-[#111111] text-[#F5F0E8] hover:bg-[#1B1B1B] hover:text-[#D4AF37]">
+                    <ThemeToggle />
+                    <Button variant="outline" className="border-border bg-card text-foreground hover:bg-muted hover:text-primary">
                         <FileText className="mr-2 h-4 w-4" />
                         Relatório
                     </Button>
-                    <Button className="bg-[#D4AF37] text-[#0D0D0D] hover:bg-[#C9A84C]">
+                    <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
                         <CalendarIcon className="mr-2 h-4 w-4" />
                         Agendar
                     </Button>
@@ -110,10 +112,10 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
             {/* Metrics Section: HOJE */}
             <div className="space-y-4">
                 <div className="flex items-center gap-2">
-                    <div className="h-4 w-4 rounded-full border-2 border-[#D4AF37] flex items-center justify-center">
-                        <div className="h-1.5 w-1.5 rounded-full bg-[#D4AF37]"></div>
+                    <div className="h-4 w-4 rounded-full border-2 border-primary flex items-center justify-center">
+                        <div className="h-1.5 w-1.5 rounded-full bg-primary"></div>
                     </div>
-                    <h3 className="text-sm font-semibold uppercase tracking-widest text-[#71685F]">Hoje</h3>
+                    <h3 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">Hoje</h3>
                 </div>
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                     <Suspense fallback={<DashboardMetricsSkeleton />}>
@@ -125,10 +127,10 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
             {/* Metrics Section: ESTE MÊS */}
             <div className="space-y-4">
                 <div className="flex items-center gap-2">
-                    <div className="h-4 w-4 rounded-[3px] border border-[#71685F] flex items-center justify-center">
-                        <CalendarDays className="h-2.5 w-2.5 text-[#71685F]" />
+                    <div className="h-4 w-4 rounded-[3px] border border-muted-foreground flex items-center justify-center">
+                        <CalendarDays className="h-2.5 w-2.5 text-muted-foreground" />
                     </div>
-                    <h3 className="text-sm font-semibold uppercase tracking-widest text-[#71685F]">Este Mês</h3>
+                    <h3 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">Este Mês</h3>
                 </div>
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                     <Suspense fallback={<DashboardMetricsMonthSkeleton />}>
@@ -138,14 +140,21 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
             </div>
 
             {/* Main Content Grids */}
-            <div className="grid gap-6 md:grid-cols-2 items-start">
+            <div className="grid gap-6 lg:grid-cols-3 items-start">
                 {/* Left Column */}
                 <div className="flex flex-col gap-6">
                     <Suspense fallback={<DashboardUpcomingSkeleton />}>
                         <DashboardUpcoming date={dataSelecionada} empresaId={session.user.empresaId} />
                     </Suspense>
+                </div>
+
+                {/* Middle Column */}
+                <div className="flex flex-col gap-6">
                     <Suspense fallback={<div className="h-[300px] rounded-xl bg-[#111111] animate-pulse" />}>
                         <DashboardStatusOverview date={dataSelecionada} empresaId={session.user.empresaId} />
+                    </Suspense>
+                    <Suspense fallback={<div className="h-[300px] rounded-xl bg-[#111111] animate-pulse" />}>
+                        <DashboardTopServices date={dataSelecionada} empresaId={session.user.empresaId} />
                     </Suspense>
                 </div>
 
@@ -153,9 +162,6 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                 <div className="flex flex-col gap-6">
                     <Suspense fallback={<DashboardTeamSkeleton />}>
                         <DashboardTeam date={dataSelecionada} empresaId={session.user.empresaId} />
-                    </Suspense>
-                    <Suspense fallback={<div className="h-[300px] rounded-xl bg-[#111111] animate-pulse" />}>
-                        <DashboardTopServices date={dataSelecionada} empresaId={session.user.empresaId} />
                     </Suspense>
                 </div>
             </div>

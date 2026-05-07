@@ -27,27 +27,27 @@ export function BookingLinkCard({ empresaSlug }: BookingLinkCardProps) {
     }
 
     return (
-        <Card className="group overflow-hidden rounded-[10px] border-[#2A2418] bg-[#111111] py-0 shadow-[0_18px_50px_rgba(0,0,0,0.30)]">
+        <Card className="group overflow-hidden rounded-[10px] border-dashboard-border bg-dashboard-surface py-0 shadow-[0_18px_50px_rgba(86,66,31,0.10)] dark:shadow-[0_18px_50px_rgba(0,0,0,0.30)]">
             <CardContent className="relative p-5 sm:p-6">
-                <div className="absolute inset-x-0 top-0 h-px bg-[#D4AF37]/35" />
+                <div className="absolute inset-x-0 top-0 h-px bg-dashboard-primary/35" />
                 <div className="mb-5 flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-[8px] border border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[#D4AF37]">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-[8px] border border-dashboard-primary/25 bg-dashboard-primary/10 text-dashboard-primary">
                         <Link2 className="h-5 w-5" />
                     </div>
-                    <h3 className="font-heading text-xl font-semibold text-[#F5F0E8]">
+                    <h3 className="font-heading text-xl font-semibold text-dashboard-foreground">
                         Link de Agendamento
                     </h3>
                 </div>
 
-                <div className="flex items-center gap-2 rounded-[10px] border border-[#D4AF37]/30 bg-[#1A1A1A] p-2 pl-3">
-                    <span className="flex-1 truncate text-sm font-medium text-[#F5F0E8]">
+                <div className="flex items-center gap-2 rounded-[10px] border border-dashboard-primary/30 bg-dashboard-surface-subtle p-2 pl-3">
+                    <span className="flex-1 truncate text-sm font-medium text-dashboard-foreground">
                         {bookingUrl}
                     </span>
                     <Button
                         variant="secondary"
                         size="sm"
                         onClick={handleCopy}
-                        className="shrink-0 gap-2 rounded-[8px] bg-[#2A2A2A] text-[#A9A198] hover:bg-[#D4AF37] hover:text-[#0D0D0D] transition-colors"
+                        className="shrink-0 gap-2 rounded-[8px] bg-dashboard-surface-hover text-dashboard-muted hover:bg-dashboard-primary hover:text-dashboard-primary-foreground transition-colors"
                     >
                         {copied ? (
                             <>
@@ -63,7 +63,7 @@ export function BookingLinkCard({ empresaSlug }: BookingLinkCardProps) {
                     </Button>
                 </div>
 
-                <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.22em] text-[#8C8379]">
+                <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.22em] text-dashboard-muted">
                     Compartilhe para que clientes agendem.
                 </p>
             </CardContent>

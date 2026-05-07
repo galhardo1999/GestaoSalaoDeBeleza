@@ -194,27 +194,27 @@ export function Sidebar({ isCollapsed, toggleCollapse, companyName, companyCnpj,
         cn(
             "group relative flex w-full items-center rounded-[8px] px-3.5 py-3 text-sm font-medium transition-colors",
             ativo
-                ? "bg-[#D4AF37]/10 text-[#F5F0E8]"
-                : "text-[#A9A198] hover:bg-[#171717] hover:text-[#F5F0E8]",
+                ? "bg-dashboard-primary/10 text-dashboard-foreground"
+                : "text-dashboard-muted hover:bg-dashboard-surface-hover hover:text-dashboard-foreground",
             isCollapsed && "justify-center px-2"
         )
 
     const classeIconeMenu = (ativo: boolean, comMargem = true) =>
         cn(
             "h-5 w-5 transition-colors",
-            ativo ? "text-[#D4AF37]" : "text-[#756C62] group-hover:text-[#D4AF37]",
+            ativo ? "text-dashboard-primary" : "text-dashboard-subtle group-hover:text-dashboard-primary",
             comMargem && !isCollapsed && "mr-3.5"
         )
 
     return (
         <TooltipProvider delayDuration={0}>
-            <div className="flex h-full flex-col border-r border-[#2A2418] bg-[#0F0F0F] py-5 text-[#F5F0E8]">
+            <div className="flex h-full flex-col border-r border-dashboard-border bg-dashboard-sidebar py-5 text-dashboard-foreground">
                 <Button
                     onClick={toggleCollapse}
                     variant="ghost"
                     size="icon"
                     className={cn(
-                        "absolute -right-3 top-7 z-20 hidden h-8 w-8 items-center justify-center rounded-[8px] border border-[#3A301C] bg-[#141414] text-[#C9A84C] shadow-[0_10px_25px_rgba(0,0,0,0.35)] hover:border-[#D4AF37]/60 hover:bg-[#191919] md:flex",
+                        "absolute -right-3 top-7 z-20 hidden h-8 w-8 items-center justify-center rounded-[8px] border border-dashboard-border bg-[#141414] text-dashboard-primary shadow-[0_10px_25px_rgba(0,0,0,0.35)] hover:border-dashboard-primary/60 hover:bg-dashboard-surface-hover md:flex",
                         isCollapsed ? "translate-x-1" : ""
                     )}
                 >
@@ -223,15 +223,15 @@ export function Sidebar({ isCollapsed, toggleCollapse, companyName, companyCnpj,
 
                 <div className="relative flex-1 overflow-y-auto px-4">
                     <Link href="/dashboard" className="mb-7 flex items-center overflow-hidden">
-                        <div className="mr-3 flex h-12 w-12 min-w-[3rem] shrink-0 items-center justify-center rounded-[10px] border border-[#D4AF37]/35 bg-[#D4AF37]/10 text-[#D4AF37] shadow-[0_12px_28px_rgba(212,175,55,0.08)] transition-colors hover:border-[#D4AF37]/60">
+                        <div className="mr-3 flex h-12 w-12 min-w-[3rem] shrink-0 items-center justify-center rounded-[10px] border border-dashboard-primary/35 bg-dashboard-primary/10 text-dashboard-primary shadow-[0_12px_28px_rgba(197,160,89,0.10)] dark:shadow-[0_12px_28px_rgba(212,175,55,0.08)] transition-colors hover:border-dashboard-primary/60">
                             <Scissors className="h-6 w-6" />
                         </div>
                         {!isCollapsed && (
                             <div className="overflow-hidden whitespace-nowrap transition-all duration-300">
-                                <h1 className="font-heading text-[1.35rem] font-semibold leading-none tracking-normal text-[#F5F0E8]">
+                                <h1 className="font-heading text-[1.35rem] font-semibold leading-none tracking-normal text-dashboard-foreground">
                                     BARBER & CO.
                                 </h1>
-                                <p className="mt-1.5 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#C9A84C]">
+                                <p className="mt-1.5 text-[10px] font-semibold uppercase tracking-[0.24em] text-dashboard-primary">
                                     Gestão Premium
                                 </p>
                             </div>
@@ -243,70 +243,70 @@ export function Sidebar({ isCollapsed, toggleCollapse, companyName, companyCnpj,
                             {userCargo === "SUPER_ADMIN" ? (
                                 <DropdownMenu open={switcherAberto} onOpenChange={setSwitcherAberto}>
                                     <DropdownMenuTrigger asChild>
-                                        <button className="group w-full cursor-pointer rounded-[10px] border border-[#2A2418] bg-[#151515] p-3 text-left transition-colors hover:border-[#D4AF37]/35 hover:bg-[#181818]">
+                                        <button className="group w-full cursor-pointer rounded-[10px] border border-dashboard-border bg-dashboard-surface-subtle p-3 text-left transition-colors hover:border-dashboard-primary/35 hover:bg-dashboard-surface-hover">
                                             <div className="flex items-center justify-between gap-3">
                                                 <div className="min-w-0">
                                                     {companyName ? (
                                                         <>
-                                                            <p className="truncate text-sm font-semibold text-[#F5F0E8]" title={companyName}>
+                                                            <p className="truncate text-sm font-semibold text-dashboard-foreground" title={companyName}>
                                                                 {companyName}
                                                             </p>
                                                             {companyCnpj && (
-                                                                <p className="mt-1 text-xs text-[#A9A198]">
+                                                                <p className="mt-1 text-xs text-dashboard-muted">
                                                                     {formatarCnpj(companyCnpj)}
                                                                 </p>
                                                             )}
                                                         </>
                                                     ) : (
-                                                        <p className="text-sm font-semibold text-[#D4AF37]">
+                                                        <p className="text-sm font-semibold text-dashboard-primary">
                                                             Selecionar Empresa
                                                         </p>
                                                     )}
                                                 </div>
-                                                <ChevronsUpDown className="h-4 w-4 shrink-0 text-[#7D756C] group-hover:text-[#D4AF37]" />
+                                                <ChevronsUpDown className="h-4 w-4 shrink-0 text-dashboard-subtle group-hover:text-dashboard-primary" />
                                             </div>
                                             {userName && (
-                                                <p className="mt-3 truncate border-t border-[#2A2418] pt-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#8C8379]" title={userName}>
+                                                <p className="mt-3 truncate border-t border-dashboard-border pt-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-dashboard-muted" title={userName}>
                                                     {userCargo === "SUPER_ADMIN" ? "Administrador" : userName}
                                                 </p>
                                             )}
                                         </button>
                                     </DropdownMenuTrigger>
-                                    <DropdownMenuContent className="max-h-[300px] w-64 overflow-y-auto border-[#2A2418] bg-[#151515] text-[#F5F0E8] shadow-[0_24px_70px_rgba(0,0,0,0.55)]" align="start">
-                                        <DropdownMenuLabel className="font-heading text-[#C9A84C]">Trocar Empresa</DropdownMenuLabel>
-                                        <DropdownMenuSeparator className="bg-[#2A2418]" />
+                                    <DropdownMenuContent className="max-h-[300px] w-64 overflow-y-auto border-dashboard-border bg-dashboard-surface-subtle text-dashboard-foreground shadow-[0_24px_70px_rgba(86,66,31,0.18)] dark:shadow-[0_24px_70px_rgba(0,0,0,0.55)]" align="start">
+                                        <DropdownMenuLabel className="font-heading text-dashboard-primary">Trocar Empresa</DropdownMenuLabel>
+                                        <DropdownMenuSeparator className="bg-dashboard-border" />
                                         {carregandoEmpresas ? (
                                             <div className="flex items-center justify-center p-4">
-                                                <Loader2 className="h-4 w-4 animate-spin text-[#D4AF37]" />
+                                                <Loader2 className="h-4 w-4 animate-spin text-dashboard-primary" />
                                             </div>
                                         ) : (
                                             empresas.map((empresa) => (
                                                 <DropdownMenuItem
                                                     key={empresa.value}
                                                     onSelect={() => trocarEmpresa(empresa.value)}
-                                                    className="flex cursor-pointer flex-col items-start gap-1 focus:bg-[#D4AF37]/10 focus:text-[#D4AF37]"
+                                                    className="flex cursor-pointer flex-col items-start gap-1 focus:bg-dashboard-primary/10 focus:text-dashboard-primary"
                                                 >
                                                     <span className="font-medium">{empresa.label}</span>
-                                                    <span className="text-xs text-[#A9A198]">{formatarCnpj(empresa.cnpj)}</span>
+                                                    <span className="text-xs text-dashboard-muted">{formatarCnpj(empresa.cnpj)}</span>
                                                 </DropdownMenuItem>
                                             ))
                                         )}
                                     </DropdownMenuContent>
                                 </DropdownMenu>
                             ) : (companyName || companyCnpj) ? (
-                                <div className="rounded-[10px] border border-[#2A2418] bg-[#151515] p-3">
+                                <div className="rounded-[10px] border border-dashboard-border bg-dashboard-surface-subtle p-3">
                                     {companyName && (
-                                        <p className="truncate text-sm font-semibold text-[#F5F0E8]" title={companyName}>
+                                        <p className="truncate text-sm font-semibold text-dashboard-foreground" title={companyName}>
                                             {companyName}
                                         </p>
                                     )}
                                     {companyCnpj && (
-                                        <p className="mt-1 text-xs text-[#A9A198]">
+                                        <p className="mt-1 text-xs text-dashboard-muted">
                                             {formatarCnpj(companyCnpj)}
                                         </p>
                                     )}
                                     {userName && (
-                                        <p className="mt-3 truncate border-t border-[#2A2418] pt-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#8C8379]" title={userName}>
+                                        <p className="mt-3 truncate border-t border-dashboard-border pt-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-dashboard-muted" title={userName}>
                                             {userCargo === "SUPER_ADMIN" ? "Administrador" : userName}
                                         </p>
                                     )}
@@ -315,9 +315,9 @@ export function Sidebar({ isCollapsed, toggleCollapse, companyName, companyCnpj,
                         </div>
                     )}
 
-                    <div className="mb-4 h-px w-full bg-[#2A2418]" />
+                    <div className="mb-4 h-px w-full bg-dashboard-border" />
                     {!isCollapsed && (
-                        <p className="mb-3 px-2 text-[10px] font-semibold uppercase tracking-[0.28em] text-[#71685F]">
+                        <p className="mb-3 px-2 text-[10px] font-semibold uppercase tracking-[0.28em] text-dashboard-subtle">
                             Operação
                         </p>
                     )}
@@ -335,15 +335,15 @@ export function Sidebar({ isCollapsed, toggleCollapse, companyName, companyCnpj,
                                                     variant="ghost"
                                                     className={classeItemMenu(ativo)}
                                                 >
-                                                    {ativo && <span className="absolute left-0 top-2 h-7 w-[2px] rounded-r-full bg-[#D4AF37]" />}
+                                                    {ativo && <span className="absolute left-0 top-2 h-7 w-[2px] rounded-r-full bg-dashboard-primary" />}
                                                     <rota.icon className={classeIconeMenu(ativo, false)} />
                                                 </Button>
                                             </DropdownMenuTrigger>
-                                            <DropdownMenuContent side="right" align="start" sideOffset={18} className="ml-2 w-52 border-[#2A2418] bg-[#151515] text-[#F5F0E8] shadow-[0_24px_70px_rgba(0,0,0,0.55)]">
-                                                <DropdownMenuLabel className="px-2 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-[#C9A84C]">
+                                            <DropdownMenuContent side="right" align="start" sideOffset={18} className="ml-2 w-52 border-dashboard-border bg-dashboard-surface-subtle text-dashboard-foreground shadow-[0_24px_70px_rgba(86,66,31,0.18)] dark:shadow-[0_24px_70px_rgba(0,0,0,0.55)]">
+                                                <DropdownMenuLabel className="px-2 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-dashboard-primary">
                                                     {rota.label}
                                                 </DropdownMenuLabel>
-                                                <DropdownMenuSeparator className="-mx-1 my-1 bg-[#2A2418]" />
+                                                <DropdownMenuSeparator className="-mx-1 my-1 bg-dashboard-border" />
                                                 {rota.submenus.map((submenu) => {
                                                     const submenuAtivo = pathname === submenu.href
 
@@ -354,11 +354,11 @@ export function Sidebar({ isCollapsed, toggleCollapse, companyName, companyCnpj,
                                                                 className={cn(
                                                                     "mx-1 my-0.5 flex w-full items-center rounded-[7px] px-2 py-2 text-sm transition-colors",
                                                                     submenuAtivo
-                                                                        ? "bg-[#D4AF37]/10 text-[#D4AF37]"
-                                                                        : "text-[#A9A198] hover:bg-[#1B1B1B] hover:text-[#F5F0E8]"
+                                                                        ? "bg-dashboard-primary/10 text-dashboard-primary"
+                                                                        : "text-dashboard-muted hover:bg-dashboard-surface-hover hover:text-dashboard-foreground"
                                                                 )}
                                                             >
-                                                                <submenu.icon className={cn("mr-2 h-4 w-4", submenuAtivo ? "text-[#D4AF37]" : "text-[#756C62]")} />
+                                                                <submenu.icon className={cn("mr-2 h-4 w-4", submenuAtivo ? "text-dashboard-primary" : "text-dashboard-subtle")} />
                                                                 {submenu.label}
                                                             </Link>
                                                         </DropdownMenuItem>
@@ -383,15 +383,15 @@ export function Sidebar({ isCollapsed, toggleCollapse, companyName, companyCnpj,
                                                 variant="ghost"
                                                 className={cn(classeItemMenu(ativo), "justify-between")}
                                             >
-                                                {ativo && <span className="absolute left-0 top-2 h-7 w-[2px] rounded-r-full bg-[#D4AF37]" />}
+                                                {ativo && <span className="absolute left-0 top-2 h-7 w-[2px] rounded-r-full bg-dashboard-primary" />}
                                                 <div className="flex items-center">
                                                     <rota.icon className={classeIconeMenu(ativo)} />
                                                     {rota.label}
                                                 </div>
-                                                <ChevronDown className={cn("h-4 w-4 text-[#756C62] transition-transform duration-200", aberto && "rotate-180 text-[#D4AF37]")} />
+                                                <ChevronDown className={cn("h-4 w-4 text-dashboard-subtle transition-transform duration-200", aberto && "rotate-180 text-dashboard-primary")} />
                                             </Button>
                                         </CollapsibleTrigger>
-                                        <CollapsibleContent className="relative space-y-1 pt-2 pl-5 before:absolute before:bottom-2 before:left-6 before:top-2 before:w-px before:bg-[#2A2418]">
+                                        <CollapsibleContent className="relative space-y-1 pt-2 pl-5 before:absolute before:bottom-2 before:left-6 before:top-2 before:w-px before:bg-dashboard-border">
                                             {rota.submenus.map((submenu) => {
                                                 const submenuAtivo = pathname === submenu.href
 
@@ -402,11 +402,11 @@ export function Sidebar({ isCollapsed, toggleCollapse, companyName, companyCnpj,
                                                         className={cn(
                                                             "relative z-10 ml-5 flex items-center rounded-[7px] px-3 py-2 text-sm transition-colors",
                                                             submenuAtivo
-                                                                ? "bg-[#D4AF37]/10 font-semibold text-[#D4AF37]"
-                                                                : "text-[#8C8379] hover:bg-[#171717] hover:text-[#F5F0E8]"
+                                                                ? "bg-dashboard-primary/10 font-semibold text-dashboard-primary"
+                                                                : "text-dashboard-muted hover:bg-dashboard-surface-hover hover:text-dashboard-foreground"
                                                         )}
                                                     >
-                                                        <submenu.icon className={cn("mr-3 h-4 w-4", submenuAtivo ? "text-[#D4AF37]" : "text-[#756C62]")} />
+                                                        <submenu.icon className={cn("mr-3 h-4 w-4", submenuAtivo ? "text-dashboard-primary" : "text-dashboard-subtle")} />
                                                         {submenu.label}
                                                     </Link>
                                                 )
@@ -420,7 +420,7 @@ export function Sidebar({ isCollapsed, toggleCollapse, companyName, companyCnpj,
                                 <Tooltip key={rota.href}>
                                     <TooltipTrigger asChild>
                                         <Link href={rota.href} className={classeItemMenu(ativo)}>
-                                            {ativo && <span className="absolute left-0 top-2 h-7 w-[2px] rounded-r-full bg-[#D4AF37]" />}
+                                            {ativo && <span className="absolute left-0 top-2 h-7 w-[2px] rounded-r-full bg-dashboard-primary" />}
                                             <div className="flex items-center">
                                                 <rota.icon className={classeIconeMenu(ativo)} />
                                                 {!isCollapsed && rota.label}
@@ -428,7 +428,7 @@ export function Sidebar({ isCollapsed, toggleCollapse, companyName, companyCnpj,
                                         </Link>
                                     </TooltipTrigger>
                                     {isCollapsed && (
-                                        <TooltipContent side="right" className="border-[#2A2418] bg-[#151515] text-[#F5F0E8]">
+                                        <TooltipContent side="right" className="border-dashboard-border bg-dashboard-surface-subtle text-dashboard-foreground">
                                             {rota.label}
                                         </TooltipContent>
                                     )}
@@ -440,18 +440,18 @@ export function Sidebar({ isCollapsed, toggleCollapse, companyName, companyCnpj,
 
                 <div className="px-4 pt-4">
                     {!isCollapsed && (
-                        <p className="mb-3 px-2 text-[10px] font-semibold uppercase tracking-[0.28em] text-[#71685F]">
+                        <p className="mb-3 px-2 text-[10px] font-semibold uppercase tracking-[0.28em] text-dashboard-subtle">
                             Sistema
                         </p>
                     )}
-                    <div className="space-y-1.5 border-t border-[#2A2418] pt-4">
+                    <div className="space-y-1.5 border-t border-dashboard-border pt-4">
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <Link
                                     href="/dashboard/configuracoes"
                                     className={classeItemMenu(pathname === "/dashboard/configuracoes")}
                                 >
-                                    {pathname === "/dashboard/configuracoes" && <span className="absolute left-0 top-2 h-7 w-[2px] rounded-r-full bg-[#D4AF37]" />}
+                                    {pathname === "/dashboard/configuracoes" && <span className="absolute left-0 top-2 h-7 w-[2px] rounded-r-full bg-dashboard-primary" />}
                                     <div className="flex items-center">
                                         <Settings className={classeIconeMenu(pathname === "/dashboard/configuracoes")} />
                                         {!isCollapsed && "Configurações"}
@@ -459,7 +459,7 @@ export function Sidebar({ isCollapsed, toggleCollapse, companyName, companyCnpj,
                                 </Link>
                             </TooltipTrigger>
                             {isCollapsed && (
-                                <TooltipContent side="right" className="border-[#2A2418] bg-[#151515] text-[#F5F0E8]">
+                                <TooltipContent side="right" className="border-dashboard-border bg-dashboard-surface-subtle text-dashboard-foreground">
                                     Configurações
                                 </TooltipContent>
                             )}
@@ -471,16 +471,16 @@ export function Sidebar({ isCollapsed, toggleCollapse, companyName, companyCnpj,
                                     onClick={() => signOut({ redirect: false }).then(() => { window.location.href = "/login" })}
                                     variant="ghost"
                                     className={cn(
-                                        "group flex h-auto w-full items-center rounded-[8px] px-3.5 py-3 text-sm font-medium text-[#A9A198] transition-colors hover:bg-red-500/10 hover:text-red-300",
+                                        "group flex h-auto w-full items-center rounded-[8px] px-3.5 py-3 text-sm font-medium text-dashboard-muted transition-colors hover:bg-red-500/10 hover:text-red-300",
                                         isCollapsed && "justify-center px-2"
                                     )}
                                 >
-                                    <LogOut className={cn("h-5 w-5 text-[#756C62] transition-colors group-hover:text-red-300", !isCollapsed && "mr-3.5")} />
+                                    <LogOut className={cn("h-5 w-5 text-dashboard-subtle transition-colors group-hover:text-red-300", !isCollapsed && "mr-3.5")} />
                                     {!isCollapsed && "Sair"}
                                 </Button>
                             </TooltipTrigger>
                             {isCollapsed && (
-                                <TooltipContent side="right" className="border-[#2A2418] bg-[#151515] text-[#F5F0E8]">
+                                <TooltipContent side="right" className="border-dashboard-border bg-dashboard-surface-subtle text-dashboard-foreground">
                                     Sair
                                 </TooltipContent>
                             )}

@@ -41,7 +41,7 @@ export function UpcomingAppointments({ appointments, date }: UpcomingAppointment
             case 'NAO_COMPARECEU':
                 return "text-[#EF4444] border-[#EF4444]/20 bg-[#EF4444]/10"
             default:
-                return "text-[#A9A198] border-[#A9A198]/20 bg-[#A9A198]/10"
+                return "text-dashboard-muted border-dashboard-muted/20 bg-dashboard-muted/10"
         }
     }
 
@@ -57,16 +57,16 @@ export function UpcomingAppointments({ appointments, date }: UpcomingAppointment
     }
 
     return (
-        <Card className="rounded-[10px] border-[#2A2418] bg-[#111111] py-0 shadow-[0_18px_50px_rgba(0,0,0,0.30)]">
-            <div className="flex items-center gap-2 p-5 border-b border-[#2A2418]">
-                <Clock className="h-4 w-4 text-[#71685F]" />
-                <h2 className="font-heading text-[15px] font-semibold text-[#F5F0E8]">Próximos agendamentos</h2>
+        <Card className="rounded-[10px] border-dashboard-border bg-dashboard-surface py-0 shadow-[0_18px_50px_rgba(86,66,31,0.10)] dark:shadow-[0_18px_50px_rgba(86,66,31,0.10)] dark:shadow-[0_18px_50px_rgba(0,0,0,0.30)]">
+            <div className="flex items-center gap-2 p-5 border-b border-dashboard-border">
+                <Clock className="h-4 w-4 text-dashboard-subtle" />
+                <h2 className="font-heading text-[15px] font-semibold text-dashboard-foreground">Próximos agendamentos</h2>
             </div>
 
             <CardContent className="p-0">
                 <div className="px-5 py-2 space-y-1">
                     {appointments.length === 0 ? (
-                        <div className="flex h-full items-center justify-center p-8 text-center text-[#A9A198]">
+                        <div className="flex h-full items-center justify-center p-8 text-center text-dashboard-muted">
                             <p className="text-sm font-medium">Nenhum agendamento para esta data.</p>
                         </div>
                     ) : (
@@ -80,10 +80,10 @@ export function UpcomingAppointments({ appointments, date }: UpcomingAppointment
                             const duracao = appointment.duracaoMin || 30;
 
                             return (
-                                <div key={appointment.id} className="group relative flex items-center gap-4 py-3 border-b border-[#2A2418] last:border-0 hover:bg-[#1B1B1B] -mx-5 px-5 transition-colors">
+                                <div key={appointment.id} className="group relative flex items-center gap-4 py-3 border-b border-dashboard-border last:border-0 hover:bg-dashboard-surface-hover -mx-5 px-5 transition-colors">
                                     <div className="min-w-[50px] text-left">
-                                        <div className="text-[13px] font-bold text-[#F5F0E8] font-heading">{hora}</div>
-                                        <div className="text-[10px] font-semibold text-[#71685F] mt-0.5">{duracao} min</div>
+                                        <div className="text-[13px] font-bold text-dashboard-foreground font-heading">{hora}</div>
+                                        <div className="text-[10px] font-semibold text-dashboard-subtle mt-0.5">{duracao} min</div>
                                     </div>
 
                                     {appointment.status === 'CANCELADO' && (
@@ -91,10 +91,10 @@ export function UpcomingAppointments({ appointments, date }: UpcomingAppointment
                                     )}
 
                                     <div className="flex-1 min-w-0">
-                                        <h3 className={`truncate text-sm font-semibold ${appointment.status === 'CANCELADO' ? 'text-[#71685F]' : 'text-[#F5F0E8]'}`}>
+                                        <h3 className={`truncate text-sm font-semibold ${appointment.status === 'CANCELADO' ? 'text-dashboard-subtle' : 'text-dashboard-foreground'}`}>
                                             {appointment.cliente.nome}
                                         </h3>
-                                        <p className="truncate text-[11px] text-[#A9A198] mt-0.5">
+                                        <p className="truncate text-[11px] text-dashboard-muted mt-0.5">
                                             {appointment.servico.nome} {appointment.colaborador?.nome ? `- ${appointment.colaborador.nome.split(' ')[0]}` : ''}
                                         </p>
                                     </div>
@@ -110,8 +110,8 @@ export function UpcomingAppointments({ appointments, date }: UpcomingAppointment
                     )}
                 </div>
 
-                <div className="p-5 border-t border-[#2A2418]">
-                    <Button variant="outline" className="w-full h-10 border-[#2A2418] bg-transparent text-[#A9A198] hover:bg-[#1B1B1B] hover:text-[#D4AF37] hover:border-[#D4AF37]/50 rounded-[8px] text-[13px] font-semibold transition-colors" asChild>
+                <div className="p-5 border-t border-dashboard-border">
+                    <Button variant="outline" className="w-full h-10 border-dashboard-border bg-transparent text-dashboard-muted hover:bg-dashboard-surface-hover hover:text-dashboard-primary hover:border-dashboard-primary/50 rounded-[8px] text-[13px] font-semibold transition-colors" asChild>
                         <Link href={`/dashboard/agendamentos?date=${format(displayDate, 'yyyy-MM-dd')}`}>
                             Ver todos os agendamentos
                         </Link>

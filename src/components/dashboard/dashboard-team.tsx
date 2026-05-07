@@ -71,24 +71,24 @@ export async function DashboardTeam({ date, empresaId }: DashboardTeamProps) {
 
 export function DashboardTeamSkeleton() {
     return (
-        <Card className="h-[400px] rounded-[10px] border-[#2A2418] bg-[#111111] py-0 shadow-[0_18px_50px_rgba(0,0,0,0.30)] flex flex-col">
-            <div className="flex items-center gap-2 p-5 border-b border-[#2A2418]">
-                <div className="h-4 w-4 rounded bg-[#2A2418] animate-pulse" />
-                <div className="h-4 w-32 rounded bg-[#2A2418] animate-pulse" />
+        <Card className="h-[400px] rounded-[10px] border-dashboard-border bg-dashboard-surface py-0 shadow-[0_18px_50px_rgba(86,66,31,0.10)] dark:shadow-[0_18px_50px_rgba(0,0,0,0.30)] flex flex-col">
+            <div className="flex items-center gap-2 p-5 border-b border-dashboard-border">
+                <div className="h-4 w-4 rounded bg-dashboard-border animate-pulse" />
+                <div className="h-4 w-32 rounded bg-dashboard-border animate-pulse" />
             </div>
             <CardContent className="flex-1 space-y-4 px-5 pb-5 pt-4">
                 {[1, 2, 3].map((i) => (
-                    <div key={i} className="flex items-center justify-between border-b border-[#2A2418] pb-3 last:border-0">
+                    <div key={i} className="flex items-center justify-between border-b border-dashboard-border pb-3 last:border-0">
                         <div className="flex items-center gap-4">
-                            <div className="h-9 w-9 animate-pulse rounded-full bg-[#2A2418]" />
+                            <div className="h-9 w-9 animate-pulse rounded-full bg-dashboard-border" />
                             <div>
-                                <div className="mb-1 h-3 w-24 animate-pulse rounded bg-[#2A2418]" />
-                                <div className="h-2 w-16 animate-pulse rounded bg-[#2A2418]" />
+                                <div className="mb-1 h-3 w-24 animate-pulse rounded bg-dashboard-border" />
+                                <div className="h-2 w-16 animate-pulse rounded bg-dashboard-border" />
                             </div>
                         </div>
                         <div className="flex flex-col items-end gap-1.5 w-24">
-                            <div className="h-1.5 w-full bg-[#2A2418] rounded-full animate-pulse" />
-                            <div className="h-2 w-6 bg-[#2A2418] rounded animate-pulse" />
+                            <div className="h-1.5 w-full bg-dashboard-border rounded-full animate-pulse" />
+                            <div className="h-2 w-6 bg-dashboard-border rounded animate-pulse" />
                         </div>
                     </div>
                 ))}

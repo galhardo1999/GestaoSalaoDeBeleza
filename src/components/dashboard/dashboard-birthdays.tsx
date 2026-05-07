@@ -58,36 +58,36 @@ export async function DashboardBirthdays({ date, empresaId }: DashboardBirthdays
     })
 
     return (
-        <Card className="rounded-[10px] border-[#2A2418] bg-[#111111] py-0 shadow-[0_18px_50px_rgba(0,0,0,0.30)]">
-            <div className="flex items-center gap-2 p-5 border-b border-[#2A2418]">
-                <Gift className="h-4 w-4 text-[#71685F]" />
-                <h2 className="font-heading text-[15px] font-semibold text-[#F5F0E8]">Aniversariantes da semana</h2>
+        <Card className="rounded-[10px] border-dashboard-border bg-dashboard-surface py-0 shadow-[0_18px_50px_rgba(86,66,31,0.10)] dark:shadow-[0_18px_50px_rgba(0,0,0,0.30)]">
+            <div className="flex items-center gap-2 p-5 border-b border-dashboard-border">
+                <Gift className="h-4 w-4 text-dashboard-subtle" />
+                <h2 className="font-heading text-[15px] font-semibold text-dashboard-foreground">Aniversariantes da semana</h2>
             </div>
             
             <CardContent className="p-0">
                 <div className="px-5 py-4 space-y-4">
                     {aniversariantes.length === 0 ? (
-                        <div className="flex h-full items-center justify-center text-center text-[#A9A198]">
+                        <div className="flex h-full items-center justify-center text-center text-dashboard-muted">
                             <p className="text-sm font-medium">Nenhum aniversariante nesta semana.</p>
                         </div>
                     ) : (
                         aniversariantes.map((cliente) => (
                             <div key={cliente.id} className="flex items-center justify-between gap-4">
                                 <div className="flex items-center gap-3">
-                                    <Avatar className="h-10 w-10 border border-[#2A2418]">
-                                        <AvatarFallback className="bg-[#1B1B1B] text-[#F5F0E8] font-bold text-[11px]">
+                                    <Avatar className="h-10 w-10 border border-dashboard-border">
+                                        <AvatarFallback className="bg-dashboard-surface-hover text-dashboard-foreground font-bold text-[11px]">
                                             {cliente.nome.substring(0, 2).toUpperCase()}
                                         </AvatarFallback>
                                     </Avatar>
                                     <div>
-                                        <p className="text-[13px] font-bold text-[#F5F0E8]">{cliente.nome}</p>
-                                        <p className="text-[11px] font-medium text-[#A9A198] mt-0.5">
+                                        <p className="text-[13px] font-bold text-dashboard-foreground">{cliente.nome}</p>
+                                        <p className="text-[11px] font-medium text-dashboard-muted mt-0.5">
                                             {cliente.dayOfWeek} · {cliente.telefone || 'Sem telefone'}
                                         </p>
                                     </div>
                                 </div>
                                 {cliente.isToday && (
-                                    <div className="h-6 w-6 rounded-md bg-[#D4AF37]/10 flex items-center justify-center text-[#D4AF37]">
+                                    <div className="h-6 w-6 rounded-md bg-dashboard-primary/10 flex items-center justify-center text-dashboard-primary">
                                         <Cake className="h-3.5 w-3.5" />
                                     </div>
                                 )}
@@ -96,8 +96,8 @@ export async function DashboardBirthdays({ date, empresaId }: DashboardBirthdays
                     )}
                 </div>
 
-                <div className="p-5 border-t border-[#2A2418]">
-                    <Button variant="outline" className="w-full h-10 border-[#2A2418] bg-[#1B1B1B] text-[#A9A198] hover:bg-[#D4AF37] hover:text-[#0D0D0D] hover:border-[#D4AF37] rounded-[8px] text-[13px] font-semibold transition-all group">
+                <div className="p-5 border-t border-dashboard-border">
+                    <Button variant="outline" className="w-full h-10 border-dashboard-border bg-dashboard-surface-hover text-dashboard-muted hover:bg-dashboard-primary hover:text-dashboard-primary-foreground hover:border-dashboard-primary rounded-[8px] text-[13px] font-semibold transition-all group">
                         Enviar parabéns via WhatsApp
                         <ArrowUpRight className="ml-1.5 h-3.5 w-3.5 opacity-50 group-hover:opacity-100" />
                     </Button>

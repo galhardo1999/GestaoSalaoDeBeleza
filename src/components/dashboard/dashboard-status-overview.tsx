@@ -49,14 +49,14 @@ export async function DashboardStatusOverview({ date, empresaId }: DashboardStat
         { key: 'CONCLUIDO', label: 'Concluído', count: statusCounts.CONCLUIDO, color: 'bg-[#4ADE80]' },
         { key: 'PENDENTE', label: 'Pendente', count: statusCounts.PENDENTE, color: 'bg-[#F59E0B]' },
         { key: 'CANCELADO', label: 'Cancelado', count: statusCounts.CANCELADO, color: 'bg-[#EF4444]' },
-        { key: 'NAO_COMPARECEU', label: 'Não compareceu', count: statusCounts.NAO_COMPARECEU, color: 'bg-[#71685F]' },
+        { key: 'NAO_COMPARECEU', label: 'Não compareceu', count: statusCounts.NAO_COMPARECEU, color: 'bg-dashboard-subtle' },
     ]
 
     return (
-        <Card className="rounded-[10px] border-[#2A2418] bg-[#111111] py-0 shadow-[0_18px_50px_rgba(0,0,0,0.30)]">
-            <div className="flex items-center gap-2 p-5 border-b border-[#2A2418]">
-                <BarChart2 className="h-4 w-4 text-[#71685F]" />
-                <h2 className="font-heading text-[15px] font-semibold text-[#F5F0E8]">Status dos agendamentos hoje</h2>
+        <Card className="rounded-[10px] border-dashboard-border bg-dashboard-surface py-0 shadow-[0_18px_50px_rgba(86,66,31,0.10)] dark:shadow-[0_18px_50px_rgba(86,66,31,0.10)] dark:shadow-[0_18px_50px_rgba(0,0,0,0.30)]">
+            <div className="flex items-center gap-2 p-5 border-b border-dashboard-border">
+                <BarChart2 className="h-4 w-4 text-dashboard-subtle" />
+                <h2 className="font-heading text-[15px] font-semibold text-dashboard-foreground">Status dos agendamentos hoje</h2>
             </div>
             
             <CardContent className="p-5 space-y-4">
@@ -67,11 +67,11 @@ export async function DashboardStatusOverview({ date, empresaId }: DashboardStat
                         <div key={key} className="flex items-center justify-between gap-4">
                             <div className="flex items-center gap-2 min-w-[120px]">
                                 <div className={`h-2 w-2 rounded-full ${color}`} />
-                                <span className="text-[13px] font-semibold text-[#F5F0E8]">{label}</span>
+                                <span className="text-[13px] font-semibold text-dashboard-foreground">{label}</span>
                             </div>
                             
                             <div className="flex-1">
-                                <div className="h-1.5 w-full bg-[#1B1B1B] rounded-full overflow-hidden">
+                                <div className="h-1.5 w-full bg-dashboard-surface-hover rounded-full overflow-hidden">
                                     <div 
                                         className={`h-full rounded-full ${color}`} 
                                         style={{ width: `${percentage}%` }}
@@ -79,7 +79,7 @@ export async function DashboardStatusOverview({ date, empresaId }: DashboardStat
                                 </div>
                             </div>
 
-                            <div className="min-w-[24px] text-right font-heading text-[15px] font-bold text-[#F5F0E8]">
+                            <div className="min-w-[24px] text-right font-heading text-[15px] font-bold text-dashboard-foreground">
                                 {count}
                             </div>
                         </div>

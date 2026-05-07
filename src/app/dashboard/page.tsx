@@ -2,15 +2,12 @@ import { Suspense } from "react"
 import { redirect } from "next/navigation"
 import { getServerSession } from "next-auth"
 import { CalendarDays, FileText, Calendar as CalendarIcon } from "lucide-react"
-import { DashboardCalendar } from "@/components/dashboard/dashboard-calendar"
 import { DashboardMetrics, DashboardMetricsSkeleton } from "@/components/dashboard/dashboard-metrics"
 import { DashboardTeam, DashboardTeamSkeleton } from "@/components/dashboard/dashboard-team"
 import { DashboardUpcoming, DashboardUpcomingSkeleton } from "@/components/dashboard/dashboard-upcoming"
 import { authOptions } from "@/lib/auth"
-import { db } from "@/lib/db"
 import { Button } from "@/components/ui/button"
 
-// New components to be implemented
 import { DashboardMetricsMonth, DashboardMetricsMonthSkeleton } from "@/components/dashboard/dashboard-metrics-month"
 import { DashboardStatusOverview } from "@/components/dashboard/dashboard-status-overview"
 import { DashboardTopServices } from "@/components/dashboard/dashboard-top-services"
@@ -53,24 +50,22 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         redirect("/login")
     }
 
-    const primeiroNome = session.user.name?.split(" ")[0] || "Usuário"
-
     if (session.user.cargo === "SUPER_ADMIN" && !session.user.empresaId) {
         return (
             <div className="flex-1 space-y-8">
-                <div className="flex flex-col gap-4 border-b border-[#2A2418] pb-7 md:flex-row md:items-end md:justify-between">
+                <div className="flex flex-col gap-4 border-b border-dashboard-border pb-7 md:flex-row md:items-end md:justify-between">
                     <div>
-                        <h2 className="font-heading text-4xl font-semibold tracking-normal text-[#F5F0E8] md:text-5xl">
+                        <h2 className="font-heading text-4xl font-semibold tracking-normal text-dashboard-foreground md:text-5xl">
                             Visão geral
                         </h2>
-                        <p className="mt-2 text-sm capitalize text-[#A9A198]">
+                        <p className="mt-2 text-sm capitalize text-dashboard-muted">
                             {dataFormatada}
                         </p>
                     </div>
                 </div>
-                <div className="flex h-[50vh] flex-col items-center justify-center space-y-4 rounded-[10px] border border-dashed border-[#3A301C] bg-[#111111] shadow-[0_24px_70px_rgba(0,0,0,0.32)]">
-                    <h3 className="font-heading text-2xl font-semibold text-[#F5F0E8]">Nenhuma empresa selecionada</h3>
-                    <p className="text-sm text-[#A9A198]">Selecione uma empresa no menu lateral para visualizar os dados.</p>
+                <div className="flex h-[50vh] flex-col items-center justify-center space-y-4 rounded-[10px] border border-dashed border-dashboard-border bg-dashboard-surface shadow-[0_24px_70px_rgba(86,66,31,0.12)] dark:shadow-[0_24px_70px_rgba(0,0,0,0.32)]">
+                    <h3 className="font-heading text-2xl font-semibold text-dashboard-foreground">Nenhuma empresa selecionada</h3>
+                    <p className="text-sm text-dashboard-muted">Selecione uma empresa no menu lateral para visualizar os dados.</p>
                 </div>
             </div>
         )
@@ -79,10 +74,6 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     if (!session.user.empresaId) {
         return null
     }
-
-    const empresa = await db.empresa.findUnique({
-        where: { id: session.user.empresaId },
-    })
 
     return (
         <div className="flex-1 space-y-8 pb-10">
@@ -150,10 +141,10 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
                 {/* Middle Column */}
                 <div className="flex flex-col gap-6">
-                    <Suspense fallback={<div className="h-[300px] rounded-xl bg-[#111111] animate-pulse" />}>
+                    <Suspense fallback={<div className="h-[300px] rounded-xl bg-dashboard-surface animate-pulse" />}>
                         <DashboardStatusOverview date={dataSelecionada} empresaId={session.user.empresaId} />
                     </Suspense>
-                    <Suspense fallback={<div className="h-[300px] rounded-xl bg-[#111111] animate-pulse" />}>
+                    <Suspense fallback={<div className="h-[300px] rounded-xl bg-dashboard-surface animate-pulse" />}>
                         <DashboardTopServices date={dataSelecionada} empresaId={session.user.empresaId} />
                     </Suspense>
                 </div>
@@ -168,13 +159,13 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
             {/* Bottom Widgets Row */}
             <div className="grid gap-6 md:grid-cols-3 items-start">
-                <Suspense fallback={<div className="h-[300px] rounded-xl bg-[#111111] animate-pulse" />}>
+                <Suspense fallback={<div className="h-[300px] rounded-xl bg-dashboard-surface animate-pulse" />}>
                     <DashboardBirthdays date={dataSelecionada} empresaId={session.user.empresaId} />
                 </Suspense>
-                <Suspense fallback={<div className="h-[300px] rounded-xl bg-[#111111] animate-pulse" />}>
+                <Suspense fallback={<div className="h-[300px] rounded-xl bg-dashboard-surface animate-pulse" />}>
                     <DashboardAlerts date={dataSelecionada} empresaId={session.user.empresaId} />
                 </Suspense>
-                <Suspense fallback={<div className="h-[300px] rounded-xl bg-[#111111] animate-pulse" />}>
+                <Suspense fallback={<div className="h-[300px] rounded-xl bg-dashboard-surface animate-pulse" />}>
                     <DashboardAvailableSlots date={dataSelecionada} empresaId={session.user.empresaId} />
                 </Suspense>
             </div>

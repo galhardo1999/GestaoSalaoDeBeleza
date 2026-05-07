@@ -69,10 +69,10 @@ export async function DashboardTopServices({ date, empresaId }: DashboardTopServ
     }
 
     return (
-        <Card className="rounded-[10px] border-[#2A2418] bg-[#111111] py-0 shadow-[0_18px_50px_rgba(0,0,0,0.30)]">
-            <div className="flex items-center gap-2 border-b border-[#2A2418] p-5">
-                <Scissors className="h-4 w-4 text-[#71685F]" />
-                <h2 className="font-heading text-[15px] font-semibold text-[#F5F0E8]">
+        <Card className="rounded-[10px] border-dashboard-border bg-dashboard-surface py-0 shadow-[0_18px_50px_rgba(86,66,31,0.10)] dark:shadow-[0_18px_50px_rgba(0,0,0,0.30)]">
+            <div className="flex items-center gap-2 border-b border-dashboard-border p-5">
+                <Scissors className="h-4 w-4 text-dashboard-subtle" />
+                <h2 className="font-heading text-[15px] font-semibold text-dashboard-foreground">
                     Serviços mais realizados (mês)
                 </h2>
             </div>
@@ -80,19 +80,19 @@ export async function DashboardTopServices({ date, empresaId }: DashboardTopServ
             <CardContent className="p-5">
                 <div className="space-y-4">
                     {servicosRealizados.length === 0 ? (
-                        <div className="flex h-full items-center justify-center text-center text-[#A9A198]">
+                        <div className="flex h-full items-center justify-center text-center text-dashboard-muted">
                             <p className="text-sm font-medium">Nenhum serviço concluído neste mês.</p>
                         </div>
                     ) : (
                         servicosRealizados.map((servico) => (
                             <div key={servico.nome} className="flex items-center gap-4">
-                                <div className="min-w-[80px] truncate text-[13px] font-semibold text-[#F5F0E8]" title={servico.nome}>
+                                <div className="min-w-[80px] truncate text-[13px] font-semibold text-dashboard-foreground" title={servico.nome}>
                                     {servico.nome}
                                 </div>
 
-                                <div className="flex h-6 flex-1 items-center overflow-hidden rounded-full border border-[#2A2418] bg-[#1B1B1B]">
-                                    <div className={`flex h-full items-center bg-[#D4AF37] px-3 ${obterLargura(servico.count)}`}>
-                                        <span className="text-[10px] font-bold text-[#0D0D0D]">
+                                <div className="flex h-6 flex-1 items-center overflow-hidden rounded-full border border-dashboard-border bg-dashboard-surface-hover">
+                                    <div className={`flex h-full items-center bg-dashboard-primary px-3 ${obterLargura(servico.count)}`}>
+                                        <span className="text-[10px] font-bold text-dashboard-primary-foreground">
                                             {servico.count}
                                         </span>
                                     </div>
@@ -103,7 +103,7 @@ export async function DashboardTopServices({ date, empresaId }: DashboardTopServ
                 </div>
 
                 <div className="mt-auto pt-5">
-                    <Button variant="outline" className="h-10 w-full rounded-[8px] border-[#2A2418] bg-transparent text-[13px] font-semibold text-[#A9A198] transition-colors hover:border-[#D4AF37]/50 hover:bg-[#1B1B1B] hover:text-[#D4AF37]">
+                    <Button variant="outline" className="h-10 w-full rounded-[8px] border-dashboard-border bg-transparent text-[13px] font-semibold text-dashboard-muted transition-colors hover:border-dashboard-primary/50 hover:bg-dashboard-surface-hover hover:text-dashboard-primary">
                         Análise por serviço
                     </Button>
                 </div>

@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { Playfair_Display, Inter } from "next/font/google";
-import "./globals.css";
+import { Inter, Playfair_Display } from "next/font/google";
 import { SessionProvider } from "@/components/providers/session-provider";
 import { ThemeProvider } from "@/components/theme-provider";
+import "./globals.css";
 
 const playfair = Playfair_Display({
   variable: "--font-playfair",
@@ -25,10 +25,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR">
+    <html lang="pt-BR" suppressHydrationWarning>
       <body
-        className={`${playfair.variable} ${inter.variable} font-sans antialiased bg-background text-foreground selection:bg-primary/30`}
-        suppressHydrationWarning
+        className={`${playfair.variable} ${inter.variable} bg-background text-foreground font-sans antialiased selection:bg-primary/30`}
       >
         <ThemeProvider
           attribute="class"

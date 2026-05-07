@@ -125,25 +125,25 @@ export function DashboardCalendar() {
                 className={cn(
                     "relative flex h-10 w-10 items-center justify-center rounded-[8px] text-sm font-semibold transition-colors duration-200",
                     estaSelecionado(dia)
-                        ? "bg-[#D4AF37] text-[#0D0D0D] shadow-[0_10px_24px_rgba(212,175,55,0.18)]"
+                        ? "bg-dashboard-primary text-dashboard-primary-foreground shadow-[0_10px_24px_rgba(197,160,89,0.18)] dark:shadow-[0_10px_24px_rgba(212,175,55,0.18)]"
                         : ehHoje(dia)
-                            ? "border border-[#D4AF37]/35 bg-[#D4AF37]/10 text-[#D4AF37]"
-                            : "text-[#A9A198] hover:bg-[#1B1B1B] hover:text-[#F5F0E8]"
+                            ? "border border-dashboard-primary/35 bg-dashboard-primary/10 text-dashboard-primary"
+                            : "text-dashboard-muted hover:bg-dashboard-surface-hover hover:text-dashboard-foreground"
                 )}
             >
                 {dia}
                 {temEventos && !estaSelecionado(dia) && (
-                    <span className="absolute bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-[#D4AF37]" />
+                    <span className="absolute bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-dashboard-primary" />
                 )}
             </button>
         )
     }
 
     return (
-        <Card className="rounded-[10px] border-[#2A2418] bg-[#111111] py-0 shadow-[0_18px_50px_rgba(0,0,0,0.30)]">
+        <Card className="rounded-[10px] border-dashboard-border bg-dashboard-surface py-0 shadow-[0_18px_50px_rgba(86,66,31,0.10)] dark:shadow-[0_18px_50px_rgba(0,0,0,0.30)]">
             <CardContent className="p-5 sm:p-6">
                 <div className="mb-6 flex items-center justify-between px-2">
-                    <h2 className="font-heading text-2xl font-semibold capitalize text-[#F5F0E8]">
+                    <h2 className="font-heading text-2xl font-semibold capitalize text-dashboard-foreground">
                         {MESES[mes]} {ano}
                     </h2>
                     <div className="flex gap-1">
@@ -151,7 +151,7 @@ export function DashboardCalendar() {
                             variant="ghost"
                             size="icon"
                             onClick={mesAnterior}
-                            className="h-8 w-8 rounded-[7px] text-[#8C8379] hover:bg-[#1B1B1B] hover:text-[#D4AF37]"
+                            className="h-8 w-8 rounded-[7px] text-dashboard-muted hover:bg-dashboard-surface-hover hover:text-dashboard-primary"
                         >
                             <ChevronLeft className="h-4 w-4" />
                         </Button>
@@ -159,7 +159,7 @@ export function DashboardCalendar() {
                             variant="ghost"
                             size="icon"
                             onClick={proximoMes}
-                            className="h-8 w-8 rounded-[7px] text-[#8C8379] hover:bg-[#1B1B1B] hover:text-[#D4AF37]"
+                            className="h-8 w-8 rounded-[7px] text-dashboard-muted hover:bg-dashboard-surface-hover hover:text-dashboard-primary"
                         >
                             <ChevronRight className="h-4 w-4" />
                         </Button>
@@ -170,7 +170,7 @@ export function DashboardCalendar() {
                     {DIAS.map((dia) => (
                         <div
                             key={dia}
-                            className="flex h-10 items-center justify-center text-[10px] font-semibold uppercase tracking-[0.12em] text-[#71685F]"
+                            className="flex h-10 items-center justify-center text-[10px] font-semibold uppercase tracking-[0.12em] text-dashboard-subtle"
                         >
                             {dia}
                         </div>
@@ -179,15 +179,15 @@ export function DashboardCalendar() {
 
                 <div className="grid grid-cols-7 gap-1">{dias}</div>
 
-                <div className="mt-6 rounded-[10px] border border-[#2A2418] bg-[#0D0D0D] p-4">
-                    <p className="font-heading text-lg font-semibold capitalize text-[#F5F0E8]" suppressHydrationWarning>
+                <div className="mt-6 rounded-[10px] border border-dashboard-border bg-dashboard-background p-4">
+                    <p className="font-heading text-lg font-semibold capitalize text-dashboard-foreground" suppressHydrationWarning>
                         {dataSelecionada.toLocaleDateString("pt-BR", {
                             weekday: "long",
                             day: "numeric",
                             month: "long",
                         })}
                     </p>
-                    <p className="mt-1 text-sm font-semibold text-[#D4AF37]">
+                    <p className="mt-1 text-sm font-semibold text-dashboard-primary">
                         {eventosPorDia[obterChaveDia(dataSelecionada.getDate())] || 0} agendamentos
                     </p>
                 </div>

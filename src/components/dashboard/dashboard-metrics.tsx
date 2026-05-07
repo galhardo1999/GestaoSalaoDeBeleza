@@ -118,16 +118,16 @@ export async function DashboardMetrics({ date, empresaId }: DashboardMetricsProp
                 const diffValue = diff !== null ? (titulo === 'Receita estimada' ? `R$ ${Math.abs(diff).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : Math.abs(diff)) : '';
 
                 return (
-                    <Card key={titulo} className="group relative overflow-hidden rounded-[10px] border-[#2A2418] bg-[#111111] py-0 shadow-[0_18px_50px_rgba(0,0,0,0.30)]">
-                        <div className="absolute inset-x-0 top-0 h-px bg-[#D4AF37]/20" />
+                    <Card key={titulo} className="group relative overflow-hidden rounded-[10px] border-dashboard-border bg-dashboard-surface py-0 shadow-[0_18px_50px_rgba(86,66,31,0.10)] dark:shadow-[0_18px_50px_rgba(0,0,0,0.30)]">
+                        <div className="absolute inset-x-0 top-0 h-px bg-dashboard-primary/20" />
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 px-5 pb-2 pt-5">
-                            <CardTitle className="text-[13px] font-semibold text-[#A9A198] flex items-center gap-2">
-                                <Icone className="h-4 w-4 text-[#71685F]" />
+                            <CardTitle className="text-[13px] font-semibold text-dashboard-muted flex items-center gap-2">
+                                <Icone className="h-4 w-4 text-dashboard-subtle" />
                                 {titulo}
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="px-5 pb-5">
-                            <div className="font-heading text-3xl font-semibold leading-none text-[#F5F0E8] mt-2 mb-3">
+                            <div className="font-heading text-3xl font-semibold leading-none text-dashboard-foreground mt-2 mb-3">
                                 {prefix}{valor}{suffix}
                             </div>
                             <div className="flex items-center gap-2">
@@ -137,10 +137,10 @@ export async function DashboardMetrics({ date, empresaId }: DashboardMetricsProp
                                             <ArrowUpRight className={`h-3 w-3 ${isPositive ? '' : 'rotate-90'}`} />
                                             {diffValue}
                                         </span>
-                                        <span className="text-[11px] font-medium text-[#71685F]">{apoio}</span>
+                                        <span className="text-[11px] font-medium text-dashboard-subtle">{apoio}</span>
                                     </>
                                 ) : (
-                                    <span className="text-[11px] font-medium text-[#71685F]">{apoio}</span>
+                                    <span className="text-[11px] font-medium text-dashboard-subtle">{apoio}</span>
                                 )}
                             </div>
                         </CardContent>
@@ -155,16 +155,16 @@ export function DashboardMetricsSkeleton() {
     return (
         <>
             {[1, 2, 3, 4].map((i) => (
-                <Card key={i} className="relative overflow-hidden rounded-[10px] border-[#2A2418] bg-[#111111] py-0 shadow-[0_18px_50px_rgba(0,0,0,0.30)]">
+                <Card key={i} className="relative overflow-hidden rounded-[10px] border-dashboard-border bg-dashboard-surface py-0 shadow-[0_18px_50px_rgba(86,66,31,0.10)] dark:shadow-[0_18px_50px_rgba(0,0,0,0.30)]">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 px-5 pb-2 pt-5">
                         <div className="flex items-center gap-2">
-                            <div className="h-4 w-4 animate-pulse rounded bg-[#2A2418]" />
-                            <div className="h-4 w-24 animate-pulse rounded bg-[#2A2418]" />
+                            <div className="h-4 w-4 animate-pulse rounded bg-dashboard-border" />
+                            <div className="h-4 w-24 animate-pulse rounded bg-dashboard-border" />
                         </div>
                     </CardHeader>
                     <CardContent className="px-5 pb-5">
-                        <div className="mb-3 mt-2 h-8 w-20 animate-pulse rounded bg-[#2A2418]" />
-                        <div className="h-4 w-32 animate-pulse rounded bg-[#2A2418]" />
+                        <div className="mb-3 mt-2 h-8 w-20 animate-pulse rounded bg-dashboard-border" />
+                        <div className="h-4 w-32 animate-pulse rounded bg-dashboard-border" />
                     </CardContent>
                 </Card>
             ))}

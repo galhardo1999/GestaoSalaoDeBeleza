@@ -41,7 +41,7 @@ export function DateScrollPicker({ selectedDate }: DateScrollPickerProps) {
 
     return (
         <div className="mb-6 flex w-full select-none flex-col items-center space-y-4">
-            <h3 className="text-center font-heading text-xl font-semibold capitalize text-[#F5F0E8]">
+            <h3 className="text-center font-heading text-xl font-semibold capitalize text-dashboard-foreground">
                 {format(selectedDate, "d 'de' MMMM 'de' yyyy", { locale: ptBR })}
             </h3>
 
@@ -49,7 +49,7 @@ export function DateScrollPicker({ selectedDate }: DateScrollPickerProps) {
                 <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 rounded-[7px] text-[#8C8379] hover:bg-[#1B1B1B] hover:text-[#D4AF37]"
+                    className="h-8 w-8 rounded-[7px] text-dashboard-muted hover:bg-dashboard-surface-hover hover:text-dashboard-primary"
                     onClick={() => setDataVisivel((dataAtual) => subDays(dataAtual, 1))}
                 >
                     <ChevronLeft className="h-5 w-5" />
@@ -66,14 +66,14 @@ export function DateScrollPicker({ selectedDate }: DateScrollPickerProps) {
                                 className={cn(
                                     "flex h-20 min-w-[4.35rem] flex-col items-center justify-center rounded-[10px] border transition-colors duration-200",
                                     selecionada
-                                        ? "border-[#D4AF37]/55 bg-[#D4AF37]/10 text-[#D4AF37]"
-                                        : "border-transparent text-[#8C8379] hover:border-[#2A2418] hover:bg-[#151515] hover:text-[#F5F0E8]"
+                                        ? "border-dashboard-primary/55 bg-dashboard-primary/10 text-dashboard-primary"
+                                        : "border-transparent text-dashboard-muted hover:border-dashboard-border hover:bg-dashboard-surface-subtle hover:text-dashboard-foreground"
                                 )}
                             >
                                 <span className="mb-1 text-[10px] font-semibold uppercase tracking-[0.14em]">
                                     {format(data, "EEEE", { locale: ptBR }).replace("-feira", "")}
                                 </span>
-                                <span className={cn("font-heading text-2xl font-semibold", selecionada ? "text-[#D4AF37]" : "text-[#F5F0E8]")}>
+                                <span className={cn("font-heading text-2xl font-semibold", selecionada ? "text-dashboard-primary" : "text-dashboard-foreground")}>
                                     {format(data, "dd")}
                                 </span>
                             </button>
@@ -84,7 +84,7 @@ export function DateScrollPicker({ selectedDate }: DateScrollPickerProps) {
                 <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 rounded-[7px] text-[#8C8379] hover:bg-[#1B1B1B] hover:text-[#D4AF37]"
+                    className="h-8 w-8 rounded-[7px] text-dashboard-muted hover:bg-dashboard-surface-hover hover:text-dashboard-primary"
                     onClick={() => setDataVisivel((dataAtual) => addDays(dataAtual, 1))}
                 >
                     <ChevronRight className="h-5 w-5" />

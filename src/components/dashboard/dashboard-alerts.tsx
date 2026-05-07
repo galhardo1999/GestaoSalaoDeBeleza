@@ -46,10 +46,10 @@ export async function DashboardAlerts({ date, empresaId }: DashboardAlertsProps)
     })
 
     return (
-        <Card className="rounded-[10px] border-[#2A2418] bg-[#111111] py-0 shadow-[0_18px_50px_rgba(0,0,0,0.30)]">
-            <div className="flex items-center gap-2 p-5 border-b border-[#2A2418]">
-                <AlertTriangle className="h-4 w-4 text-[#71685F]" />
-                <h2 className="font-heading text-[15px] font-semibold text-[#F5F0E8]">Alertas e notificações</h2>
+        <Card className="rounded-[10px] border-dashboard-border bg-dashboard-surface py-0 shadow-[0_18px_50px_rgba(86,66,31,0.10)] dark:shadow-[0_18px_50px_rgba(0,0,0,0.30)]">
+            <div className="flex items-center gap-2 p-5 border-b border-dashboard-border">
+                <AlertTriangle className="h-4 w-4 text-dashboard-subtle" />
+                <h2 className="font-heading text-[15px] font-semibold text-dashboard-foreground">Alertas e notificações</h2>
             </div>
             
             <CardContent className="p-5 space-y-3">

@@ -56,16 +56,16 @@ export async function DashboardUpcoming({ date, empresaId }: DashboardUpcomingPr
 
 export function DashboardUpcomingSkeleton() {
     return (
-        <Card className="bg-[#111111] border-[#2A2418] shadow-[0_18px_50px_rgba(0,0,0,0.30)] h-[400px] p-6 rounded-[10px]">
-            <div className="flex justify-between items-center mb-6 border-b border-[#2A2418] pb-4">
+        <Card className="bg-dashboard-surface border-dashboard-border shadow-[0_18px_50px_rgba(86,66,31,0.10)] dark:shadow-[0_18px_50px_rgba(0,0,0,0.30)] h-[400px] p-6 rounded-[10px]">
+            <div className="flex justify-between items-center mb-6 border-b border-dashboard-border pb-4">
                 <div className="flex items-center gap-2">
-                    <div className="h-4 w-4 bg-[#2A2418] rounded animate-pulse" />
-                    <div className="h-4 w-32 bg-[#2A2418] rounded animate-pulse" />
+                    <div className="h-4 w-4 bg-dashboard-border rounded animate-pulse" />
+                    <div className="h-4 w-32 bg-dashboard-border rounded animate-pulse" />
                 </div>
             </div>
             <div className="space-y-4">
                 {[1, 2, 3].map((i) => (
-                    <div key={i} className="h-16 w-full bg-[#1B1B1B] rounded-[8px] animate-pulse" />
+                    <div key={i} className="h-16 w-full bg-dashboard-surface-hover rounded-[8px] animate-pulse" />
                 ))}
             </div>
         </Card>
